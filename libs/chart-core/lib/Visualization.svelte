@@ -740,6 +740,44 @@ Please make sure you called __(key) with a key of type "string".
         return dwChart;
     }
 
+    // watch for height changes - still needed?
+    let currentHeight;
+
+    afterUpdate(() => {
+        if (!isIframe || currentHeight === undefined) return;
+        const newHeight = document.body.offsetHeight;
+        if (currentHeight !== newHeight && typeof dwChart.render === 'function') {
+            dwChart.render(outerContainer);
+            currentHeight = newHeight;
+        }
+    });
+
+    /*
+     * Swap emotion class on .dw-chart-body via classList.toggle instead of directly on element
+     * to prevent entire class attribute getting updated when emotion class changes,
+     * since that removes classes set on .dw-chart-body by render code.
+     *
+     * TODO: resolve the issue of conflicting class name toggles by
+     *
+     * - toggling "global" classes like `.dir-rtl` on parent container (.dw-chart)
+     *   whose `class` property is not set/managed by Svelte
+     *
+     * - make sure that vis render code (such as d3-bars) is not toggling
+     *   classes on elements that are managed by this Svelte component,
+     *   e.g. by passing these visualizations a new div to render the
+     *   charts into.
+     *
+     */
+    beforeUpdate(() => {
+        if (target === undefined) return;
+        if (prevChartBodyEmotionClass !== chartBodyEmotionClass) {
+            [prevChartBodyEmotionClass, chartBodyEmotionClass].forEach((cl, i) => {
+                if (cl) target.classList.toggle(cl, !!i);
+            });
+            prevChartBodyEmotionClass = chartBodyEmotionClass;
+        }
+    });
+
     onMount(async () => {
         useFallbackImage = getBrowser().browser === 'ie' && !isPreview;
         const dwChart = await run();
@@ -774,40 +812,7 @@ Please make sure you called __(key) with a key of type "string".
                 });
             });
 
-            // watch for height changes - still needed?
-            let currentHeight = document.body.offsetHeight;
-            afterUpdate(() => {
-                const newHeight = document.body.offsetHeight;
-                if (currentHeight !== newHeight && typeof dwChart.render === 'function') {
-                    dwChart.render(outerContainer);
-                    currentHeight = newHeight;
-                }
-            });
-
-            /*
-             * Swap emotion class on .dw-chart-body via classList.toggle instead of directly on element
-             * to prevent entire class attribute getting updated when emotion class changes,
-             * since that removes classes set on .dw-chart-body by render code.
-             *
-             * TODO: resolve the issue of conflicting class name toggles by
-             *
-             * - toggling "global" classes like `.dir-rtl` on parent container (.dw-chart)
-             *   whose `class` property is not set/managed by Svelte
-             *
-             * - make sure that vis render code (such as d3-bars) is not toggling
-             *   classes on elements that are managed by this Svelte component,
-             *   e.g. by passing these visualizations a new div to render the
-             *   charts into.
-             *
-             */
-            beforeUpdate(() => {
-                if (prevChartBodyEmotionClass !== chartBodyEmotionClass) {
-                    [prevChartBodyEmotionClass, chartBodyEmotionClass].forEach((cl, i) => {
-                        if (cl) target.classList.toggle(cl, !!i);
-                    });
-                    prevChartBodyEmotionClass = chartBodyEmotionClass;
-                }
-            });
+            currentHeight = document.body.offsetHeight;
 
             // provide external APIs
             window.__dw = window.__dw || {};

@@ -2590,71 +2590,71 @@ const rx = {
     MM: { test: /(0?[1-9]|1[0-2])/, parse: /(0?[1-9]|1[0-2])/ },
     DD: { parse: /(0?[1-9]|[1-2][0-9]|3[01])/ },
     DOW: { parse: /([0-7])/ },
-    HHMM: { parse: /(0?\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))? *(am|pm)?/ }
+    HHMM: { parse: /(0?\d|1\d|2[0-3]):([0-5]\d)(?::([0-5]\d))? *(AM|PM)?/ }
 };
 
 const MONTHS = {
     // feel free to add more localized month names
     0: [
-        'jan',
-        'january',
-        'januar',
-        'jänner',
-        'jän',
-        'janv',
-        'janvier',
-        'ene',
-        'enero',
-        'gen',
-        'gennaio',
-        'janeiro'
+        'JAN',
+        'JANUARY',
+        'JANUAR',
+        'JÄNNER',
+        'JÄN',
+        'JANV',
+        'JANVIER',
+        'ENE',
+        'ENERO',
+        'GEN',
+        'GENNAIO',
+        'JANEIRO'
     ],
     1: [
-        'feb',
-        'february',
-        'febr',
-        'februar',
-        'fév',
-        'févr',
-        'février',
-        'febrero',
-        'febbraio',
-        'fev',
-        'fevereiro'
+        'FEB',
+        'FEBRUARY',
+        'FEBR',
+        'FEBRUAR',
+        'FÉV',
+        'FÉVR',
+        'FÉVRIER',
+        'FEBRERO',
+        'FEBBRAIO',
+        'FEV',
+        'FEVEREIRO'
     ],
-    2: ['mar', 'mär', 'march', 'mrz', 'märz', 'mars', 'mars', 'marzo', 'marzo', 'março'],
-    3: ['apr', 'april', 'apr', 'april', 'avr', 'avril', 'abr', 'abril', 'aprile'],
-    4: ['may', 'mai', 'mayo', 'mag', 'maggio', 'maio', 'maj'],
-    5: ['jun', 'june', 'juni', 'juin', 'junio', 'giu', 'giugno', 'junho'],
-    6: ['jul', 'july', 'juli', 'juil', 'juillet', 'julio', 'lug', 'luglio', 'julho'],
-    7: ['aug', 'august', 'août', 'ago', 'agosto'],
-    8: ['sep', 'september', 'sept', 'septembre', 'septiembre', 'set', 'settembre', 'setembro'],
+    2: ['MAR', 'MÄR', 'MARCH', 'MRZ', 'MÄRZ', 'MARS', 'MARS', 'MARZO', 'MARZO', 'MARÇO'],
+    3: ['APR', 'APRIL', 'APR', 'APRIL', 'AVR', 'AVRIL', 'ABR', 'ABRIL', 'APRILE'],
+    4: ['MAY', 'MAI', 'MAYO', 'MAG', 'MAGGIO', 'MAIO', 'MAJ'],
+    5: ['JUN', 'JUNE', 'JUNI', 'JUIN', 'JUNIO', 'GIU', 'GIUGNO', 'JUNHO'],
+    6: ['JUL', 'JULY', 'JULI', 'JUIL', 'JUILLET', 'JULIO', 'LUG', 'LUGLIO', 'JULHO'],
+    7: ['AUG', 'AUGUST', 'AOÛT', 'AGO', 'AGOSTO'],
+    8: ['SEP', 'SEPTEMBER', 'SEPT', 'SEPTEMBRE', 'SEPTIEMBRE', 'SET', 'SETTEMBRE', 'SETEMBRO'],
     9: [
-        'oct',
-        'october',
-        'okt',
-        'oktober',
-        'octobre',
-        'octubre',
-        'ott',
-        'ottobre',
-        'out',
-        'outubro'
+        'OCT',
+        'OCTOBER',
+        'OKT',
+        'OKTOBER',
+        'OCTOBRE',
+        'OCTUBRE',
+        'OTT',
+        'OTTOBRE',
+        'OUT',
+        'OUTUBRO'
     ],
-    10: ['nov', 'november', 'november', 'novembre', 'noviembre', 'novembre', 'novembro'],
+    10: ['NOV', 'NOVEMBER', 'NOVEMBER', 'NOVEMBRE', 'NOVIEMBRE', 'NOVEMBRE', 'NOVEMBRO'],
     11: [
-        'dec',
-        'december',
-        'dez',
-        'des',
-        'dezember',
-        'déc',
-        'décembre',
-        'dic',
-        'diciembre',
-        'dicembre',
-        'desember',
-        'dezembro'
+        'DEC',
+        'DECEMBER',
+        'DEZ',
+        'DES',
+        'DEZEMBER',
+        'DÉC',
+        'DÉCEMBRE',
+        'DIC',
+        'DICIEMBRE',
+        'DICEMBRE',
+        'DESEMBER',
+        'DEZEMBRO'
     ]
 };
 const shortMonthKey = {};
@@ -2666,6 +2666,9 @@ each(MONTHS, function (abbr, m) {
 });
 
 rx.MMM = { parse: new RegExp('(' + flatten(values(MONTHS)).join('|') + ')') };
+
+const ISO8601_REG =
+    /^(?:([1-9]\d{3})(-?)(?:(0\d|1[012]))\2(0\d|1\d|2\d|3[01]))T([01]\d|2[0-3])(:?)([0-5]\d)(?:\6([0-5]\d)(?:\.(\d{3}))?)?(Z|[+-][01]\d(?:\6[0-5]\d)?)$/;
 
 each(rx, function (r) {
     r.parse = r.parse.source;
@@ -2823,10 +2826,8 @@ var knownFormats = {
         precision: 'day-minutes'
     },
     ISO8601: {
-        test: /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d(\.\d+)?([+-][0-2]\d:[0-5]\d|Z)/,
-        parse: function (str) {
-            return str;
-        },
+        test: ISO8601_REG,
+        parse: ISO8601_REG,
         precision: 'day-seconds'
     }
 };
@@ -2860,8 +2861,8 @@ function dateFromIsoWeek(year, week, day) {
 }
 
 function hour(hr, amPm) {
-    if (hr !== 12) return hr + (amPm === 'pm' ? 12 : 0);
-    return amPm === 'am' ? 0 : 12;
+    if (hr !== 12) return hr + (amPm === 'PM' ? 12 : 0);
+    return amPm === 'AM' ? 0 : 12;
 }
 
 function date (sample) {
@@ -2875,7 +2876,7 @@ function date (sample) {
     each(knownFormats, function (format, key) {
         each(sample, function (n) {
             if (matches[key] === undefined) matches[key] = 0;
-            if (test(n, key)) {
+            if (test(String(n).toUpperCase(), key)) {
                 matches[key] += 1;
                 if (matches[key] > bestMatch[1]) {
                     bestMatch[0] = key;
@@ -2885,7 +2886,6 @@ function date (sample) {
         });
     });
     format = bestMatch[0];
-
     // public interface
     const type = {
         parse: function (raw) {
@@ -2895,7 +2895,7 @@ function date (sample) {
                 return raw;
             }
 
-            var m = parse(raw.toLowerCase(), format);
+            var m = parse(raw.toUpperCase(), format);
 
             if (!m) {
                 errors++;
@@ -2991,7 +2991,11 @@ function date (sample) {
                     );
 
                 case 'ISO8601':
-                    return new Date(m.toUpperCase());
+                    return new Date(
+                        `${m[1]}-${m[3]}-${m[4]}T${m[5]}:${m[7]}:${m[8] || '00'}.${m[9] || '000'}${
+                            m[10] || ''
+                        }`
+                    );
 
                 default:
                     console.warn('unknown format', format);
