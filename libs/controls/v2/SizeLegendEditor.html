@@ -36,12 +36,14 @@
             {labelWidth}
             label="{__('controls / legend / size-legend-values')}"
             options="{legendValuesOptions}"
+            uid="legend-values-toggle"
         />
 
         {#if value.legendValues === 'custom'}
         <TextControl
             label="{__('controls / legend / size-legend-custom-values')}"
             placeholder="1,3,10"
+            uid="legend-values-custom"
             bind:value="legendValuesCustom"
         />
         {/if}
@@ -339,7 +341,7 @@
 
                 value.legendValuesCustom = legendValuesCustom;
             } else if (
-                (changed.legendValuesCustom && !current.legendValuesCustom) ||
+                (changed.legendValuesCustom && current.legendValuesCustom === '') ||
                 current.value.legendValues === 'auto'
             ) {
                 // unset custom values
