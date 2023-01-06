@@ -55,7 +55,6 @@ module.exports = async () => {
             // first take some screenshots
             action: 'png',
             params: {
-                delay: 500,
                 sizes: [
                     {
                         zoom: 2,

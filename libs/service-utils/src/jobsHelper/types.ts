@@ -29,23 +29,14 @@ type PdfJobData = {
         | 'fullVector'
         | 'ligatures'
         | 'dark'
-    > &
-        Partial<Pick<Parameters<ExportPrint['pdf']>[0], 'delay'>>;
+    >;
 };
 
 type SvgJobData = {
     format: ExportFormat.SVG;
     options: Pick<
         Parameters<ExportPrint['svg']>[0],
-        | 'width'
-        | 'height'
-        | 'plain'
-        | 'logo'
-        | 'logoId'
-        | 'fullVector'
-        | 'delay'
-        | 'dark'
-        | 'transparent'
+        'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'dark' | 'transparent'
     >;
 };
 

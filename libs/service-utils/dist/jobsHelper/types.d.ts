@@ -11,11 +11,11 @@ export declare enum ExportFormat {
 }
 declare type PdfJobData = {
     format: ExportFormat.PDF;
-    options: Pick<Parameters<ExportPrint['pdf']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'unit' | 'scale' | 'border' | 'transparent' | 'colorMode' | 'fullVector' | 'ligatures' | 'dark'> & Partial<Pick<Parameters<ExportPrint['pdf']>[0], 'delay'>>;
+    options: Pick<Parameters<ExportPrint['pdf']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'unit' | 'scale' | 'border' | 'transparent' | 'colorMode' | 'fullVector' | 'ligatures' | 'dark'>;
 };
 declare type SvgJobData = {
     format: ExportFormat.SVG;
-    options: Pick<Parameters<ExportPrint['svg']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'delay' | 'dark' | 'transparent'>;
+    options: Pick<Parameters<ExportPrint['svg']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'dark' | 'transparent'>;
 };
 declare type PngJobData = {
     format: ExportFormat.PNG;
