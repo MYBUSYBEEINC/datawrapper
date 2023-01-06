@@ -103,7 +103,11 @@ type ChartAction = {
     };
 };
 
-type ServerEventName = 'CHART_EXPORT' | 'CHART_EXPORT_STREAM';
+type ServerEventName =
+    | 'CHART_EXPORT_SYNC'
+    | 'CHART_EXPORT_PUBLISH'
+    | 'CHART_EXPORT_ASYNC'
+    | 'CHART_EXPORT_STREAM';
 type ServerEvents = {
     [Key in ServerEventName]: Key;
 };

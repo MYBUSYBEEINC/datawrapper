@@ -57,7 +57,7 @@ declare type ChartAction = {
         data: Record<string, unknown>;
     };
 };
-declare type ServerEventName = 'CHART_EXPORT' | 'CHART_EXPORT_STREAM';
+declare type ServerEventName = 'CHART_EXPORT_SYNC' | 'CHART_EXPORT_PUBLISH' | 'CHART_EXPORT_ASYNC' | 'CHART_EXPORT_STREAM';
 declare type ServerEvents = {
     [Key in ServerEventName]: Key;
 };

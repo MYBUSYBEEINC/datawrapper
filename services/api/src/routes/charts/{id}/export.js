@@ -202,7 +202,7 @@ async function exportChart(request, h) {
 
         events
             .emit(
-                event.CHART_EXPORT,
+                event.CHART_EXPORT_ASYNC,
                 {
                     chart,
                     user,
@@ -210,8 +210,7 @@ async function exportChart(request, h) {
                     priority: 5,
                     data: payload,
                     auth,
-                    logger,
-                    returnAsStream: false
+                    logger
                 },
                 { filter: res => res.status === 'success' && res.data }
             )
@@ -246,7 +245,7 @@ async function exportChart(request, h) {
 
     try {
         const results = await events.emit(
-            event.CHART_EXPORT,
+            event.CHART_EXPORT_SYNC,
             {
                 chart,
                 user,

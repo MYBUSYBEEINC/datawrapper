@@ -87,17 +87,17 @@ test('Guests not allowed to export PNG', async t => {
     t.is(res.statusCode, 401);
 });
 
-test('POST /export/{format} returns an error thrown by CHART_EXPORT', async t => {
+test('POST /export/{format} returns an error thrown by CHART_EXPORT_SYNC', async t => {
     const chart = await createChart();
 
     function mockChartExportListener({ data }) {
         if (data.id === chart.id) {
-            throw new CodedError('teapot', 'Test CHART_EXPORT error');
+            throw new CodedError('teapot', 'Test CHART_EXPORT_SYNC error');
         }
     }
 
     const { events, event } = t.context.server.app;
-    events.on(event.CHART_EXPORT, mockChartExportListener);
+    events.on(event.CHART_EXPORT_SYNC, mockChartExportListener);
 
     try {
         // Start an asynchronous export.
@@ -112,14 +112,14 @@ test('POST /export/{format} returns an error thrown by CHART_EXPORT', async t =>
             payload: {}
         });
         t.is(res.statusCode, 418);
-        t.is(res.result.message, 'Test CHART_EXPORT error');
+        t.is(res.result.message, 'Test CHART_EXPORT_SYNC error');
     } finally {
-        events.off(event.CHART_EXPORT, mockChartExportListener);
+        events.off(event.CHART_EXPORT_SYNC, mockChartExportListener);
         await destroy(chart);
     }
 });
 
-test('POST /export/{format}/async/{exportId} streams the result of CHART_EXPORT once it finishes', async t => {
+test('POST /export/{format}/async/{exportId} streams the result of CHART_EXPORT_ASYNC once it finishes', async t => {
     const CHART_EXPORT_SLEEP_MS = 50;
 
     const chart = await createChart();
@@ -164,8 +164,8 @@ test('POST /export/{format}/async/{exportId} streams the result of CHART_EXPORT 
 
     // Add two listener that each handles different export format to test that the API chooses the
     // result that matches the passed format.
-    events.on(event.CHART_EXPORT, mockChartExportPDFListener);
-    events.on(event.CHART_EXPORT, mockChartExportPNGListener);
+    events.on(event.CHART_EXPORT_ASYNC, mockChartExportPDFListener);
+    events.on(event.CHART_EXPORT_ASYNC, mockChartExportPNGListener);
 
     events.on(event.CHART_EXPORT_STREAM, mockChartExportStreamListener);
 
@@ -196,7 +196,7 @@ test('POST /export/{format}/async/{exportId} streams the result of CHART_EXPORT 
         });
         t.is(resCheck1.statusCode, 425);
 
-        // Wait until our mock CHART_EXPORT listener finishes.
+        // Wait until our mock CHART_EXPORT_ASYNC listener finishes.
         let resCheck2;
         for (let i = 0; i < 3; i++) {
             await new Promise(resolve => setTimeout(resolve, CHART_EXPORT_SLEEP_MS));
@@ -219,23 +219,24 @@ test('POST /export/{format}/async/{exportId} streams the result of CHART_EXPORT 
         t.is(resCheck2.result, 'Test PNG data');
         t.is(resCheck2.headers['content-type'], 'application/x.test-chart-export-mime');
     } finally {
-        events.off(event.CHART_EXPORT, mockChartExportPDFListener);
-        events.off(event.CHART_EXPORT, mockChartExportPNGListener);
+        events.off(event.CHART_EXPORT_ASYNC, mockChartExportPDFListener);
+        events.off(event.CHART_EXPORT_ASYNC, mockChartExportPNGListener);
+        events.off(event.CHART_EXPORT_STREAM, mockChartExportStreamListener);
         await destroy(chart);
     }
 });
 
-test('POST /export/{format}/async/{exportId} returns an error thrown by CHART_EXPORT', async t => {
+test('POST /export/{format}/async/{exportId} returns an error thrown by CHART_EXPORT_ASYNC', async t => {
     const chart = await createChart();
 
     function mockChartExportListener({ data }) {
         if (data.id === chart.id) {
-            throw new CodedError('teapot', 'Test CHART_EXPORT error');
+            throw new CodedError('teapot', 'Test CHART_EXPORT_ASYNC error');
         }
     }
 
     const { events, event } = t.context.server.app;
-    events.on(event.CHART_EXPORT, mockChartExportListener);
+    events.on(event.CHART_EXPORT_ASYNC, mockChartExportListener);
 
     try {
         // Start an asynchronous export.
@@ -253,7 +254,7 @@ test('POST /export/{format}/async/{exportId} returns an error thrown by CHART_EX
         const checkUrl = resAsync.result.url;
 
         // The check if the export has finished should be unsuccessful, because our mock
-        // CHART_EXPORT listener immediately threw an error.
+        // CHART_EXPORT_ASYNC listener immediately threw an error.
         const resCheck = await t.context.server.inject({
             method: 'GET',
             url: checkUrl,
@@ -264,9 +265,9 @@ test('POST /export/{format}/async/{exportId} returns an error thrown by CHART_EX
             }
         });
         t.is(resCheck.statusCode, 418);
-        t.is(resCheck.result.message, 'Test CHART_EXPORT error');
+        t.is(resCheck.result.message, 'Test CHART_EXPORT_ASYNC error');
     } finally {
-        events.off(event.CHART_EXPORT, mockChartExportListener);
+        events.off(event.CHART_EXPORT_ASYNC, mockChartExportListener);
         await destroy(chart);
     }
 });
