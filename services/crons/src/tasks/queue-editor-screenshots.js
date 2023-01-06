@@ -1,17 +1,12 @@
-const { requireConfig } = require('@datawrapper/backend-utils');
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
-const { Chart, ExportJob } = require('@datawrapper/orm/db');
 
-const config = requireConfig();
-// const logger = require('../logger');
-
-module.exports = async () => {
+module.exports = async ({ config, db }) => {
     // prepare statement to compute seconds since last edit
     const nowMinus70Seconds = SQ.fn('DATE_ADD', SQ.fn('NOW'), SQ.literal('INTERVAL -70 SECOND'));
 
     // retreive charts
-    const editedCharts = await Chart.findAll({
+    const editedCharts = await db.models.chart.findAll({
         attributes: [
             'id',
             'author_id',
@@ -141,7 +136,7 @@ module.exports = async () => {
     });
 
     if (newJobs.length) {
-        await ExportJob.bulkCreate(newJobs);
+        await db.models.export_job.bulkCreate(newJobs);
         // logger.info(`queued ${newJobs.length} new edit-screenshot jobs`);
     }
 };

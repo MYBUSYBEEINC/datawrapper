@@ -7,6 +7,7 @@ const CatboxMemory = require('@hapi/catbox-memory');
 const { initORM } = require('@datawrapper/orm');
 const { Plugin } = require('@datawrapper/orm/db');
 const Redis = require('ioredis');
+const { createJobsHelper } = require('./jobs');
 
 const config = requireConfig();
 
@@ -46,8 +47,24 @@ module.exports = async function ({ db } = {}) {
 
     await cacheConnection.start();
 
+    const taskOptions = {
+        cron,
+        logger,
+        db,
+        createCache(options, segment) {
+            return new Catbox.Policy(options, cacheConnection, segment);
+        },
+        redis,
+        jobsHelper: createJobsHelper({
+            ExportJob: db.models.export_job,
+            config,
+            logger
+        }),
+        config
+    };
+
     const schedule = (taskName, cronExpression, func) =>
-        cron.schedule(cronExpression, (...args) => func(...args), undefined, taskName);
+        cron.schedule(cronExpression, (...args) => func(taskOptions, ...args), undefined, taskName);
 
     const scheduleFromFile = (cronExpression, filename) =>
         schedule(filename, cronExpression, require(`./tasks/${filename}`));
@@ -136,15 +153,9 @@ module.exports = async function ({ db } = {}) {
 
             logger.info(`hooked in plugin ${name}...`);
             plugin.register({
-                cron,
-                logger,
-                db,
-                createCache(options, segment) {
-                    return new Catbox.Policy(options, cacheConnection, segment);
-                },
-                redis,
+                ...taskOptions,
                 config: {
-                    global: config,
+                    global: taskOptions.config,
                     plugin: pluginFinalConfig
                 }
             });

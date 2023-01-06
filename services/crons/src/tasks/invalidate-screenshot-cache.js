@@ -1,22 +1,14 @@
-const { requireConfig } = require('@datawrapper/backend-utils');
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
-const { ExportJob } = require('@datawrapper/orm/db');
-const { createJobsHelper } = require('../jobs');
-const logger = require('../logger');
 
-const config = requireConfig();
-
-module.exports = async () => {
+module.exports = async ({ config, db, jobsHelper, logger }) => {
     const cfg = config.crons.screenshots || {};
     if (!cfg.cloudflare) return;
-
-    const jobsHelper = createJobsHelper();
 
     // prepare statement to compute seconds since job completion
     const nowMinus70Seconds = SQ.fn('DATE_ADD', SQ.fn('NOW'), SQ.literal('INTERVAL -70 SECOND'));
 
-    const jobs = await ExportJob.findAll({
+    const jobs = await db.models.export_job.findAll({
         where: {
             [Op.and]: [
                 // job was edit-screenshot
