@@ -61,6 +61,7 @@ export type Server = Extend<
             computeFileGlobHash(fileGlob: string): Promise<string>;
             config(): Config;
             config<TKey extends keyof Config>(key: TKey): Config[TKey];
+            getDB(): DB;
             getJobsHelper(): JobsHelper;
             getModel<TKey extends keyof DBModels>(name: TKey): DBModels[TKey];
             getScopes(admin?: boolean): string[];

@@ -1,3 +1,4 @@
+const { requireConfig } = require('@datawrapper/backend-utils');
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
 const { User, Chart, AccessToken } = require('@datawrapper/orm/db');
@@ -5,7 +6,7 @@ const got = require('got');
 const {
     api: apiConfig,
     crons: { screenshots: shotConfig }
-} = require('../config');
+} = requireConfig();
 const { S3Client, ListObjectsCommand, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
 const { rm } = require('fs/promises');
 const { join } = require('path');

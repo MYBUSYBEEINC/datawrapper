@@ -226,14 +226,17 @@ export class RenderNetworkClient {
 
         switch (jobData.export.format) {
             case ExportFormat.PDF:
-                tasks.push({
-                    action: jobData.export.format,
-                    params: {
-                        ...jobData.export.options,
-                        mode: jobData.export.options.colorMode,
-                        out: filename
-                    }
-                });
+                {
+                    const { colorMode, ...pdfOptions } = jobData.export.options;
+                    tasks.push({
+                        action: jobData.export.format,
+                        params: {
+                            ...pdfOptions,
+                            mode: colorMode,
+                            out: filename
+                        }
+                    });
+                }
                 break;
             case ExportFormat.SVG:
                 tasks.push({

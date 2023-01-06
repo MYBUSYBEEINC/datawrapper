@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+const { requireConfig } = require('@datawrapper/backend-utils');
 const { initORM } = require('@datawrapper/orm');
-const config = require('../src/config');
+const config = requireConfig();
 
 initORM(config).then(function({ db }) {
 	const task = process.argv[2];

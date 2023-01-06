@@ -2,8 +2,9 @@
 /* eslint-env node */
 /* eslint no-console: "off" */
 const chalk = require('chalk');
+const { requireConfig } = require('@datawrapper/backend-utils');
 const { initORM } = require('@datawrapper/orm');
-const config = require('../src/config');
+const config = requireConfig();
 
 initORM(config).then(({ db }) => {
     // add missing tables without touching existing ones

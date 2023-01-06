@@ -1,7 +1,8 @@
+const { requireConfig } = require('@datawrapper/backend-utils');
 const { ExportJob } = require('@datawrapper/orm/db');
 const { JobsHelper } = require('@datawrapper/service-utils');
 const { Queue, QueueEvents } = require('bullmq');
-const config = require('./config');
+const config = requireConfig();
 const logger = require('./logger');
 
 exports.createJobsHelper = () =>

@@ -1,5 +1,5 @@
 const cron = require('node-cron');
-const { fetchAllPlugins } = require('@datawrapper/backend-utils');
+const { fetchAllPlugins, requireConfig } = require('@datawrapper/backend-utils');
 const { validateRedis } = require('@datawrapper/schemas/config');
 const Catbox = require('@hapi/catbox');
 const CatboxRedis = require('@hapi/catbox-redis');
@@ -8,14 +8,16 @@ const { initORM } = require('@datawrapper/orm');
 const { Plugin } = require('@datawrapper/orm/db');
 const Redis = require('ioredis');
 
-// initialize database
-const config = require('./config');
+const config = requireConfig();
 
-module.exports = async function () {
+module.exports = async function ({ db } = {}) {
     const logger = require('./logger');
 
-    const { db, registerPlugins } = await initORM(config);
-    await registerPlugins(logger);
+    if (!db) {
+        const orm = await initORM(config);
+        db = orm.db;
+        await orm.registerPlugins(logger);
+    }
 
     // register api plugins with core db
     Plugin.register('datawrapper-api', Object.keys(config.plugins));
@@ -44,6 +46,12 @@ module.exports = async function () {
 
     await cacheConnection.start();
 
+    const schedule = (taskName, cronExpression, func) =>
+        cron.schedule(cronExpression, (...args) => func(...args), undefined, taskName);
+
+    const scheduleFromFile = (cronExpression, filename) =>
+        schedule(filename, cronExpression, require(`./tasks/${filename}`));
+
     logger.info('Initializing crons...');
 
     //
@@ -51,52 +59,52 @@ module.exports = async function () {
     //
 
     // queue export jobs for recently edited charts every minute
-    cron.schedule('* * * * *', require('./tasks/queue-editor-screenshots'));
+    scheduleFromFile('* * * * *', 'queue-editor-screenshots');
 
     // invalidate cloudflare cache for recently created chart screenshots
-    cron.schedule('* * * * *', require('./tasks/invalidate-screenshot-cache'));
+    scheduleFromFile('* * * * *', 'invalidate-screenshot-cache');
 
     // collect some stats about charts
     const chartStats = require('./tasks/chart-stats');
-    cron.schedule('* * * * *', chartStats.minutely);
-    cron.schedule('0 * * * *', chartStats.hourly);
-    cron.schedule('0 0 * * *', chartStats.daily);
-    cron.schedule('0 0 * * 0', chartStats.weekly);
-    cron.schedule('0 0 1 * *', chartStats.monthly);
+    schedule('chart-stats-minutely', '* * * * *', chartStats.minutely);
+    schedule('chart-stats-hourly', '0 * * * *', chartStats.hourly);
+    schedule('chart-stats-daily', '0 0 * * *', chartStats.daily);
+    schedule('chart-stats-weekly', '0 0 * * 0', chartStats.weekly);
+    schedule('chart-stats-monthly', '0 0 1 * *', chartStats.monthly);
 
     // collect some stats about users and teams
     const userTeamStats = require('./tasks/user-team-stats');
-    cron.schedule('0 0 * * *', userTeamStats.daily);
-    cron.schedule('0 0 * * 0', userTeamStats.weekly);
-    cron.schedule('0 0 1 * *', userTeamStats.monthly);
+    schedule('user-team-stats-daily', '0 0 * * *', userTeamStats.daily);
+    schedule('user-team-stats-weekly', '0 0 * * 0', userTeamStats.weekly);
+    schedule('user-team-stats-monthly', '0 0 1 * *', userTeamStats.monthly);
 
     // collect stats for export-jobs every hour
     const exportJobStats = require('./tasks/export-job-stats');
-    cron.schedule('0 0 * * *', exportJobStats.daily);
-    cron.schedule('0 * * * *', exportJobStats.hourly);
-    cron.schedule('* * * * *', exportJobStats.minutely);
+    schedule('export-job-stats-daily', '0 0 * * *', exportJobStats.daily);
+    schedule('export-job-stats-hourly', '0 * * * *', exportJobStats.hourly);
+    schedule('export-job-stats-minutely', '* * * * *', exportJobStats.minutely);
 
     // collect some stats about api tokens (at 1am)
     const apiTokenStats = require('./tasks/api-token-stats');
-    cron.schedule('0 1 * * *', apiTokenStats.daily);
-    cron.schedule('0 1 * * 0', apiTokenStats.weekly);
-    cron.schedule('0 1 1 * *', apiTokenStats.monthly);
+    schedule('api-token-stats-daily', '0 1 * * *', apiTokenStats.daily);
+    schedule('api-token-stats-weekly', '0 1 * * 0', apiTokenStats.weekly);
+    schedule('api-token-stats-monthly', '0 1 1 * *', apiTokenStats.monthly);
 
     // remove expired products from users, every 5 minutes
-    cron.schedule('*/5 * * * *', require('./tasks/remove-expired-products'));
+    scheduleFromFile('*/5 * * * *', 'remove-expired-products');
     // remove expired password reset tokens, every day at 3am
-    cron.schedule('0 3 * * *', require('./tasks/remove-expired-pwd-reset-tokens'));
+    scheduleFromFile('0 3 * * *', 'remove-expired-pwd-reset-tokens');
     // remove old export jobs day at 2am
-    cron.schedule('0 2 * * *', require('./tasks/remove-old-export-jobs'));
+    scheduleFromFile('0 2 * * *', 'remove-old-export-jobs');
     // remove expired sessions every day at 3:05 am
-    cron.schedule('5 3 * * *', require('./tasks/remove-expired-sessions'));
-    cron.schedule('5 3 * * *', require('./tasks/remove-admin-sessions'));
+    scheduleFromFile('5 3 * * *', 'remove-expired-sessions');
+    scheduleFromFile('5 3 * * *', 'remove-admin-sessions');
 
     // hourly remove login tokens older than 1h
-    cron.schedule('0 * * * *', require('./tasks/remove-expired-login-tokens'));
+    scheduleFromFile('0 * * * *', 'remove-expired-login-tokens');
 
     const runTestCleanup = require('./tasks/run-test-cleanup');
-    cron.schedule('23 14 * * * *', () => runTestCleanup().catch(logger.error));
+    schedule('run-test-cleanup', '23 14 * * * *', () => runTestCleanup().catch(logger.error));
 
     // plugins may define crons as well
 

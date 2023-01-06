@@ -82,6 +82,17 @@ async function setup(options) {
         }
     });
 
+    server.injectWithSession = ({ session, ...rest }) =>
+        server.inject({
+            ...rest,
+            headers: {
+                ...rest.headers,
+                cookie: `DW-SESSION=${session.id}; crumb=abc`,
+                'X-CSRF-Token': 'abc',
+                referer: 'http://localhost'
+            }
+        });
+
     return server;
 }
 

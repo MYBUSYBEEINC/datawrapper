@@ -1,7 +1,9 @@
+const { requireConfig } = require('@datawrapper/backend-utils');
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
 const { Chart, ExportJob } = require('@datawrapper/orm/db');
-const config = require('../config');
+
+const config = requireConfig();
 // const logger = require('../logger');
 
 module.exports = async () => {

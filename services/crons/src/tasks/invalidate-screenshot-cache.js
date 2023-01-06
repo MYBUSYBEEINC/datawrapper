@@ -1,9 +1,11 @@
+const { requireConfig } = require('@datawrapper/backend-utils');
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
 const { ExportJob } = require('@datawrapper/orm/db');
-const config = require('../config');
 const { createJobsHelper } = require('../jobs');
 const logger = require('../logger');
+
+const config = requireConfig();
 
 module.exports = async () => {
     const cfg = config.crons.screenshots || {};
