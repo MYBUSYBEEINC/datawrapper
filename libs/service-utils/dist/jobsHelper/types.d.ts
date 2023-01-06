@@ -9,16 +9,20 @@ export declare enum ExportFormat {
     PNG = "png",
     SVG = "svg"
 }
+export declare type Filename<TFormat extends ExportFormat> = `${string}.${TFormat}`;
 declare type PdfJobData = {
     format: ExportFormat.PDF;
+    filename: Filename<ExportFormat.PDF>;
     options: Pick<Parameters<ExportPrint['pdf']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'unit' | 'scale' | 'border' | 'transparent' | 'colorMode' | 'fullVector' | 'ligatures' | 'dark'>;
 };
 declare type SvgJobData = {
     format: ExportFormat.SVG;
+    filename: Filename<ExportFormat.SVG>;
     options: Pick<Parameters<ExportPrint['svg']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'dark' | 'transparent'>;
 };
 declare type PngJobData = {
     format: ExportFormat.PNG;
+    filename: Filename<ExportFormat.PNG>;
     options: {
         width: number;
         height: number | 'auto';
@@ -44,16 +48,16 @@ export declare type ExportChartJobData = {
     export: PdfJobData | SvgJobData | PngJobData;
     publish?: {
         teamId: string | null;
-        outFile: string;
+        outDir: string;
     };
     save?: {
         s3?: {
             bucket: string;
-            path: string;
+            dirPath: string;
             acl: 'private' | 'public-read';
         };
         file?: {
-            out: string;
+            outDir: string;
         };
     };
 };

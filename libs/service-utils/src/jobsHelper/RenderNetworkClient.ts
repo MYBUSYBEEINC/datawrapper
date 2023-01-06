@@ -1,9 +1,11 @@
 import type { ExportJobModel } from '@datawrapper/orm';
 import type { ExportJob } from '@datawrapper/orm/db';
 import type { ExportPrint } from '@datawrapper/shared/exportPrintTypes';
+import path from 'node:path';
 import {
     ExportChartJobData,
     ExportFormat,
+    Filename,
     InvalidateCloudflareJobData,
     JobCompletionError,
     JobCreationResult,
@@ -12,10 +14,8 @@ import {
 
 type ExportJobType = typeof ExportJob;
 
-type Filename = `export.${ExportFormat}`;
-
 type ChartPdfExportTaskOptions = {
-    out: Filename;
+    out: Filename<ExportFormat.PDF>;
     mode: Parameters<ExportPrint['pdf']>[0]['colorMode'];
 } & Pick<
     Parameters<ExportPrint['pdf']>[0],
@@ -35,7 +35,7 @@ type ChartPdfExportTaskOptions = {
     Partial<Pick<Parameters<ExportPrint['pdf']>[0], 'delay'>>;
 
 type ChartSvgExportTaskOptions = {
-    out: Filename;
+    out: Filename<ExportFormat.SVG>;
 } & Pick<
     Parameters<ExportPrint['svg']>[0],
     | 'width'
@@ -53,7 +53,7 @@ type ChartPngExportTaskOptions = {
     sizes: {
         width: number;
         height: number | 'auto';
-        out: Filename;
+        out: Filename<ExportFormat.PNG>;
         zoom: number;
         plain: boolean;
         transparent: boolean;
@@ -74,13 +74,29 @@ type Task =
     | GenericTask<'pdf', ChartPdfExportTaskOptions>
     | GenericTask<'png', ChartPngExportTaskOptions>
     | GenericTask<'svg', ChartSvgExportTaskOptions>
-    | GenericTask<'border', { image: Filename; out: Filename; padding: number; color: string }>
-    | GenericTask<'exif', { image: Filename; tags: Record<string, string> }>
-    | GenericTask<'file', { file: Filename; out: string }>
-    | GenericTask<'publish', { file: Filename; teamId: string | null; outFile: string }>
+    | GenericTask<
+          'border',
+          {
+              image: Filename<ExportFormat.PNG>;
+              out: Filename<ExportFormat.PNG>;
+              padding: number;
+              color: string;
+          }
+      >
+    | GenericTask<'exif', { image: Filename<ExportFormat.PNG>; tags: Record<string, string> }>
+    | GenericTask<'file', { file: Filename<ExportFormat>; out: string }>
+    | GenericTask<
+          'publish',
+          { file: Filename<ExportFormat>; teamId: string | null; outFile: string }
+      >
     | GenericTask<
           's3',
-          { file: Filename; bucket: string; path: string; acl: 'private' | 'public-read' }
+          {
+              file: Filename<ExportFormat>;
+              bucket: string;
+              path: string;
+              acl: 'private' | 'public-read';
+          }
       >;
 
 export type ExportJobOptions = {
@@ -222,7 +238,6 @@ export class RenderNetworkClient {
         options: TOptions
     ) {
         const tasks: Task[] = [];
-        const filename = `export.${jobData.export.format}` as const;
 
         switch (jobData.export.format) {
             case ExportFormat.PDF:
@@ -233,7 +248,7 @@ export class RenderNetworkClient {
                         params: {
                             ...pdfOptions,
                             mode: colorMode,
-                            out: filename
+                            out: jobData.export.filename
                         }
                     });
                 }
@@ -243,7 +258,7 @@ export class RenderNetworkClient {
                     action: jobData.export.format,
                     params: {
                         ...jobData.export.options,
-                        out: filename
+                        out: jobData.export.filename
                     }
                 });
                 break;
@@ -254,7 +269,7 @@ export class RenderNetworkClient {
                         sizes: [
                             {
                                 ...jobData.export.options,
-                                out: filename
+                                out: jobData.export.filename
                             }
                         ]
                     }
@@ -264,8 +279,8 @@ export class RenderNetworkClient {
                         action: 'border',
                         params: {
                             ...jobData.export.border,
-                            image: filename,
-                            out: filename
+                            image: jobData.export.filename,
+                            out: jobData.export.filename
                         }
                     });
                 }
@@ -274,7 +289,7 @@ export class RenderNetworkClient {
                         action: 'exif',
                         params: {
                             ...jobData.export.exif,
-                            image: filename
+                            image: jobData.export.filename
                         }
                     });
                 }
@@ -287,8 +302,9 @@ export class RenderNetworkClient {
             tasks.push({
                 action: 'publish',
                 params: {
-                    ...jobData.publish,
-                    file: filename
+                    file: jobData.export.filename,
+                    teamId: jobData.publish.teamId,
+                    outFile: path.join(jobData.publish.outDir, jobData.export.filename)
                 }
             });
         }
@@ -297,8 +313,8 @@ export class RenderNetworkClient {
             tasks.push({
                 action: 'file',
                 params: {
-                    ...jobData.save.file,
-                    file: filename
+                    file: jobData.export.filename,
+                    out: path.join(jobData.save.file.outDir, jobData.export.filename)
                 }
             });
         }
@@ -307,8 +323,10 @@ export class RenderNetworkClient {
             tasks.push({
                 action: 's3',
                 params: {
-                    ...jobData.save.s3,
-                    file: filename
+                    acl: jobData.save.s3.acl,
+                    bucket: jobData.save.s3.bucket,
+                    file: jobData.export.filename,
+                    path: `${jobData.save.s3.dirPath}/${jobData.export.filename}`
                 }
             });
         }

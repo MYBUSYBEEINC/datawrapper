@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderNetworkClient = void 0;
+const node_path_1 = __importDefault(require("node:path"));
 const types_1 = require("./types");
 const waitForJobCompletion = (job, maxSecondsInQueue) => {
     // todo keep request open until result
@@ -91,7 +95,6 @@ class RenderNetworkClient {
     }
     async scheduleChartExport(jobData, options) {
         const tasks = [];
-        const filename = `export.${jobData.export.format}`;
         switch (jobData.export.format) {
             case types_1.ExportFormat.PDF:
                 {
@@ -101,7 +104,7 @@ class RenderNetworkClient {
                         params: {
                             ...pdfOptions,
                             mode: colorMode,
-                            out: filename
+                            out: jobData.export.filename
                         }
                     });
                 }
@@ -111,7 +114,7 @@ class RenderNetworkClient {
                     action: jobData.export.format,
                     params: {
                         ...jobData.export.options,
-                        out: filename
+                        out: jobData.export.filename
                     }
                 });
                 break;
@@ -122,7 +125,7 @@ class RenderNetworkClient {
                         sizes: [
                             {
                                 ...jobData.export.options,
-                                out: filename
+                                out: jobData.export.filename
                             }
                         ]
                     }
@@ -132,8 +135,8 @@ class RenderNetworkClient {
                         action: 'border',
                         params: {
                             ...jobData.export.border,
-                            image: filename,
-                            out: filename
+                            image: jobData.export.filename,
+                            out: jobData.export.filename
                         }
                     });
                 }
@@ -142,7 +145,7 @@ class RenderNetworkClient {
                         action: 'exif',
                         params: {
                             ...jobData.export.exif,
-                            image: filename
+                            image: jobData.export.filename
                         }
                     });
                 }
@@ -154,8 +157,9 @@ class RenderNetworkClient {
             tasks.push({
                 action: 'publish',
                 params: {
-                    ...jobData.publish,
-                    file: filename
+                    file: jobData.export.filename,
+                    teamId: jobData.publish.teamId,
+                    outFile: node_path_1.default.join(jobData.publish.outDir, jobData.export.filename)
                 }
             });
         }
@@ -163,8 +167,8 @@ class RenderNetworkClient {
             tasks.push({
                 action: 'file',
                 params: {
-                    ...jobData.save.file,
-                    file: filename
+                    file: jobData.export.filename,
+                    out: node_path_1.default.join(jobData.save.file.outDir, jobData.export.filename)
                 }
             });
         }
@@ -172,8 +176,10 @@ class RenderNetworkClient {
             tasks.push({
                 action: 's3',
                 params: {
-                    ...jobData.save.s3,
-                    file: filename
+                    acl: jobData.save.s3.acl,
+                    bucket: jobData.save.s3.bucket,
+                    file: jobData.export.filename,
+                    path: `${jobData.save.s3.dirPath}/${jobData.export.filename}`
                 }
             });
         }

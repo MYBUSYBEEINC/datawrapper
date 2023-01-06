@@ -12,8 +12,11 @@ export enum ExportFormat {
     SVG = 'svg'
 }
 
+export type Filename<TFormat extends ExportFormat> = `${string}.${TFormat}`;
+
 type PdfJobData = {
     format: ExportFormat.PDF;
+    filename: Filename<ExportFormat.PDF>;
     options: Pick<
         Parameters<ExportPrint['pdf']>[0],
         | 'width'
@@ -34,6 +37,7 @@ type PdfJobData = {
 
 type SvgJobData = {
     format: ExportFormat.SVG;
+    filename: Filename<ExportFormat.SVG>;
     options: Pick<
         Parameters<ExportPrint['svg']>[0],
         'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'dark' | 'transparent'
@@ -42,6 +46,7 @@ type SvgJobData = {
 
 type PngJobData = {
     format: ExportFormat.PNG;
+    filename: Filename<ExportFormat.PNG>;
     options: {
         width: number;
         height: number | 'auto';
@@ -70,16 +75,16 @@ export type ExportChartJobData = {
     export: PdfJobData | SvgJobData | PngJobData;
     publish?: {
         teamId: string | null;
-        outFile: string;
+        outDir: string;
     };
     save?: {
         s3?: {
             bucket: string;
-            path: string;
+            dirPath: string;
             acl: 'private' | 'public-read';
         };
         file?: {
-            out: string;
+            outDir: string;
         };
     };
 };
