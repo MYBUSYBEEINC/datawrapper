@@ -14,7 +14,7 @@ export enum ExportFormat {
 
 export type Filename<TFormat extends ExportFormat> = `${string}.${TFormat}`;
 
-type PdfJobData = {
+export type PdfJobData = {
     format: ExportFormat.PDF;
     filename: Filename<ExportFormat.PDF>;
     options: Pick<
@@ -35,7 +35,7 @@ type PdfJobData = {
     >;
 };
 
-type SvgJobData = {
+export type SvgJobData = {
     format: ExportFormat.SVG;
     filename: Filename<ExportFormat.SVG>;
     options: Pick<
@@ -44,7 +44,7 @@ type SvgJobData = {
     >;
 };
 
-type PngJobData = {
+export type PngJobData = {
     format: ExportFormat.PNG;
     filename: Filename<ExportFormat.PNG>;
     options: {
@@ -69,23 +69,31 @@ type PngJobData = {
     };
 };
 
+export type AnyFormatJobData = PdfJobData | SvgJobData | PngJobData;
+
+export type ExportFilesPublishOptions = {
+    teamId: string | null;
+    outDir: string;
+};
+
+export type ExportFilesS3Options = {
+    bucket: string;
+    dirPath: string;
+    acl: 'private' | 'public-read';
+};
+
+export type ExportFilesSaveOptions = {
+    outDir: string;
+};
+
 export type ExportChartJobData = {
     chartId: string;
     userId: number;
-    export: PdfJobData | SvgJobData | PngJobData;
-    publish?: {
-        teamId: string | null;
-        outDir: string;
-    };
+    exports: AnyFormatJobData[];
+    publish?: ExportFilesPublishOptions;
     save?: {
-        s3?: {
-            bucket: string;
-            dirPath: string;
-            acl: 'private' | 'public-read';
-        };
-        file?: {
-            outDir: string;
-        };
+        s3?: ExportFilesS3Options;
+        file?: ExportFilesSaveOptions;
     };
 };
 

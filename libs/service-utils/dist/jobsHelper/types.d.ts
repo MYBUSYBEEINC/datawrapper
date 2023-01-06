@@ -10,17 +10,17 @@ export declare enum ExportFormat {
     SVG = "svg"
 }
 export declare type Filename<TFormat extends ExportFormat> = `${string}.${TFormat}`;
-declare type PdfJobData = {
+export declare type PdfJobData = {
     format: ExportFormat.PDF;
     filename: Filename<ExportFormat.PDF>;
     options: Pick<Parameters<ExportPrint['pdf']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'unit' | 'scale' | 'border' | 'transparent' | 'colorMode' | 'fullVector' | 'ligatures' | 'dark'>;
 };
-declare type SvgJobData = {
+export declare type SvgJobData = {
     format: ExportFormat.SVG;
     filename: Filename<ExportFormat.SVG>;
     options: Pick<Parameters<ExportPrint['svg']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'dark' | 'transparent'>;
 };
-declare type PngJobData = {
+export declare type PngJobData = {
     format: ExportFormat.PNG;
     filename: Filename<ExportFormat.PNG>;
     options: {
@@ -42,23 +42,27 @@ declare type PngJobData = {
         tags: Record<string, string>;
     };
 };
+export declare type AnyFormatJobData = PdfJobData | SvgJobData | PngJobData;
+export declare type ExportFilesPublishOptions = {
+    teamId: string | null;
+    outDir: string;
+};
+export declare type ExportFilesS3Options = {
+    bucket: string;
+    dirPath: string;
+    acl: 'private' | 'public-read';
+};
+export declare type ExportFilesSaveOptions = {
+    outDir: string;
+};
 export declare type ExportChartJobData = {
     chartId: string;
     userId: number;
-    export: PdfJobData | SvgJobData | PngJobData;
-    publish?: {
-        teamId: string | null;
-        outDir: string;
-    };
+    exports: AnyFormatJobData[];
+    publish?: ExportFilesPublishOptions;
     save?: {
-        s3?: {
-            bucket: string;
-            dirPath: string;
-            acl: 'private' | 'public-read';
-        };
-        file?: {
-            outDir: string;
-        };
+        s3?: ExportFilesS3Options;
+        file?: ExportFilesSaveOptions;
     };
 };
 declare type JobCompletionErrorCode = 'failed' | 'timeout';

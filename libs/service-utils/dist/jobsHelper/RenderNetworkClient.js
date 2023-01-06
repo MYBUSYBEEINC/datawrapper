@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderNetworkClient = void 0;
+const lodash_1 = require("lodash");
 const node_path_1 = __importDefault(require("node:path"));
 const types_1 = require("./types");
 const waitForJobCompletion = (job, maxSecondsInQueue) => {
@@ -36,6 +37,82 @@ const waitForJobCompletion = (job, maxSecondsInQueue) => {
         })();
     });
 };
+const createPdfTasks = (exports) => exports.map(data => {
+    const { colorMode, ...pdfOptions } = data.options;
+    return {
+        action: 'pdf',
+        params: {
+            ...pdfOptions,
+            mode: colorMode,
+            out: data.filename
+        }
+    };
+});
+const createSvgTasks = (exports) => exports.map(data => ({
+    action: 'svg',
+    params: {
+        ...data.options,
+        out: data.filename
+    }
+}));
+const createPngTasks = (exports) => [
+    {
+        action: 'png',
+        params: {
+            sizes: exports.map(data => ({
+                ...data.options,
+                out: data.filename
+            })) ?? []
+        }
+    },
+    ...exports.flatMap(data => {
+        const subTasks = [];
+        if (data.border) {
+            subTasks.push({
+                action: 'border',
+                params: {
+                    ...data.border,
+                    image: data.filename,
+                    out: data.filename
+                }
+            });
+        }
+        if (data.exif) {
+            subTasks.push({
+                action: 'exif',
+                params: {
+                    ...data.exif,
+                    image: data.filename
+                }
+            });
+        }
+        return subTasks;
+    })
+];
+const createExportFilePublishTasks = (publishOptions, filenames) => filenames.map(filename => ({
+    action: 'publish',
+    params: {
+        file: filename,
+        teamId: publishOptions.teamId,
+        outFile: node_path_1.default.join(publishOptions.outDir, filename)
+    }
+}));
+const createExportFileSaveTasks = (saveOptions, filenames) => filenames.map(filename => ({
+    action: 'file',
+    params: {
+        file: filename,
+        out: node_path_1.default.join(saveOptions.outDir, filename)
+    }
+}));
+const createExportFileS3Tasks = (s3Options, filenames) => filenames.map(filename => ({
+    action: 's3',
+    params: {
+        acl: s3Options.acl,
+        bucket: s3Options.bucket,
+        file: filename,
+        path: `${s3Options.dirPath}/${filename}`
+    }
+}));
 class RenderNetworkClient {
     ExportJob;
     constructor(ExportJob) {
@@ -94,99 +171,33 @@ class RenderNetworkClient {
         }, options);
     }
     async scheduleChartExport(jobData, options) {
-        const tasks = [];
-        switch (jobData.export.format) {
-            case types_1.ExportFormat.PDF:
-                {
-                    const { colorMode, ...pdfOptions } = jobData.export.options;
-                    tasks.push({
-                        action: jobData.export.format,
-                        params: {
-                            ...pdfOptions,
-                            mode: colorMode,
-                            out: jobData.export.filename
-                        }
-                    });
-                }
-                break;
-            case types_1.ExportFormat.SVG:
-                tasks.push({
-                    action: jobData.export.format,
-                    params: {
-                        ...jobData.export.options,
-                        out: jobData.export.filename
-                    }
-                });
-                break;
-            case types_1.ExportFormat.PNG:
-                tasks.push({
-                    action: jobData.export.format,
-                    params: {
-                        sizes: [
-                            {
-                                ...jobData.export.options,
-                                out: jobData.export.filename
-                            }
-                        ]
-                    }
-                });
-                if (jobData.export.border) {
-                    tasks.push({
-                        action: 'border',
-                        params: {
-                            ...jobData.export.border,
-                            image: jobData.export.filename,
-                            out: jobData.export.filename
-                        }
-                    });
-                }
-                if (jobData.export.exif) {
-                    tasks.push({
-                        action: 'exif',
-                        params: {
-                            ...jobData.export.exif,
-                            image: jobData.export.filename
-                        }
-                    });
-                }
-                break;
-            default:
-                throw new Error('Unsupported format');
-        }
-        if (jobData.publish) {
-            tasks.push({
-                action: 'publish',
-                params: {
-                    file: jobData.export.filename,
-                    teamId: jobData.publish.teamId,
-                    outFile: node_path_1.default.join(jobData.publish.outDir, jobData.export.filename)
-                }
-            });
-        }
-        if (jobData.save?.file) {
-            tasks.push({
-                action: 'file',
-                params: {
-                    file: jobData.export.filename,
-                    out: node_path_1.default.join(jobData.save.file.outDir, jobData.export.filename)
-                }
-            });
-        }
-        if (jobData.save?.s3) {
-            tasks.push({
-                action: 's3',
-                params: {
-                    acl: jobData.save.s3.acl,
-                    bucket: jobData.save.s3.bucket,
-                    file: jobData.export.filename,
-                    path: `${jobData.save.s3.dirPath}/${jobData.export.filename}`
-                }
-            });
-        }
+        const exportFilenames = jobData.exports.map(({ filename }) => filename);
+        const publishOptions = jobData.publish;
+        const saveOptions = jobData.save?.file;
+        const s3Options = jobData.save?.s3;
+        const exportsByType = (0, lodash_1.groupBy)(jobData.exports, data => data.format);
         return await this.create({
             chartId: jobData.chartId,
             userId: jobData.userId,
-            tasks
+            tasks: [
+                ...Object.keys(exportsByType).flatMap(format => {
+                    switch (format) {
+                        case types_1.ExportFormat.PDF:
+                            return createPdfTasks(exportsByType[format]);
+                        case types_1.ExportFormat.SVG:
+                            return createSvgTasks(exportsByType[format]);
+                        case types_1.ExportFormat.PNG:
+                            return createPngTasks(exportsByType[format]);
+                        default:
+                            throw new Error(`Unsupported format ${format}`);
+                    }
+                }),
+                ...(publishOptions
+                    ? createExportFilePublishTasks(publishOptions, exportFilenames)
+                    : []),
+                ...(saveOptions ? createExportFileSaveTasks(saveOptions, exportFilenames) : []),
+                ...(s3Options ? createExportFileS3Tasks(s3Options, exportFilenames) : [])
+            ]
         }, options);
     }
 }
