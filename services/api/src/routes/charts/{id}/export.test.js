@@ -90,8 +90,8 @@ test('Guests not allowed to export PNG', async t => {
 test('POST /export/{format} returns an error thrown by CHART_EXPORT_SYNC', async t => {
     const chart = await createChart();
 
-    function mockChartExportListener({ data }) {
-        if (data.id === chart.id) {
+    function mockChartExportListener({ chart: eventChart }) {
+        if (eventChart.id === chart.id) {
             throw new CodedError('teapot', 'Test CHART_EXPORT_SYNC error');
         }
     }
@@ -124,15 +124,15 @@ test('POST /export/{format}/async/{exportId} streams the result of CHART_EXPORT_
 
     const chart = await createChart();
 
-    function mockChartExportPDFListener({ data }) {
-        if (data.id === chart.id && data.format === 'pdf') {
+    function mockChartExportPDFListener({ chart: eventChart, data }) {
+        if (eventChart.id === chart.id && data.format === 'pdf') {
             return 'Test PDF data';
         }
         return undefined;
     }
 
-    function mockChartExportPNGListener({ data }) {
-        if (data.id === chart.id && data.format === 'png') {
+    function mockChartExportPNGListener({ chart: eventChart, data }) {
+        if (eventChart.id === chart.id && data.format === 'png') {
             return new Promise(resolve =>
                 setTimeout(
                     () =>
@@ -229,8 +229,8 @@ test('POST /export/{format}/async/{exportId} streams the result of CHART_EXPORT_
 test('POST /export/{format}/async/{exportId} returns an error thrown by CHART_EXPORT_ASYNC', async t => {
     const chart = await createChart();
 
-    function mockChartExportListener({ data }) {
-        if (data.id === chart.id) {
+    function mockChartExportListener({ chart: eventChart }) {
+        if (eventChart.id === chart.id) {
             throw new CodedError('teapot', 'Test CHART_EXPORT_ASYNC error');
         }
     }

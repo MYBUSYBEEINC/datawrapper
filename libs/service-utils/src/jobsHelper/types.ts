@@ -92,8 +92,8 @@ export type ExportChartJobData = {
     exports: AnyFormatJobData[];
     publish?: ExportFilesPublishOptions;
     save?: {
-        s3?: ExportFilesS3Options;
-        file?: ExportFilesSaveOptions;
+        s3?: ExportFilesS3Options | undefined;
+        file?: ExportFilesSaveOptions | undefined;
     };
 };
 

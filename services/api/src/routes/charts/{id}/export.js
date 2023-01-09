@@ -157,6 +157,7 @@ module.exports = server => {
 
 async function exportChart(request, h) {
     const { query, payload, params, auth, logger, server, headers } = request;
+    const { format } = params;
     const { events, event } = server.app;
     const user = auth.artifacts;
 
@@ -172,13 +173,12 @@ async function exportChart(request, h) {
 
     // user is authorized to access chart
     // further authoritzation is handled by plugins
-    Object.assign(payload, params);
 
     if (!headers.origin) {
         try {
             // refresh external data
             await server.inject({
-                url: `/v3/charts/${payload.id}/data/refresh`,
+                url: `/v3/charts/${chart.id}/data/refresh`,
                 method: 'POST',
                 auth,
                 headers
@@ -206,9 +206,9 @@ async function exportChart(request, h) {
                 {
                     chart,
                     user,
-                    key: `export-${payload.format}`,
+                    key: `export-${format}`,
                     priority: 5,
-                    data: payload,
+                    data: { ...payload, format },
                     auth,
                     logger
                 },
@@ -239,7 +239,7 @@ async function exportChart(request, h) {
             });
 
         return {
-            url: `/v3/charts/${chart.id}/export/${params.format}/async/${exportId}`
+            url: `/v3/charts/${chart.id}/export/${format}/async/${exportId}`
         };
     }
 
@@ -249,10 +249,10 @@ async function exportChart(request, h) {
             {
                 chart,
                 user,
-                key: `export-${payload.format}`,
+                key: `export-${format}`,
                 priority: 5,
                 maxSecondsInQueue: 10,
-                data: payload,
+                data: { ...payload, format },
                 auth,
                 logger
             },
@@ -263,7 +263,7 @@ async function exportChart(request, h) {
 
         const result = results[0].data;
 
-        await request.server.methods.logAction(user.id, `chart/export/${params.format}`, params.id);
+        await request.server.methods.logAction(user.id, `chart/export/${format}`, params.id);
 
         return streamExportResult({ h, query, params, result });
     } catch (error) {
