@@ -1,12 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderNetworkClient = void 0;
 const lodash_1 = require("lodash");
-const node_path_1 = __importDefault(require("node:path"));
-const types_1 = require("./types");
+const types_1 = require("../types");
+const tasks_1 = require("./tasks");
 const waitForJobCompletion = (job, maxSecondsInQueue) => {
     // todo keep request open until result
     const deadline = Date.now() + (maxSecondsInQueue ?? 0) * 1000;
@@ -37,82 +34,6 @@ const waitForJobCompletion = (job, maxSecondsInQueue) => {
         })();
     });
 };
-const createPdfTasks = (exports) => exports.map(data => {
-    const { colorMode, ...pdfOptions } = data.options;
-    return {
-        action: 'pdf',
-        params: {
-            ...pdfOptions,
-            mode: colorMode,
-            out: data.filename
-        }
-    };
-});
-const createSvgTasks = (exports) => exports.map(data => ({
-    action: 'svg',
-    params: {
-        ...data.options,
-        out: data.filename
-    }
-}));
-const createPngTasks = (exports) => [
-    {
-        action: 'png',
-        params: {
-            sizes: exports.map(data => ({
-                ...data.options,
-                out: data.filename
-            })) ?? []
-        }
-    },
-    ...exports.flatMap(data => {
-        const subTasks = [];
-        if (data.border) {
-            subTasks.push({
-                action: 'border',
-                params: {
-                    ...data.border,
-                    image: data.filename,
-                    out: data.filename
-                }
-            });
-        }
-        if (data.exif) {
-            subTasks.push({
-                action: 'exif',
-                params: {
-                    ...data.exif,
-                    image: data.filename
-                }
-            });
-        }
-        return subTasks;
-    })
-];
-const createExportFilePublishTasks = (publishOptions, filenames) => filenames.map(filename => ({
-    action: 'publish',
-    params: {
-        file: filename,
-        teamId: publishOptions.teamId,
-        outFile: node_path_1.default.join(publishOptions.outDir, filename)
-    }
-}));
-const createExportFileSaveTasks = (saveOptions, filenames) => filenames.map(filename => ({
-    action: 'file',
-    params: {
-        file: filename,
-        out: node_path_1.default.join(saveOptions.outDir, filename)
-    }
-}));
-const createExportFileS3Tasks = (s3Options, filenames) => filenames.map(filename => ({
-    action: 's3',
-    params: {
-        acl: s3Options.acl,
-        bucket: s3Options.bucket,
-        file: filename,
-        path: `${s3Options.dirPath}/${filename}`
-    }
-}));
 class RenderNetworkClient {
     ExportJob;
     constructor(ExportJob) {
@@ -160,14 +81,7 @@ class RenderNetworkClient {
         return await this.create({
             chartId,
             userId,
-            tasks: [
-                {
-                    action: 'cloudflare',
-                    params: {
-                        urls
-                    }
-                }
-            ]
+            tasks: [(0, tasks_1.createCloudflareInvalidateTask)(urls)]
         }, options);
     }
     async scheduleChartExport(jobData, options) {
@@ -183,20 +97,20 @@ class RenderNetworkClient {
                 ...Object.keys(exportsByType).flatMap(format => {
                     switch (format) {
                         case types_1.ExportFormat.PDF:
-                            return createPdfTasks(exportsByType[format]);
+                            return (0, tasks_1.createPdfTasks)(exportsByType[format]);
                         case types_1.ExportFormat.SVG:
-                            return createSvgTasks(exportsByType[format]);
+                            return (0, tasks_1.createSvgTasks)(exportsByType[format]);
                         case types_1.ExportFormat.PNG:
-                            return createPngTasks(exportsByType[format]);
+                            return (0, tasks_1.createPngTasks)(exportsByType[format]);
                         default:
                             throw new Error(`Unsupported format ${format}`);
                     }
                 }),
                 ...(publishOptions
-                    ? createExportFilePublishTasks(publishOptions, exportFilenames)
+                    ? (0, tasks_1.createExportFilePublishTasks)(publishOptions, exportFilenames)
                     : []),
-                ...(saveOptions ? createExportFileSaveTasks(saveOptions, exportFilenames) : []),
-                ...(s3Options ? createExportFileS3Tasks(s3Options, exportFilenames) : [])
+                ...(saveOptions ? (0, tasks_1.createExportFileSaveTasks)(saveOptions, exportFilenames) : []),
+                ...(s3Options ? (0, tasks_1.createExportFileS3Tasks)(s3Options, exportFilenames) : [])
             ]
         }, options);
     }

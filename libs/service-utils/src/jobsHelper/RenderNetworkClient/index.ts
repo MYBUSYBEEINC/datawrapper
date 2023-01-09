@@ -1,122 +1,28 @@
 import type { ExportJobModel } from '@datawrapper/orm';
 import type { ExportJob } from '@datawrapper/orm/db';
-import type { ExportPrint } from '@datawrapper/shared/exportPrintTypes';
 import { groupBy } from 'lodash';
-import path from 'node:path';
 import {
     AnyFormatJobData,
     ExportChartJobData,
-    ExportFilesPublishOptions,
-    ExportFilesS3Options,
-    ExportFilesSaveOptions,
     ExportFormat,
-    Filename,
     InvalidateCloudflareJobData,
     JobCompletionError,
     JobCreationResult,
-    JobsCreationResult,
-    PdfJobData,
-    PngJobData,
-    SvgJobData
-} from './types';
+    JobsCreationResult
+} from '../types';
+import {
+    createCloudflareInvalidateTask,
+    createExportFilePublishTasks,
+    createExportFileS3Tasks,
+    createExportFileSaveTasks,
+    createPdfTasks,
+    createPngTasks,
+    createSvgTasks
+} from './tasks';
+import type { ExportJobOptions, JobData } from './types';
+export type { ExportJobOptions } from './types';
 
 type ExportJobType = typeof ExportJob;
-
-type ChartPdfExportTaskOptions = {
-    out: Filename<ExportFormat.PDF>;
-    mode: Parameters<ExportPrint['pdf']>[0]['colorMode'];
-} & Pick<
-    Parameters<ExportPrint['pdf']>[0],
-    | 'width'
-    | 'height'
-    | 'plain'
-    | 'logo'
-    | 'logoId'
-    | 'unit'
-    | 'scale'
-    | 'border'
-    | 'transparent'
-    | 'fullVector'
-    | 'ligatures'
-    | 'dark'
-> &
-    Partial<Pick<Parameters<ExportPrint['pdf']>[0], 'delay'>>;
-
-type ChartSvgExportTaskOptions = {
-    out: Filename<ExportFormat.SVG>;
-} & Pick<
-    Parameters<ExportPrint['svg']>[0],
-    | 'width'
-    | 'height'
-    | 'plain'
-    | 'logo'
-    | 'logoId'
-    | 'fullVector'
-    | 'delay'
-    | 'dark'
-    | 'transparent'
->;
-
-type ChartPngExportTaskOptions = {
-    sizes: {
-        width: number;
-        height: number | 'auto';
-        out: Filename<ExportFormat.PNG>;
-        zoom: number;
-        plain: boolean;
-        transparent: boolean;
-        published?: boolean;
-        logo: string | undefined;
-        logoId: string | undefined;
-        dark: boolean;
-    }[];
-};
-
-type GenericTask<TAction extends string, TParams> = {
-    action: TAction;
-    params: TParams;
-};
-
-type Task =
-    | GenericTask<'cloudflare', { urls: string[] }>
-    | GenericTask<'pdf', ChartPdfExportTaskOptions>
-    | GenericTask<'png', ChartPngExportTaskOptions>
-    | GenericTask<'svg', ChartSvgExportTaskOptions>
-    | GenericTask<
-          'border',
-          {
-              image: Filename<ExportFormat.PNG>;
-              out: Filename<ExportFormat.PNG>;
-              padding: number;
-              color: string;
-          }
-      >
-    | GenericTask<'exif', { image: Filename<ExportFormat.PNG>; tags: Record<string, string> }>
-    | GenericTask<'file', { file: Filename<ExportFormat>; out: string }>
-    | GenericTask<
-          'publish',
-          { file: Filename<ExportFormat>; teamId: string | null; outFile: string }
-      >
-    | GenericTask<
-          's3',
-          {
-              file: Filename<ExportFormat>;
-              bucket: string;
-              path: string;
-              acl: 'private' | 'public-read';
-          }
-      >;
-
-export type ExportJobOptions = {
-    key: string;
-    priority: number;
-};
-
-type JobData = {
-    chartId: string | null;
-    userId: number | null;
-    tasks: Task[];
-};
 
 const waitForJobCompletion = (job: ExportJobModel, maxSecondsInQueue: number | undefined) => {
     // todo keep request open until result
@@ -154,106 +60,6 @@ const waitForJobCompletion = (job: ExportJobModel, maxSecondsInQueue: number | u
         })();
     });
 };
-
-const createPdfTasks = (exports: PdfJobData[]): Task[] =>
-    exports.map(data => {
-        const { colorMode, ...pdfOptions } = data.options;
-        return {
-            action: 'pdf',
-            params: {
-                ...pdfOptions,
-                mode: colorMode,
-                out: data.filename
-            }
-        };
-    });
-
-const createSvgTasks = (exports: SvgJobData[]): Task[] =>
-    exports.map(data => ({
-        action: 'svg',
-        params: {
-            ...data.options,
-            out: data.filename
-        }
-    }));
-
-const createPngTasks = (exports: PngJobData[]): Task[] => [
-    {
-        action: 'png',
-        params: {
-            sizes:
-                exports.map(data => ({
-                    ...data.options,
-                    out: data.filename
-                })) ?? []
-        }
-    },
-    ...exports.flatMap(data => {
-        const subTasks: Task[] = [];
-
-        if (data.border) {
-            subTasks.push({
-                action: 'border',
-                params: {
-                    ...data.border,
-                    image: data.filename,
-                    out: data.filename
-                }
-            });
-        }
-
-        if (data.exif) {
-            subTasks.push({
-                action: 'exif',
-                params: {
-                    ...data.exif,
-                    image: data.filename
-                }
-            });
-        }
-
-        return subTasks;
-    })
-];
-
-const createExportFilePublishTasks = (
-    publishOptions: ExportFilesPublishOptions,
-    filenames: Filename<ExportFormat>[]
-): Task[] =>
-    filenames.map(filename => ({
-        action: 'publish',
-        params: {
-            file: filename,
-            teamId: publishOptions.teamId,
-            outFile: path.join(publishOptions.outDir, filename)
-        }
-    }));
-
-const createExportFileSaveTasks = (
-    saveOptions: ExportFilesSaveOptions,
-    filenames: Filename<ExportFormat>[]
-): Task[] =>
-    filenames.map(filename => ({
-        action: 'file',
-        params: {
-            file: filename,
-            out: path.join(saveOptions.outDir, filename)
-        }
-    }));
-
-const createExportFileS3Tasks = (
-    s3Options: ExportFilesS3Options,
-    filenames: Filename<ExportFormat>[]
-): Task[] =>
-    filenames.map(filename => ({
-        action: 's3',
-        params: {
-            acl: s3Options.acl,
-            bucket: s3Options.bucket,
-            file: filename,
-            path: `${s3Options.dirPath}/${filename}`
-        }
-    }));
 
 export class RenderNetworkClient {
     private readonly ExportJob: ExportJobType;
@@ -328,14 +134,7 @@ export class RenderNetworkClient {
             {
                 chartId,
                 userId,
-                tasks: [
-                    {
-                        action: 'cloudflare',
-                        params: {
-                            urls
-                        }
-                    }
-                ]
+                tasks: [createCloudflareInvalidateTask(urls)]
             },
             options
         );

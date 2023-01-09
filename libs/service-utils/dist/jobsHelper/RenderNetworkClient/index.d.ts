@@ -1,10 +1,8 @@
 import type { ExportJob } from '@datawrapper/orm/db';
-import { ExportChartJobData, InvalidateCloudflareJobData } from './types';
+import { ExportChartJobData, InvalidateCloudflareJobData } from '../types';
+import type { ExportJobOptions } from './types';
+export type { ExportJobOptions } from './types';
 declare type ExportJobType = typeof ExportJob;
-export declare type ExportJobOptions = {
-    key: string;
-    priority: number;
-};
 export declare class RenderNetworkClient {
     private readonly ExportJob;
     constructor(ExportJob: ExportJobType);
@@ -20,4 +18,3 @@ export declare class RenderNetworkClient {
         getResult(maxSecondsInQueue?: number | undefined): Promise<void>;
     }>;
 }
-export {};
