@@ -7,7 +7,7 @@ dw.visualization.register('dummy', function () {
          */
         render(el) {
             const themeData = this.theme();
-            el.innerHTML = `<div style="background:#dddddd; padding:5em; font-size:30px;text-align:center;color:#bbb;">
+            el.innerHTML = `<div style="background:#dddddd; padding:3em 5em; font-size:30px;text-align:center;color:#bbb;">
                 Visualization<br>Placeholder
                 <div class="rotate-limit">${themeData.colors?.mode?.rotateLimit ?? 0}</div>
                 <span class="label legend-text">First label</span>

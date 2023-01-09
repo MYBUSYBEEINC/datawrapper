@@ -915,19 +915,20 @@ Please make sure you called __(key) with a key of type "string".
         height: 100%;
     }
 
+    :global(.chart.dir-rtl) {
+        :global(.dw-chart-header),
+        :global(.dw-below-header),
+        :global(.dw-above-footer),
+        :global(.dw-below-footer),
+        .dw-chart-footer {
+            direction: rtl;
+            unicode-bidi: embed;
+        }
+    }
+
     :global(.chart) {
         height: 100%;
 
-        &.dir-rtl {
-            :global(.dw-chart-header),
-            :global(.dw-below-header),
-            :global(.dw-above-footer),
-            :global(.dw-below-footer),
-            .dw-chart-footer {
-                direction: rtl;
-                unicode-bidi: embed;
-            }
-        }
         &.is-dark-mode :global(.hide-in-dark) {
             display: none;
         }
@@ -960,30 +961,30 @@ Please make sure you called __(key) with a key of type "string".
             display: none;
         }
 
-        :global(.filter-ui) {
-            &.filter-links {
-                overflow-x: hidden;
-                overflow-y: hidden;
-                line-height: 28px;
+        :global(.filter-ui.filter-links) {
+            overflow-x: hidden;
+            overflow-y: hidden;
+            line-height: 28px;
 
-                :global(a) {
-                    display: inline-block;
-                    height: 28px;
-                    padding: 3px 10px;
+            :global(a) {
+                display: inline-block;
+                height: 28px;
+                padding: 3px 10px;
+                text-decoration: none;
+
+                &.active {
+                    box-shadow: none;
+                    cursor: default;
                     text-decoration: none;
-
-                    &.active {
-                        box-shadow: none;
-                        cursor: default;
-                        text-decoration: none;
-                    }
                 }
             }
+        }
 
-            &.filter-select {
-                vertical-align: middle;
-            }
+        :global(.filter-ui.filter-select) {
+            vertical-align: middle;
+        }
 
+        :global(.filter-ui) {
             :global(.point) {
                 display: inline-block;
                 position: absolute;
