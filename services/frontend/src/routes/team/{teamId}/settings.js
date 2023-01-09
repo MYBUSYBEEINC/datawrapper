@@ -209,8 +209,7 @@ module.exports = {
                     const __ = server.methods.getTranslate(request);
                     const config = server.methods.config();
 
-                    // fetch team from DB as auth.artifacts.teams[]
-                    // doesn't include team.settings
+                    // fetch team from DB as auth.artifacts.teams[] doesn't include team.settings
                     team = await Team.findByPk(params.teamId);
 
                     if (!team) throw Boom.notFound();

@@ -161,6 +161,15 @@
             }
         },
         helpers: { __ },
+        methods: {
+            init() {
+                const { settings, team } = this.get();
+                this.fire('change', {
+                    team,
+                    settings
+                });
+            }
+        },
         oncreate() {
             const settings = this.get().settings || {};
 

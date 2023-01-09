@@ -122,6 +122,15 @@
                 });
                 // store app reference for client-side hooks
                 bundle.app = _app;
+                if (typeof _app.init === 'function') {
+                    // The app can decide to implement an init function which is called as soon
+                    // as the Svelte2Wrapper has registered all event listeners.
+                    // This can be used for setup code that requires the event listeners to
+                    // be active such as setting default data.
+                    // For an example, see
+                    // https://github.com/datawrapper/code/blob/main/services/frontend/src/svelte2/team-settings/tabs/Settings.html
+                    _app.init();
+                }
                 dispatch('init', _app);
             } catch (err) {
                 console.error(err);
