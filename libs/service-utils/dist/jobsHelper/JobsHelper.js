@@ -6,8 +6,8 @@ const WorkerClient_1 = require("./WorkerClient");
 class JobsHelper {
     workerClient;
     renderNetworkClient;
-    constructor(config, Queue, QueueEvents, ExportJob, onError) {
-        this.renderNetworkClient = new RenderNetworkClient_1.RenderNetworkClient(ExportJob);
+    constructor(config, Queue, QueueEvents, db, onError) {
+        this.renderNetworkClient = new RenderNetworkClient_1.RenderNetworkClient(db);
         try {
             this.workerClient = new WorkerClient_1.WorkerClient(config, Queue, QueueEvents);
         }

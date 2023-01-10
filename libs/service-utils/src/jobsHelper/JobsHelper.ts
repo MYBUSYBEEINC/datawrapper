@@ -1,10 +1,8 @@
 import type { WorkerTypes } from '@datawrapper/backend-utils';
-import type { ExportJob } from '@datawrapper/orm/db';
+import type { DB } from '@datawrapper/orm';
 import { ExportJobOptions, RenderNetworkClient } from './RenderNetworkClient';
 import type { ExportChartJobData, InvalidateCloudflareJobData } from './types';
 import { WorkerClient, BullmqQueueEventsClass, ServerConfig } from './WorkerClient';
-
-type ExportJobType = typeof ExportJob;
 
 export class JobsHelper {
     public readonly workerClient?: WorkerClient;
@@ -14,10 +12,10 @@ export class JobsHelper {
         config: ServerConfig,
         Queue: WorkerTypes.BullmqQueueClass,
         QueueEvents: BullmqQueueEventsClass,
-        ExportJob: ExportJobType,
+        db: DB,
         onError: (e: unknown) => void
     ) {
-        this.renderNetworkClient = new RenderNetworkClient(ExportJob);
+        this.renderNetworkClient = new RenderNetworkClient(db);
         try {
             this.workerClient = new WorkerClient(config, Queue, QueueEvents);
         } catch (e) {

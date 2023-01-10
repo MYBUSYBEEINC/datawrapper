@@ -1,5 +1,4 @@
-import type { ExportJobModel } from '@datawrapper/orm';
-import type { ExportJob } from '@datawrapper/orm/db';
+import type { DB, ExportJobModel } from '@datawrapper/orm';
 import { groupBy } from 'lodash';
 import {
     AnyFormatJobData,
@@ -21,8 +20,6 @@ import {
 } from './tasks';
 import type { ExportJobOptions, JobData } from './types';
 export type { ExportJobOptions } from './types';
-
-type ExportJobType = typeof ExportJob;
 
 const waitForJobCompletion = (job: ExportJobModel, maxSecondsInQueue: number | undefined) => {
     // todo keep request open until result
@@ -62,17 +59,17 @@ const waitForJobCompletion = (job: ExportJobModel, maxSecondsInQueue: number | u
 };
 
 export class RenderNetworkClient {
-    private readonly ExportJob: ExportJobType;
+    private readonly db: DB;
 
-    constructor(ExportJob: ExportJobType) {
-        this.ExportJob = ExportJob;
+    constructor(db: DB) {
+        this.db = db;
     }
 
     private async bulkCreate<TOptions extends ExportJobOptions>(
         bulkJobData: JobData[],
         options: TOptions
     ): JobsCreationResult<void> {
-        const jobs = await this.ExportJob.bulkCreate(
+        const jobs = await this.db.models.export_job.bulkCreate(
             bulkJobData.map(({ chartId, userId, tasks }) => ({
                 key: options.key,
                 priority: options.priority,
@@ -92,7 +89,7 @@ export class RenderNetworkClient {
         { chartId, userId, tasks }: JobData,
         options: TOptions
     ): JobCreationResult<void> {
-        const job = await this.ExportJob.create({
+        const job = await this.db.models.export_job.create({
             key: options.key,
             priority: options.priority,
             chart_id: chartId,

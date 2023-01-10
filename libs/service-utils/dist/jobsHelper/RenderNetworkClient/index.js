@@ -35,12 +35,12 @@ const waitForJobCompletion = (job, maxSecondsInQueue) => {
     });
 };
 class RenderNetworkClient {
-    ExportJob;
-    constructor(ExportJob) {
-        this.ExportJob = ExportJob;
+    db;
+    constructor(db) {
+        this.db = db;
     }
     async bulkCreate(bulkJobData, options) {
-        const jobs = await this.ExportJob.bulkCreate(bulkJobData.map(({ chartId, userId, tasks }) => ({
+        const jobs = await this.db.models.export_job.bulkCreate(bulkJobData.map(({ chartId, userId, tasks }) => ({
             key: options.key,
             priority: options.priority,
             chart_id: chartId,
@@ -52,7 +52,7 @@ class RenderNetworkClient {
         };
     }
     async create({ chartId, userId, tasks }, options) {
-        const job = await this.ExportJob.create({
+        const job = await this.db.models.export_job.create({
             key: options.key,
             priority: options.priority,
             chart_id: chartId,

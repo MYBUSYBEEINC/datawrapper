@@ -1,11 +1,10 @@
-import type { ExportJob } from '@datawrapper/orm/db';
+import type { DB } from '@datawrapper/orm';
 import { ExportChartJobData, InvalidateCloudflareJobData } from '../types';
 import type { ExportJobOptions } from './types';
 export type { ExportJobOptions } from './types';
-declare type ExportJobType = typeof ExportJob;
 export declare class RenderNetworkClient {
-    private readonly ExportJob;
-    constructor(ExportJob: ExportJobType);
+    private readonly db;
+    constructor(db: DB);
     private bulkCreate;
     private create;
     scheduleInvalidateCloudflareJobs<TOptions extends ExportJobOptions>(bulkJobData: InvalidateCloudflareJobData[], options: TOptions): Promise<{

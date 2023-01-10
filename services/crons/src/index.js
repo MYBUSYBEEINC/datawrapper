@@ -56,8 +56,8 @@ module.exports = async function ({ db } = {}) {
         },
         redis,
         jobsHelper: createJobsHelper({
-            ExportJob: db.models.export_job,
             config,
+            db,
             logger
         }),
         config
