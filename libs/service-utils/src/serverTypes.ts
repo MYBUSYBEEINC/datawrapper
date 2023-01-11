@@ -158,3 +158,26 @@ type ServerPlugin<TServer extends Server, TConfig> = {
 
 export type APIServerPlugin<TConfig = never> = ServerPlugin<APIServer, TConfig>;
 export type FrontendServerPlugin<TConfig = never> = ServerPlugin<FrontendServer, TConfig>;
+
+export type CronsPlugin<TConfig> = {
+    register(options: {
+        createCache: unknown;
+        cron: {
+            schedule(
+                cronExpression: string,
+                func: (now: Date | 'manual') => void,
+                options?: unknown
+            ): void;
+        };
+        db: DB;
+        event: ServerEvents;
+        events: ServiceEventEmitter<ServerEventName>;
+        jobsHelper: JobsHelper;
+        logger: pino.Logger;
+        redis: unknown;
+        config: {
+            global: Config;
+            plugin: TConfig;
+        };
+    }): Promise<void>;
+};

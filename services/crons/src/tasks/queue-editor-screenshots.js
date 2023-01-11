@@ -1,7 +1,10 @@
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
+const path = require('path');
 
-module.exports = async ({ config, db }) => {
+module.exports = async ({ config, db, event, events }) => {
+    const cfg = config.crons.screenshots;
+
     // prepare statement to compute seconds since last edit
     const nowMinus70Seconds = SQ.fn('DATE_ADD', SQ.fn('NOW'), SQ.literal('INTERVAL -70 SECOND'));
 
@@ -39,104 +42,57 @@ module.exports = async ({ config, db }) => {
     });
 
     // create export jobs for the charts
-    const newJobs = editedCharts.map(chart => {
-        const imagePath = config.crons.screenshots.path
-            ? `${chart.id}/${config.crons.screenshots.path}/`
-            : `${chart.id}/${chart.get('hash')}/`;
+    const newJobs = editedCharts.map(async chart => {
+        const imagePath = `${chart.id}/${cfg.path || chart.get('hash')}`;
 
-        const tasks = [];
-
-        tasks.push({
-            // first take some screenshots
-            action: 'png',
-            params: {
-                sizes: [
-                    {
-                        zoom: 2,
-                        width: 480,
-                        height: 360,
-                        plain: true,
-                        out: 'plain.png'
-                    },
-                    {
-                        zoom: 2,
-                        width: 540,
-                        height: 'auto',
-                        plain: false,
-                        out: 'full.png'
+        await events.emit(event.CHART_EXPORT_PUBLISH, {
+            chart,
+            exports: [
+                {
+                    compress: true,
+                    disableExif: true,
+                    filename: 'plain.png',
+                    format: 'png',
+                    height: 360,
+                    width: 480,
+                    plain: true,
+                    zoom: 2
+                },
+                {
+                    compress: true,
+                    disableExif: true,
+                    filename: 'full.png',
+                    format: 'png',
+                    height: 'auto',
+                    width: 540,
+                    plain: false,
+                    zoom: 2
+                }
+            ],
+            key: 'edit-screenshot',
+            priority: 0,
+            save: {
+                ...(!!cfg.s3 && {
+                    s3: {
+                        bucket: cfg.s3.bucket,
+                        acl: cfg.s3.acl || 'public-read',
+                        dirPath: `${cfg.s3.path ? cfg.s3.path + '/' : ''}${imagePath}`
                     }
-                ]
+                }),
+                ...(!!cfg.file && {
+                    file: {
+                        outDir: path.join(cfg.file.path, imagePath)
+                    }
+                })
+            },
+            user: {
+                id: chart.author_id
             }
         });
-
-        tasks.push({
-            action: 'compress',
-            params: { image: 'plain.png' }
-        });
-
-        tasks.push({
-            action: 'compress',
-            params: { image: 'full.png' }
-        });
-
-        // now check for other things we need to do
-        const cfg = config.crons.screenshots;
-        if (cfg.s3) {
-            // upload to S3
-            tasks.push(
-                {
-                    action: 's3',
-                    params: {
-                        file: 'plain.png',
-                        bucket: cfg.s3.bucket,
-                        acl: cfg.s3.acl || 'public-read',
-                        path: `${cfg.s3.path ? cfg.s3.path + '/' : ''}${imagePath}plain.png`
-                    }
-                },
-                {
-                    action: 's3',
-                    params: {
-                        file: 'full.png',
-                        bucket: cfg.s3.bucket,
-                        acl: cfg.s3.acl || 'public-read',
-                        path: `${cfg.s3.path ? cfg.s3.path + '/' : ''}${imagePath}full.png`
-                    }
-                }
-            );
-        }
-        if (cfg.file) {
-            // just copy the image to some local folder
-            tasks.push(
-                {
-                    action: 'file',
-                    params: {
-                        file: 'plain.png',
-                        out: cfg.file.path + '/' + imagePath + 'plain.png'
-                    }
-                },
-                {
-                    action: 'file',
-                    params: {
-                        file: 'full.png',
-                        out: cfg.file.path + '/' + imagePath + 'full.png'
-                    }
-                }
-            );
-        }
-
-        return {
-            key: 'edit-screenshot',
-            chart_id: chart.id,
-            user_id: chart.author_id,
-            created_at: new Date(),
-            status: 'queued',
-            priority: 0,
-            tasks
-        };
     });
 
     if (newJobs.length) {
-        await db.models.export_job.bulkCreate(newJobs);
+        await Promise.all(newJobs);
         // logger.info(`queued ${newJobs.length} new edit-screenshot jobs`);
     }
 };

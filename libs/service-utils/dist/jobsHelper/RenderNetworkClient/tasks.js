@@ -55,6 +55,14 @@ const createPngTasks = (exports) => [
                 }
             });
         }
+        if (data.compress) {
+            subTasks.push({
+                action: 'compress',
+                params: {
+                    image: data.filename
+                }
+            });
+        }
         if (data.exif) {
             subTasks.push({
                 action: 'exif',

@@ -38,9 +38,10 @@ export declare type PngJobData = {
         padding: number;
         color: string;
     } | undefined;
-    exif: {
+    compress: boolean;
+    exif?: {
         tags: Record<string, string>;
-    };
+    } | undefined;
 };
 export declare type AnyFormatJobData = PdfJobData | SvgJobData | PngJobData;
 export declare type ExportFilesPublishOptions = {

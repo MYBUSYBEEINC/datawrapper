@@ -65,6 +65,15 @@ export const createPngTasks = (exports: PngJobData[]): Task[] => [
             });
         }
 
+        if (data.compress) {
+            subTasks.push({
+                action: 'compress',
+                params: {
+                    image: data.filename
+                }
+            });
+        }
+
         if (data.exif) {
             subTasks.push({
                 action: 'exif',

@@ -70,6 +70,7 @@ export type Task =
               color: string;
           }
       >
+    | GenericTask<'compress', { image: Filename<ExportFormat.PNG> }>
     | GenericTask<'exif', { image: Filename<ExportFormat.PNG>; tags: Record<string, string> }>
     | GenericTask<'file', { file: Filename<ExportFormat>; out: string }>
     | GenericTask<

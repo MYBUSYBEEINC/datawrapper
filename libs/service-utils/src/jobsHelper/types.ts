@@ -64,9 +64,12 @@ export type PngJobData = {
               color: string;
           }
         | undefined;
-    exif: {
-        tags: Record<string, string>;
-    };
+    compress: boolean;
+    exif?:
+        | {
+              tags: Record<string, string>;
+          }
+        | undefined;
 };
 
 export type AnyFormatJobData = PdfJobData | SvgJobData | PngJobData;

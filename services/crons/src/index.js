@@ -7,6 +7,7 @@ const CatboxMemory = require('@hapi/catbox-memory');
 const { initORM } = require('@datawrapper/orm');
 const { Plugin } = require('@datawrapper/orm/db');
 const Redis = require('ioredis');
+const { eventList, CronsEventEmitter } = require('./events');
 const { createJobsHelper } = require('./jobs');
 
 const config = requireConfig();
@@ -55,6 +56,8 @@ module.exports = async function ({ db } = {}) {
             return new Catbox.Policy(options, cacheConnection, segment);
         },
         redis,
+        event: eventList,
+        events: new CronsEventEmitter({ logger, eventList }),
         jobsHelper: createJobsHelper({
             config,
             db,
