@@ -85,10 +85,6 @@ export type ExportFilesS3Options = {
     acl: 'private' | 'public-read';
 };
 
-export type ExportFilesSaveOptions = {
-    outDir: string;
-};
-
 export type ExportChartJobData = {
     chartId: string;
     userId: number;
@@ -96,7 +92,6 @@ export type ExportChartJobData = {
     publish?: ExportFilesPublishOptions;
     save?: {
         s3?: ExportFilesS3Options | undefined;
-        file?: ExportFilesSaveOptions | undefined;
     };
 };
 

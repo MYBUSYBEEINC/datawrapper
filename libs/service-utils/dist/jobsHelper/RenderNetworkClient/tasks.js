@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createExportFileS3Tasks = exports.createExportFileSaveTasks = exports.createExportFilePublishTasks = exports.createPngTasks = exports.createSvgTasks = exports.createPdfTasks = exports.createCloudflareInvalidateTask = void 0;
+exports.createExportFileS3Tasks = exports.createExportFilePublishTasks = exports.createPngTasks = exports.createSvgTasks = exports.createPdfTasks = exports.createCloudflareInvalidateTask = void 0;
 const node_path_1 = __importDefault(require("node:path"));
 const types_1 = require("../types");
 const createCloudflareInvalidateTask = (urls) => ({
@@ -85,14 +85,6 @@ const createExportFilePublishTasks = (publishOptions, filenames) => filenames.ma
     }
 }));
 exports.createExportFilePublishTasks = createExportFilePublishTasks;
-const createExportFileSaveTasks = (saveOptions, filenames) => filenames.map(filename => ({
-    action: 'file',
-    params: {
-        file: filename,
-        out: node_path_1.default.join(saveOptions.outDir, filename)
-    }
-}));
-exports.createExportFileSaveTasks = createExportFileSaveTasks;
 const createExportFileS3Tasks = (s3Options, filenames) => filenames.map(filename => ({
     action: 's3',
     params: {

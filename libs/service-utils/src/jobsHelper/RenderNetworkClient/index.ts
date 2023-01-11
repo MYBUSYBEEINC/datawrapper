@@ -13,7 +13,6 @@ import {
     createCloudflareInvalidateTask,
     createExportFilePublishTasks,
     createExportFileS3Tasks,
-    createExportFileSaveTasks,
     createPdfTasks,
     createPngTasks,
     createSvgTasks
@@ -143,7 +142,6 @@ export class RenderNetworkClient {
     ) {
         const exportFilenames = jobData.exports.map(({ filename }) => filename);
         const publishOptions = jobData.publish;
-        const saveOptions = jobData.save?.file;
         const s3Options = jobData.save?.s3;
         const exportsByType: {
             [key in ExportFormat]?: Extract<AnyFormatJobData, { format: key }>[];
@@ -172,7 +170,6 @@ export class RenderNetworkClient {
                     ...(publishOptions
                         ? createExportFilePublishTasks(publishOptions, exportFilenames)
                         : []),
-                    ...(saveOptions ? createExportFileSaveTasks(saveOptions, exportFilenames) : []),
                     ...(s3Options ? createExportFileS3Tasks(s3Options, exportFilenames) : [])
                 ]
             },

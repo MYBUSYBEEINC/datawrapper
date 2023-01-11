@@ -53,9 +53,6 @@ export declare type ExportFilesS3Options = {
     dirPath: string;
     acl: 'private' | 'public-read';
 };
-export declare type ExportFilesSaveOptions = {
-    outDir: string;
-};
 export declare type ExportChartJobData = {
     chartId: string;
     userId: number;
@@ -63,7 +60,6 @@ export declare type ExportChartJobData = {
     publish?: ExportFilesPublishOptions;
     save?: {
         s3?: ExportFilesS3Options | undefined;
-        file?: ExportFilesSaveOptions | undefined;
     };
 };
 declare type JobCompletionErrorCode = 'failed' | 'timeout';

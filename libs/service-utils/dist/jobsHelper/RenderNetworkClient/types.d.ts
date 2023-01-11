@@ -37,9 +37,6 @@ export declare type Task = GenericTask<'cloudflare', {
 }> | GenericTask<'exif', {
     image: Filename<ExportFormat.PNG>;
     tags: Record<string, string>;
-}> | GenericTask<'file', {
-    file: Filename<ExportFormat>;
-    out: string;
 }> | GenericTask<'publish', {
     file: Filename<ExportFormat>;
     teamId: string | null;

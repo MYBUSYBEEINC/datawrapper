@@ -87,7 +87,6 @@ class RenderNetworkClient {
     async scheduleChartExport(jobData, options) {
         const exportFilenames = jobData.exports.map(({ filename }) => filename);
         const publishOptions = jobData.publish;
-        const saveOptions = jobData.save?.file;
         const s3Options = jobData.save?.s3;
         const exportsByType = (0, lodash_1.groupBy)(jobData.exports, data => data.format);
         return await this.create({
@@ -109,7 +108,6 @@ class RenderNetworkClient {
                 ...(publishOptions
                     ? (0, tasks_1.createExportFilePublishTasks)(publishOptions, exportFilenames)
                     : []),
-                ...(saveOptions ? (0, tasks_1.createExportFileSaveTasks)(saveOptions, exportFilenames) : []),
                 ...(s3Options ? (0, tasks_1.createExportFileS3Tasks)(s3Options, exportFilenames) : [])
             ]
         }, options);

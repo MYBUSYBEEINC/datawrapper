@@ -72,7 +72,6 @@ export type Task =
       >
     | GenericTask<'compress', { image: Filename<ExportFormat.PNG> }>
     | GenericTask<'exif', { image: Filename<ExportFormat.PNG>; tags: Record<string, string> }>
-    | GenericTask<'file', { file: Filename<ExportFormat>; out: string }>
     | GenericTask<
           'publish',
           { file: Filename<ExportFormat>; teamId: string | null; outFile: string }

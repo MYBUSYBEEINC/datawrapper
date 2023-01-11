@@ -2,7 +2,6 @@ import path from 'node:path';
 import {
     ExportFilesPublishOptions,
     ExportFilesS3Options,
-    ExportFilesSaveOptions,
     ExportFormat,
     Filename,
     PdfJobData,
@@ -98,18 +97,6 @@ export const createExportFilePublishTasks = (
             file: filename,
             teamId: publishOptions.teamId,
             outFile: path.join(publishOptions.outDir, filename)
-        }
-    }));
-
-export const createExportFileSaveTasks = (
-    saveOptions: ExportFilesSaveOptions,
-    filenames: Filename<ExportFormat>[]
-): Task[] =>
-    filenames.map(filename => ({
-        action: 'file',
-        params: {
-            file: filename,
-            out: path.join(saveOptions.outDir, filename)
         }
     }));
 

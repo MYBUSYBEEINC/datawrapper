@@ -1,9 +1,12 @@
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
-const path = require('path');
 
 module.exports = async ({ config, db, event, events }) => {
     const cfg = config.crons.screenshots;
+
+    if (!cfg.s3) {
+        throw new Error('s3 is not configured');
+    }
 
     // prepare statement to compute seconds since last edit
     const nowMinus70Seconds = SQ.fn('DATE_ADD', SQ.fn('NOW'), SQ.literal('INTERVAL -70 SECOND'));
@@ -72,18 +75,11 @@ module.exports = async ({ config, db, event, events }) => {
             key: 'edit-screenshot',
             priority: 0,
             save: {
-                ...(!!cfg.s3 && {
-                    s3: {
-                        bucket: cfg.s3.bucket,
-                        acl: cfg.s3.acl || 'public-read',
-                        dirPath: `${cfg.s3.path ? cfg.s3.path + '/' : ''}${imagePath}`
-                    }
-                }),
-                ...(!!cfg.file && {
-                    file: {
-                        outDir: path.join(cfg.file.path, imagePath)
-                    }
-                })
+                s3: {
+                    bucket: cfg.s3.bucket,
+                    acl: cfg.s3.acl || 'public-read',
+                    dirPath: `${cfg.s3.path ? cfg.s3.path + '/' : ''}${imagePath}`
+                }
             },
             user: {
                 id: chart.author_id
