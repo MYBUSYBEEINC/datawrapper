@@ -87,6 +87,7 @@
                         min="{0}"
                         max="{50}"
                         unit="%"
+                        disabled="{offsetDisabled}"
                     />
                     <span>{__('controls / legend / offset / h')}</span>
                 </label>
@@ -97,6 +98,7 @@
                         min="{0}"
                         max="{50}"
                         unit="%"
+                        disabled="{offsetDisabled}"
                     />
                     <span>{__('controls / legend / offset / v')}</span>
                 </label>
@@ -104,8 +106,14 @@
         </ControlGroup>
         {/if}
 
+        <!-- show offset help  -->
+        {#if !outsideLegend && offsetDisabled}
+        <p class="mini-help">{@html __('controls / legend / offset-note')}</p>
+        {/if}
+        <!-- end -->
+
         <!-- show mobile positioning help  -->
-        {#if allowPositionInside}
+        {#if !outsideLegend}
         <p class="mini-help">{@html __('controls / legend / mobile-note')}</p>
         {/if}
         <!-- end: if allowPosition -->
@@ -184,7 +192,8 @@
                 initialTitle: null,
                 legendValuesCustom: null,
                 maxSize: null,
-                shape: 'symbolCircle'
+                shape: 'symbolCircle',
+                offsetDisabled: false
             };
         },
         helpers: {

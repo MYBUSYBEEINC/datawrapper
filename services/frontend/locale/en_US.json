@@ -1215,5 +1215,8 @@
   "controls / legend / size-legend-title-position-right": "Right",
   "controls / legend / size-legend-title-position": "Position",
   "controls / legend / invalid-shape-nested-warning": "Nested layout is not supported for all shapes.",
-  "controls / legend / size-legend-label-position-left": "Left"
+  "controls / legend / size-legend-label-position-left": "Left",
+  "controls / legend / offset-note": "Use the color legend editor to control the offset when both legends are in the same position.",
+  "controls / legend / top-center": "top center",
+  "controls / legend / bottom-center": "bottom center"
 }

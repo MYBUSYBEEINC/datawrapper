@@ -1215,5 +1215,8 @@
   "controls / legend / size-legend-title-position-right": "",
   "controls / legend / size-legend-title-position": "",
   "controls / legend / invalid-shape-nested-warning": "",
-  "controls / legend / size-legend-label-position-left": ""
+  "controls / legend / size-legend-label-position-left": "",
+  "controls / legend / offset-note": "",
+  "controls / legend / top-center": "",
+  "controls / legend / bottom-center": ""
 }

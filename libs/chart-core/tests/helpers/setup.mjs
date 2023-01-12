@@ -15,6 +15,7 @@ import Schemas from '../../../schemas/index.js';
 import { JSDOM } from 'jsdom';
 import createEmotion from '@emotion/css/create-instance';
 import createEmotionServer from '@emotion/server/create-instance';
+import { setTimeout } from 'timers/promises';
 
 const schemas = new Schemas();
 
@@ -83,7 +84,7 @@ export async function createPage(browser, viewportOpts = {}) {
  * @param {number} delay further delay render promise (useful for debugging)
  * @returns {Object[]} console log messages
  */
-export async function render(page, props) {
+export async function render(page, props, delay) {
     if (!props.visMeta) throw new Error('need to provide visMeta');
     if (props.theme) {
         console.warn('Warning: `theme` is deprecated, please use `themeData` instead');
@@ -219,6 +220,7 @@ export async function render(page, props) {
     await page.addScriptTag({
         content: await readFile(join(pathToChartCore, 'dist/main.js'), 'utf-8')
     });
+    if (delay) await setTimeout(delay);
     return logs;
 }
 
@@ -364,5 +366,41 @@ function getThemeDataDark(themeData) {
                 set(themeDataDark, key, value);
             });
         });
+
+    // emulating functionality in API
+    // https://github.com/datawrapper/code/blob/ba88779294ea9363f692fc51bdaa102a47a13101/services/api/src/routes/themes/%7Bid%7D/index.js#LL368-L387
+    set(themeDataDark, '_computed.bgLight', get(themeData, 'colors.background', '#ffffff'));
+    set(themeDataDark, '_computed.bgDark', get(themeDataDark, 'colors.background', '#ffffff'));
+    set(themeDataDark, '_computed.origGradients', get(themeData, 'colors.gradients', []));
+
     return themeDataDark;
+}
+
+/*
+ * Updates the chart with new metadata (merged with existing) and re-renders
+ * @param {Page} page
+ * @param {oject} updatedProps
+ */
+export async function updateMetadata(page, updatedProps) {
+    await page.evaluate(async updatedProps => {
+        const merge = (target, source) => {
+            // Iterate through `source` properties and if an `Object` set property to merge of `target` and `source` properties
+            for (const key of Object.keys(source)) {
+                if (source[key] instanceof Object)
+                    Object.assign(source[key], merge(target[key], source[key]));
+            }
+            // Join `target` and modified `source`
+            Object.assign(target || {}, source);
+            return target;
+        };
+
+        const newMetadata = merge(window.__dw.vis.chart().get().metadata, updatedProps);
+
+        window.__dw.vis.chart().set('metadata', newMetadata);
+
+        await window.__dw.vis.chart().load(window.__dw.params.data);
+
+        // re-render
+        window.__dw.render();
+    }, updatedProps);
 }

@@ -5,12 +5,14 @@
     defaultTitle="Default Title"
     maxSize="{maxSize}"
     shape="{shape}"
+    offsetDisabled="{offsetDisabled}"
     {rtl}
 />
 
 <hr style="margin-top: 5em" />
 <div class="helper">
     <CheckboxControl label="allow positioning inside" bind:value="allowPositionInside" />
+    <CheckboxControl label="disable offset control" bind:value="offsetDisabled" />
     <NumberControl label="max size" bind:value="maxSize" />
     <SelectControl bind:value="shape" label="shape" options="{shapeOptions}" />
     <CheckboxControl label="RTL locale" bind:value="rtl" />
@@ -41,6 +43,7 @@
                     { value: 'symbolStar', label: 'star' }
                 ],
                 rtl: false,
+                offsetDisabled: false,
                 value: {
                     enabled: true,
                     legendType: 'stacked',

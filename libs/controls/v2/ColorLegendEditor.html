@@ -164,7 +164,7 @@
                 <label>
                     <NumberInput
                         disabled="{outsideLegend}"
-                        bind:value="value.offsetLeft"
+                        bind:value="value.offsetX"
                         slider="{false}"
                         min="{0}"
                         max="{50}"
@@ -175,7 +175,7 @@
                 <label>
                     <NumberInput
                         disabled="{outsideLegend}"
-                        bind:value="value.offsetTop"
+                        bind:value="value.offsetY"
                         slider="{false}"
                         min="{0}"
                         max="{50}"
@@ -293,12 +293,38 @@
                 }
             ],
             positionOptions: [
-                { value: 'mt', label: __('controls / legend / above-vis') },
-                { value: 'tl', label: __('controls / legend / top-left'), inside: true },
-                { value: 'tr', label: __('controls / legend / top-right'), inside: true },
-                { value: 'bl', label: __('controls / legend / bottom-left'), inside: true },
-                { value: 'br', label: __('controls / legend / bottom-right'), inside: true },
-                { value: 'mb', label: __('controls / legend / below-vis') }
+                { value: 'above', label: __('controls / legend / above-vis') },
+                {
+                    value: 'inside-left-top',
+                    label: __('controls / legend / top-left'),
+                    inside: true
+                },
+                {
+                    value: 'inside-center-top',
+                    label: __('controls / legend / top-center'),
+                    inside: true
+                },
+                {
+                    value: 'inside-right-top',
+                    label: __('controls / legend / top-right'),
+                    inside: true
+                },
+                {
+                    value: 'inside-left-bottom',
+                    label: __('controls / legend / bottom-left'),
+                    inside: true
+                },
+                {
+                    value: 'inside-center-bottom',
+                    label: __('controls / legend / bottom-center'),
+                    inside: true
+                },
+                {
+                    value: 'inside-right-bottom',
+                    label: __('controls / legend / bottom-right'),
+                    inside: true
+                },
+                { value: 'below', label: __('controls / legend / below-vis') }
             ],
             discreteLabelOptions: [
                 { value: 'ruler', label: __('controls / legend / labels / ruler') },
