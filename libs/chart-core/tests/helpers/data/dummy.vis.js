@@ -18,7 +18,7 @@ dw.visualization.register('dummy', function () {
                 <span class="label inverted"><span>Another inverted inside label</span></span>
                 <span class="label inside"><span>Non-inverted inside label</span></span>
                 <span class="label inside"><span>Another non-inverted inside label</span></span>
-                </div>`;
+                </div>${this.get('custom-markup', '')}`;
             this.renderingComplete();
         }
     };

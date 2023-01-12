@@ -28,7 +28,7 @@ export function chartStyles(emotion, themeData) {
         padding: ${getProp('style.body.padding')};
         text-transform: ${getProp('typography.chart.textTransform')};
 
-        a {
+        a:not(.link-style-ignore) {
             border-bottom: ${getProp('style.body.links.border.bottom')};
             color: ${getProp('typography.links.color')};
             font-family: ${getProp('typography.links.typeface')};
@@ -39,7 +39,7 @@ export function chartStyles(emotion, themeData) {
             text-decoration: ${getProp('typography.links.underlined') ? 'underline' : 'none'};
         }
 
-        a:hover {
+        a:not(.link-style-ignore):hover {
             color: ${getProp('typography.links.hoverColor')};
         }
 
@@ -352,7 +352,7 @@ export function chartFooterStyles(emotion, themeData) {
             margin: ${getProp('options.footer.separator.margin')};
         }
 
-        a {
+        a:not(.link-style-ignore) {
             padding: ${getProp('style.footer.links.padding')};
             border-bottom: ${getProp('style.footer.links.border.bottom')};
             font-style: ${isTrue(get(themeData, 'typography.footer.cursive')) ||
