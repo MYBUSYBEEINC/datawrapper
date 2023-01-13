@@ -11,7 +11,7 @@ export function globalStyles(emotion, themeData) {
     }`;
 }
 
-export function chartStyles(emotion, themeData) {
+export function chartStyles(emotion, themeData, isStyleStatic) {
     const { css, getProp } = getThemeStyleHelpers(emotion, themeData);
     const bgCol = getProp('colors.background');
     return css`
@@ -28,20 +28,26 @@ export function chartStyles(emotion, themeData) {
         padding: ${getProp('style.body.padding')};
         text-transform: ${getProp('typography.chart.textTransform')};
 
-        a:not(.link-style-ignore) {
-            border-bottom: ${getProp('style.body.links.border.bottom')};
-            color: ${getProp('typography.links.color')};
-            font-family: ${getProp('typography.links.typeface')};
-            font-style: ${getProp('typography.links.cursive') === 1 ? 'italic' : 'normal'};
-            font-weight: ${getProp('typography.links.fontWeight')};
-            line-height: ${lineHeight(getProp('typography.links.lineHeight'))};
-            padding: ${getProp('style.body.links.padding')};
-            text-decoration: ${getProp('typography.links.underlined') ? 'underline' : 'none'};
-        }
+        ${isStyleStatic
+            ? ''
+            : `
+                a:not(.link-style-ignore) {
+                    border-bottom: ${getProp('style.body.links.border.bottom')};
+                    color: ${getProp('typography.links.color')};
+                    font-family: ${getProp('typography.links.typeface')};
+                    font-style: ${getProp('typography.links.cursive') === 1 ? 'italic' : 'normal'};
+                    font-weight: ${getProp('typography.links.fontWeight')};
+                    line-height: ${lineHeight(getProp('typography.links.lineHeight'))};
+                    padding: ${getProp('style.body.links.padding')};
+                    text-decoration: ${
+                        getProp('typography.links.underlined') ? 'underline' : 'none'
+                    };
+                }
 
-        a:not(.link-style-ignore):hover {
-            color: ${getProp('typography.links.hoverColor')};
-        }
+                a:not(.link-style-ignore):hover {
+                    color: ${getProp('typography.links.hoverColor')};
+                }
+        `}
 
         .labels text,
         .label {
@@ -295,7 +301,7 @@ export function aboveFooterStyles(emotion, themeData) {
  * @param {*} themeData
  * @returns {string} className
  */
-export function chartFooterStyles(emotion, themeData) {
+export function chartFooterStyles(emotion, themeData, isStyleStatic) {
     const { css, getProp } = getThemeStyleHelpers(emotion, themeData);
     return css`
         background: ${getProp('style.footer.background')};
@@ -351,15 +357,20 @@ export function chartFooterStyles(emotion, themeData) {
             content: ${getProp('options.footer.separator.text', '"•"')};
             margin: ${getProp('options.footer.separator.margin')};
         }
-
-        a:not(.link-style-ignore) {
-            padding: ${getProp('style.footer.links.padding')};
-            border-bottom: ${getProp('style.footer.links.border.bottom')};
-            font-style: ${isTrue(get(themeData, 'typography.footer.cursive')) ||
-            isTrue(get(themeData, 'typography.links.cursive'))
-                ? 'italic'
-                : 'normal'};
-        }
+        ${isStyleStatic
+            ? ''
+            : `
+            a:not(.link-style-ignore) {
+                padding: ${getProp('style.footer.links.padding')};
+                border-bottom: ${getProp('style.footer.links.border.bottom')};
+                font-style: ${
+                    isTrue(get(themeData, 'typography.footer.cursive')) ||
+                    isTrue(get(themeData, 'typography.links.cursive'))
+                        ? 'italic'
+                        : 'normal'
+                };
+            }
+            `}
     `;
 }
 

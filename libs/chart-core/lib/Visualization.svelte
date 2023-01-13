@@ -1117,7 +1117,6 @@ Please make sure you called __(key) with a key of type "string".
     :global(.static .chart a) {
         color: currentColor;
         text-decoration: none;
-        border-bottom: none;
         font-weight: unset;
         font-style: unset;
     }
@@ -1157,7 +1156,7 @@ Please make sure you called __(key) with a key of type "string".
 
 <div
     class:static={isStyleStatic}
-    class="dw-chart-styles {emotion ? chartStyles(emotion, $themeData) : ''}"
+    class="dw-chart-styles {emotion ? chartStyles(emotion, $themeData, isStyleStatic) : ''}"
 >
     {#if !isStylePlain}
         {#if !regions.headerRight.length}
@@ -1249,7 +1248,9 @@ Please make sure you called __(key) with a key of type "string".
 
         <div
             id="footer"
-            class="dw-chart-footer {emotion ? chartFooterStyles(emotion, $themeData) : ''}"
+            class="dw-chart-footer {emotion
+                ? chartFooterStyles(emotion, $themeData, isStyleStatic)
+                : ''}"
         >
             {#each ['Left', 'Center', 'Right'] as orientation}
                 <div
