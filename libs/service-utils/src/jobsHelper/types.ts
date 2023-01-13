@@ -53,7 +53,6 @@ export type PngJobData = {
         zoom: number;
         plain: boolean;
         transparent: boolean;
-        published?: boolean;
         logo: string | undefined;
         logoId: string | undefined;
         dark: boolean;
