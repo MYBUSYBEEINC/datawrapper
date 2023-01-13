@@ -3,7 +3,7 @@ const mime = require('mime');
 const Joi = require('joi');
 const Boom = require('@hapi/boom');
 const { noContentResponse } = require('../../../utils/schemas');
-const { Chart, ChartAccessToken } = require('@datawrapper/orm/db');
+const { AccessToken, Chart, ChartAccessToken } = require('@datawrapper/orm/db');
 
 module.exports = server => {
     // GET /v3/charts/{id}/assets/{asset}
@@ -109,19 +109,28 @@ async function getChartAsset(request, h) {
         // user is authenticated, but we still need to determine if the user has the rights to edit
         let isEditable = await chart.isEditableBy(auth.artifacts, auth.credentials.session);
 
-        if (!isEditable && query.ott) {
-            // we do not destroy the access token here, because this request might
-            // have been internally injected from the /chart/:id/publish/data endpoint
-            const count = await ChartAccessToken.count({
-                where: {
-                    chart_id: params.id,
-                    token: query.ott
-                },
-                limit: 1
-            });
+        if (!isEditable) {
+            if (query.chartExportToken) {
+                const chartIdFromToken = await AccessToken.getExportedChartId(
+                    query.chartExportToken
+                );
+                if (chartIdFromToken === params.id) {
+                    isEditable = true;
+                }
+            } else if (query.ott) {
+                // we do not destroy the access token here, because this request might
+                // have been internally injected from the /chart/:id/publish/data endpoint
+                const count = await ChartAccessToken.count({
+                    where: {
+                        chart_id: params.id,
+                        token: query.ott
+                    },
+                    limit: 1
+                });
 
-            if (count === 1) {
-                isEditable = true;
+                if (count === 1) {
+                    isEditable = true;
+                }
             }
         }
 

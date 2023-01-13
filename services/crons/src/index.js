@@ -123,6 +123,9 @@ module.exports = async function ({ db } = {}) {
     // hourly remove login tokens older than 1h
     scheduleFromFile('0 * * * *', 'remove-expired-login-tokens');
 
+    // every 12 hours remove export tokens older than 1d
+    scheduleFromFile('0 */12 * * *', 'remove-expired-export-tokens');
+
     const runTestCleanup = require('./tasks/run-test-cleanup');
     schedule('run-test-cleanup', '23 14 * * * *', () => runTestCleanup().catch(logger.error));
 

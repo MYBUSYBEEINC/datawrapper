@@ -13,6 +13,7 @@ module.exports = {
 
         const queryString = Object.entries({
             published: query.published,
+            chartExportToken: query.chartExportToken,
             ott: query.ott,
             theme: query.theme,
             transparent: query.transparent

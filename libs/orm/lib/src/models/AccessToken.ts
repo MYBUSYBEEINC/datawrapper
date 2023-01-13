@@ -12,6 +12,7 @@ import SQ, {
 } from 'sequelize';
 import generate from 'nanoid/generate';
 import User from './User';
+import type { ChartModel } from './Chart';
 
 const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
@@ -41,6 +42,34 @@ class AccessToken extends Model<
             data: data || {},
             token: generate(alphabet, 64)
         });
+    }
+
+    static async createChartExportToken(chart: ChartModel) {
+        if (!chart.author_id) {
+            throw new Error('Charts created by guests are not supported');
+        }
+
+        return this.newToken({
+            user_id: chart.author_id,
+            type: 'chart-export',
+            data: {
+                chartId: chart.id
+            }
+        });
+    }
+
+    static async getExportedChartId(token: string) {
+        const model = await this.findOne({
+            where: {
+                token,
+                type: 'chart-export'
+            }
+        });
+        if (!model) {
+            return undefined;
+        }
+
+        return model.data['chartId'] as string;
     }
 }
 

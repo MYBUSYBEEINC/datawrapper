@@ -2,6 +2,7 @@ declare const exported: import("../utils/wrap").ExportedLite<"access_token", typ
 export default exported;
 export type AccessTokenModel = InstanceType<typeof AccessToken>;
 import { CreationOptional, ForeignKey, InferAttributes, InferCreationAttributes, Model } from 'sequelize';
+import type { ChartModel } from './Chart';
 declare class AccessToken extends Model<InferAttributes<AccessToken>, InferCreationAttributes<AccessToken>> {
     id: CreationOptional<number>;
     type: string;
@@ -14,4 +15,6 @@ declare class AccessToken extends Model<InferAttributes<AccessToken>, InferCreat
         type: string;
         data?: Record<string, unknown>;
     }): Promise<AccessToken>;
+    static createChartExportToken(chart: ChartModel): Promise<AccessToken>;
+    static getExportedChartId(token: string): Promise<string | undefined>;
 }

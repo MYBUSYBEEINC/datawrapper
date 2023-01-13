@@ -129,7 +129,13 @@ async function getChartData(request, h) {
     const csvFilename = `${params.id}.${query.published ? 'public.' : ''}csv`;
     const res = await request.server.inject({
         method: 'GET',
-        url: `/v3/charts/${params.id}/assets/${csvFilename}${query.ott ? `?ott=${query.ott}` : ''}`,
+        url: `/v3/charts/${params.id}/assets/${csvFilename}${
+            query.chartExportToken
+                ? `?chartExportToken=${query.chartExportToken}`
+                : query.ott
+                ? `?ott=${query.ott}`
+                : ''
+        }`,
         auth: request.auth
     });
     if (res.statusCode !== 404 && res.result.error) {

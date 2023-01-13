@@ -42,6 +42,30 @@ class AccessToken extends sequelize_1.Model {
             token: (0, generate_1.default)(alphabet, 64)
         });
     }
+    static async createChartExportToken(chart) {
+        if (!chart.author_id) {
+            throw new Error('Charts created by guests are not supported');
+        }
+        return this.newToken({
+            user_id: chart.author_id,
+            type: 'chart-export',
+            data: {
+                chartId: chart.id
+            }
+        });
+    }
+    static async getExportedChartId(token) {
+        const model = await this.findOne({
+            where: {
+                token,
+                type: 'chart-export'
+            }
+        });
+        if (!model) {
+            return undefined;
+        }
+        return model.data['chartId'];
+    }
 }
 (0, wrap_1.setInitializer)(exported, ({ initOptions }) => {
     AccessToken.init({

@@ -27,6 +27,7 @@ module.exports = {
                     }),
                     query: Joi.object({
                         theme: Joi.string().optional(),
+                        chartExportToken: Joi.string().optional(),
                         ott: Joi.string().optional(),
                         search: Joi.string().optional(),
                         published: fakeBoolean(),

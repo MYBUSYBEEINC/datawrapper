@@ -6,6 +6,7 @@ const set = require('lodash/set');
 const uniq = require('lodash/uniq');
 const pick = require('lodash/pick');
 const {
+    AccessToken,
     Action,
     Chart,
     ChartAccessToken,
@@ -331,18 +332,25 @@ async function publishData(request) {
     } else {
         const isEditable = await chart.isEditableBy(auth.artifacts, auth.credentials.session);
         if (!isEditable) {
-            if (!query.ott) {
-                throw Boom.unauthorized();
-            }
-
-            const count = await ChartAccessToken.count({
-                where: {
-                    chart_id: params.id,
-                    token: query.ott
-                },
-                limit: 1
-            });
-            if (!count) {
+            if (query.chartExportToken) {
+                const chartIdFromToken = await AccessToken.getExportedChartId(
+                    query.chartExportToken
+                );
+                if (chartIdFromToken !== params.id) {
+                    throw Boom.unauthorized();
+                }
+            } else if (query.ott) {
+                const count = await ChartAccessToken.count({
+                    where: {
+                        chart_id: params.id,
+                        token: query.ott
+                    },
+                    limit: 1
+                });
+                if (!count) {
+                    throw Boom.unauthorized();
+                }
+            } else {
                 throw Boom.unauthorized();
             }
 
@@ -356,7 +364,13 @@ async function publishData(request) {
     // the csv dataset
     const res = await injectSafe(request, {
         url: `/v3/charts/${params.id}/data${
-            query.published ? '?published=1' : query.ott ? `?ott=${query.ott}` : ''
+            query.published
+                ? '?published=1'
+                : query.chartExportToken
+                ? `?chartExportToken=${query.chartExportToken}`
+                : query.ott
+                ? `?ott=${query.ott}`
+                : ''
         }`,
         auth,
         headers
@@ -439,6 +453,7 @@ async function publishData(request) {
                 {
                     chart,
                     auth,
+                    chartExportToken: query.chartExportToken,
                     ott: query.ott
                 },
                 { filter: 'success' }
