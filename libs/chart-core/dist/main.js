@@ -237,7 +237,7 @@ module=chroma$1,module.exports=function(){for(var e=function(e,t,r){return void 
             background-color: ${o("colors.background","#ffffff")};
             border-radius: ${o("style.filter.select.borderRadius","4px")};
             border: ${o("style.filter.select.border","1px solid #cccccc")};
-            color: ${o("style.filter.select.textColor","#000")};
+            color: ${o("style.filter.select.textColor",o("typography.chart.color"))};
             font-size: ${toPixel(o("typography.chart.fontSize"))};
             padding: ${o("style.filter.select.padding","4px 6px")};
         }

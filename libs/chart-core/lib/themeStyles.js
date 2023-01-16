@@ -159,7 +159,7 @@ export function chartStyles(emotion, themeData, isStyleStatic) {
             background-color: ${getProp('colors.background', '#ffffff')};
             border-radius: ${getProp('style.filter.select.borderRadius', '4px')};
             border: ${getProp('style.filter.select.border', '1px solid #cccccc')};
-            color: ${getProp('style.filter.select.textColor', '#000')};
+            color: ${getProp('style.filter.select.textColor', getProp('typography.chart.color'))};
             font-size: ${toPixel(getProp('typography.chart.fontSize'))};
             padding: ${getProp('style.filter.select.padding', '4px 6px')};
         }
