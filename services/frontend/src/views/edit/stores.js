@@ -579,5 +579,18 @@ export function initChartStore(initialValue) {
         return writableKey$;
     };
 
+    chart$.setKey = (key, value) => {
+        const clonedChart = cloneDeep(chart$.value);
+        set(clonedChart, key, value);
+        chart$.set(clonedChart);
+    };
+
+    // this is temporary convenience method to ease the transition from dw.chart.get(...)
+    // generally it's preferred to work with stores e.g. via chart.bindKey(...) as this
+    // ensures we are working with reactive values.
+    chart$.getKey = (key, defaultValue) => {
+        return get(chart$.getValue(), key, defaultValue);
+    };
+
     return { chart$, distinctChart$ };
 }
