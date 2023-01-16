@@ -35,13 +35,20 @@ module.exports.dropCache = async function ({ theme, themeCache, styleCache, visu
 };
 
 module.exports.getCaches = function (server) {
+    const config = server.methods.config();
+    const useThemeCache = get(config, 'general.cache.themes');
+    const useStyleCache = get(config, 'general.cache.styles');
     return {
-        styleCache: server.cache({ segment: 'vis-styles', shared: true }),
-        themeCache: server.cache({
-            segment: 'themes',
-            shared: true,
-            expiresIn: 30 * 864e5 /* 30 days */
-        })
+        styleCache: useStyleCache
+            ? server.cache({ segment: 'vis-styles', shared: true })
+            : undefined,
+        themeCache: useThemeCache
+            ? server.cache({
+                  segment: 'themes',
+                  shared: true,
+                  expiresIn: 30 * 864e5 /* 30 days */
+              })
+            : undefined
     };
 };
 

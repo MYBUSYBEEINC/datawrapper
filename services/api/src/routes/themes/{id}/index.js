@@ -23,7 +23,6 @@ module.exports = {
     register: server => {
         const config = server.methods.config();
         const defaultTheme = get(config, 'general.defaults.theme', 'default');
-        const useThemeCache = get(config, 'general.cache.themes');
         const { styleCache, themeCache } = getCaches(server);
 
         // GET /v3/themes/{id}
@@ -185,7 +184,7 @@ module.exports = {
                 dark: query.dark,
                 extend: query.extend
             });
-            if (useThemeCache) {
+            if (themeCache) {
                 const cachedTheme = await themeCache.get(themeCacheKey);
                 if (cachedTheme) return cachedTheme;
             }
@@ -273,7 +272,7 @@ module.exports = {
             const fonts = getThemeFonts(theme);
             const fontsCSS = await compileFontCSS(fonts, theme.data);
             const result = { ...theme, fonts, createdAt: created_at, fontsCSS };
-            if (useThemeCache) {
+            if (themeCache) {
                 themeCache.set(themeCacheKey, result);
             }
             return result;
