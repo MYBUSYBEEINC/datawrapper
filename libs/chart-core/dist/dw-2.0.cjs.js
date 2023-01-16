@@ -7069,6 +7069,10 @@ function chart (attributes) {
         }
     };
 
+    if (attributes.language) {
+        chart.locale(attributes.language);
+    }
+
     return chart;
 }
 

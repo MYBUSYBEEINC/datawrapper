@@ -156,6 +156,7 @@ export async function render(page, props, delay) {
         themeDataLight: props.theme.data,
         themeDataDark: getThemeDataDark(props.theme.data),
         // translate flags into props
+        isEditingAllowed: !!flags.inEditor,
         isStylePlain: !!flags.plain,
         isStyleStatic: !!flags.static,
         isStyleTransparent: !!flags.transparent,

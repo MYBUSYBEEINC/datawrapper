@@ -906,9 +906,10 @@ Please make sure you called __(key) with a key of type "string".
     :global(.web-component-body) {
         margin: 0;
         padding: 0;
-        &.in-editor {
-            padding-bottom: 10px;
-        }
+    }
+    :global(body.in-editor),
+    :global(.web-component-body.in-editor) {
+        padding-bottom: 10px;
     }
 
     .dw-chart-styles {
@@ -926,30 +927,27 @@ Please make sure you called __(key) with a key of type "string".
         }
     }
 
+    :global(.chart.is-dark-mode .hide-in-dark) {
+        display: none;
+    }
+    :global(.chart:not(.is-dark-mode) .hide-in-light) {
+        display: none;
+    }
+
+    :global(.chart.vis-height-fit) {
+        overflow: hidden;
+        .dw-chart-styles {
+            overflow: hidden;
+        }
+    }
+
     :global(.chart) {
         height: 100%;
 
-        &.is-dark-mode :global(.hide-in-dark) {
-            display: none;
-        }
-
-        &:not(.is-dark-mode) :global(.hide-in-light) {
-            display: none;
-        }
-
-        &.vis-height-fit {
-            overflow: hidden;
-            .dw-chart-styles {
-                overflow: hidden;
-            }
-        }
         :global(.sr-only) {
             position: absolute;
             left: -9999px;
             height: 1px;
-        }
-        &.plain #footer {
-            height: 10px;
         }
 
         &.js :global(.noscript) {
@@ -1094,13 +1092,6 @@ Please make sure you called __(key) with a key of type "string".
             &:before {
                 display: inline-block;
             }
-        }
-
-        & > div > :global(a:first-child::before),
-        & > div > :global(.source-block:first-child::before),
-        & > div > .footer-block:first-child::before {
-            content: '';
-            display: none;
         }
 
         .footer-right {
