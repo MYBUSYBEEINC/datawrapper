@@ -2,14 +2,15 @@ const Joi = require('joi');
 const Boom = require('@hapi/boom');
 const assign = require('assign-deep');
 const { compileFontCSS } = require('@datawrapper/chart-core/lib/styles/compile-css.js');
+const {
+    getBackgroundColors,
+    convertToDarkMode
+} = require('@datawrapper/chart-core/dist/darkMode.cjs.js');
 
 const { Theme, User, Team, Chart } = require('@datawrapper/orm/db');
 const { get, set, cloneDeep } = require('lodash');
-const chroma = require('chroma-js');
-const invertColor = require('@datawrapper/shared/invertColor.js');
 const {
     dropCache,
-    findDarkModeOverrideKeys,
     getCaches,
     getThemeCacheKey,
     themeId,
@@ -253,9 +254,11 @@ module.exports = {
 
             setOrigAnnotations(theme);
 
+            const themeSchema = await server.methods.getSchemas().getSchemaJSON('themeData');
+
             if (bgColorLum >= 0.3) {
                 if (query.dark) {
-                    await convertToDarkMode(server, { theme, darkBg, origBg });
+                    await convertToDarkMode(themeSchema, { theme, darkBg, origBg });
                 }
             } else {
                 // this theme is dark already, prevent dark mode preview
@@ -280,109 +283,11 @@ module.exports = {
     }
 };
 
-async function convertToDarkMode(server, { theme, darkBg, origBg }) {
-    // get dark mode settings
-    const darkMode = mergeOverrides(theme, d => d.type === 'darkMode');
-
-    const themeColorKeys = await findDarkModeOverrideKeys(server, theme);
-
-    themeColorKeys.forEach(({ path: key, noInvert, isHexColorAndOpacity }) => {
-        const darkThemeVal = get(darkMode, key);
-        if (isHexColorAndOpacity) {
-            const oldVal = get(theme.data, key);
-            set(theme.data, key, invertHexColorAndOpacity(oldVal));
-        } else if (darkThemeVal) {
-            set(theme.data, key, darkThemeVal);
-        } else {
-            const oldVal = get(theme.data, key);
-            if (oldVal && !noInvert) {
-                set(
-                    theme.data,
-                    key,
-                    Array.isArray(oldVal)
-                        ? oldVal.map(convertColor)
-                        : typeof oldVal === 'string' && oldVal.includes(' ')
-                        ? oldVal
-                              .split(' ')
-                              .map(part => (chroma.valid(part) ? convertColor(part) : part))
-                              .join(' ')
-                        : convertColor(oldVal)
-                );
-            } else if (key === 'colors.chartContentBaseColor') {
-                set(theme.data, key, '#eeeeee');
-            }
-        }
-
-        function convertColor(lightColor) {
-            if (!chroma.valid(lightColor)) return lightColor;
-            const lightContrast = chroma.contrast(origBg, lightColor);
-            return invertColor(
-                lightColor,
-                darkBg,
-                origBg,
-                0.85 -
-                    // boost text contrast if old text contrast was low already
-                    (lightContrast < 8 && (key.includes('typography') || key.includes('text'))
-                        ? 0.2
-                        : 0)
-            );
-        }
-
-        function invertHexColorAndOpacity(lightVal = {}) {
-            const { color, opacity } = lightVal;
-            let darkModeVal = get(darkMode, key);
-            if (!darkModeVal && color && typeof opacity !== 'undefined') {
-                const alphaColor = chroma(color).alpha(opacity).hex();
-                const inverted = chroma(invertColor(alphaColor, darkBg, origBg, 0.85));
-                darkModeVal = {
-                    color: inverted.alpha(1).hex(),
-                    opacity: inverted.alpha()
-                };
-            } else {
-                if (!darkModeVal) darkModeVal = {};
-                if (!('opacity' in darkModeVal) && typeof opacity !== 'undefined') {
-                    darkModeVal.opacity = opacity;
-                } else if (!darkModeVal.color && color) {
-                    darkModeVal.color = invertColor(color, darkBg, origBg, 0.85);
-                }
-            }
-            return darkModeVal;
-        }
-    });
-
-    set(theme, 'data.colors.background', darkBg);
-    const bodyBackground = get(theme, 'data.style.body.background', 'transparent');
-    if (bodyBackground !== 'transparent' && chroma(bodyBackground).hex() === chroma(origBg).hex()) {
-        set(theme, 'data.style.body.background', darkBg);
-    }
-}
-
 function setOrigAnnotations(theme) {
     ['line', 'range'].forEach(type => {
         const settings = cloneDeep(get(theme.data, `style.chart.${type}Annotations`, {}));
         set(theme, `_computed.original.${type}Annotations`, settings);
     });
-}
-
-function getBackgroundColors(theme) {
-    const origBg = get(
-        theme.data,
-        'colors.background',
-        get(theme.data, 'style.body.background', '#ffffff')
-    );
-    const origBgLum = chroma(origBg).luminance();
-    const darkMode = mergeOverrides(theme, d => d.type === 'darkMode');
-    const darkBg =
-        origBgLum < 0.3
-            ? origBg
-            : get(
-                  darkMode,
-                  'colors.background',
-                  chroma(origBg)
-                      .luminance(origBgLum > 0.5 ? 1 - origBgLum : origBgLum * 0.5)
-                      .hex()
-              );
-    return { darkBg, origBg, origBgLum };
 }
 
 function getThemeFonts(theme) {
@@ -392,16 +297,4 @@ function getThemeFonts(theme) {
         if (theme.assets[key].type === 'font') fonts[key] = value;
     }
     return fonts;
-}
-
-function mergeOverrides(theme, filterFunc) {
-    const merged = {};
-    get(theme.data, 'overrides', []).forEach(({ type, settings }) => {
-        if (!filterFunc || filterFunc({ type, settings })) {
-            Object.entries(settings).forEach(([key, value]) => {
-                set(merged, key, value);
-            });
-        }
-    });
-    return merged;
 }

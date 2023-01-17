@@ -13,7 +13,6 @@ const {
     withTheme
 } = require('../../../../test/helpers/setup');
 const { darkModeTestTheme, darkModeTestBgTheme } = require('../../../../test/data/testThemes.js');
-const { findDarkModeOverrideKeys } = require('../../../utils/themes');
 
 function getDarkTheme(t, themeId) {
     return t.context.server.inject({
@@ -116,6 +115,7 @@ test.before(async t => {
             }
         })
     ]);
+    t.context.themeSchema = await t.context.server.methods.getSchemas().getSchemaJSON('themeData');
 });
 
 test.after.always(async t => {
@@ -264,57 +264,6 @@ test('style.body.background overwritten with colors.background color where appri
     // but it does when it's the same color as colors.background
     t.is(data2.colors.background, '#191919');
     t.is(data2.style.body.background, '#191919');
-});
-
-test('findDarkModeOverrideKeys identifies keys within schema items of type link', async t => {
-    const colorKeys = await findDarkModeOverrideKeys(t.context.server);
-
-    const blocksColorKeys = colorKeys
-        .map(d => d.path)
-        .filter(path => path.match(/^options\.blocks/));
-
-    const expected = [
-        'options.blocks.logo.data.options',
-        'options.blocks.hr.data.border',
-        'options.blocks.hr1.data.border',
-        'options.blocks.hr2.data.border',
-        'options.blocks.svg-rule.data.color',
-        'options.blocks.svg-rule1.data.color',
-        'options.blocks.svg-rule2.data.color'
-    ];
-
-    t.deepEqual(blocksColorKeys, expected);
-});
-
-test('findDarkModeOverrideKeys finds keys nested in arrays', async t => {
-    // test theme is valid
-    await t.context.server.methods.getSchemas().validateThemeData(darkModeTestTheme);
-    const colorKeys = await findDarkModeOverrideKeys(t.context.server, { data: darkModeTestTheme });
-    const colorKeyPaths = colorKeys.map(d => d.path);
-
-    [
-        'options.blocks.logo.data.options.0.imgSrc',
-        'options.blocks.logo.data.options.1.imgSrc',
-        'vis.locator-maps.mapStyles.0.colors.land',
-        'vis.locator-maps.mapStyles.0.layers.water.paint.fill-color',
-        'colors.gradients.0.0',
-        'colors.categories.0.0',
-        'colors.palette.0'
-    ].forEach(path => {
-        t.is(colorKeyPaths.includes(path), true);
-    });
-
-    //  color arrays don't get mapped by array, but by individual items
-    ['colors.gradients.0', 'colors.categories.0', 'colors.palette'].forEach(path => {
-        t.is(colorKeyPaths.includes(path), false);
-    });
-});
-
-test('findDarkModeOverride keys identifies keys for items with unit hexColorAndOpacity', async t => {
-    const colorKeys = (await findDarkModeOverrideKeys(t.context.server)).map(d => d.path);
-    ['style.chart.rangeAnnotations', 'style.chart.lineAnnotations'].forEach(path => {
-        t.is(colorKeys.includes(path), true);
-    });
 });
 
 test('Dark mode overrides work as expected', async t => {

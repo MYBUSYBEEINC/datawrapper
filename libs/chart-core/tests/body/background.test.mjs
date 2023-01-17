@@ -62,3 +62,102 @@ test('no background set on chart when transparent flag is true', async t => {
     });
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgba(0, 0, 0, 0)');
 });
+
+test('conditional background color gets inverted automatically', async t => {
+    const { page } = t.context;
+
+    await renderDummy(t, {
+        chart,
+        flags: { dark: 'auto' },
+        themeData: {
+            style: {
+                body: {
+                    background: '#ffffff'
+                }
+            },
+            overrides: [
+                {
+                    condition: ['<', ['get', 'width'], 420],
+                    settings: {
+                        'style.body.background': '#ffcccc'
+                    }
+                }
+            ]
+        }
+    });
+
+    // light mode and wider than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
+    await setTimeout(300);
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 255, 255)');
+
+    // dark mode and wider than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
+    await setTimeout(300);
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(0, 0, 0)');
+
+    // light mode and narrower than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
+    await page.setViewport({ width: 400, height: 600 });
+    await setTimeout(300);
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 204, 204)');
+
+    // dark mode and narrower than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
+    await setTimeout(300);
+    // override color has been inverted automatically
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(78, 40, 41)');
+});
+
+test('conditional background color gets set explicitly in darkMode override', async t => {
+    const { page } = t.context;
+
+    await renderDummy(t, {
+        chart,
+        flags: { dark: 'auto' },
+        themeData: {
+            style: {
+                body: {
+                    background: '#ffffff'
+                }
+            },
+            overrides: [
+                {
+                    condition: ['<', ['get', 'width'], 420],
+                    settings: {
+                        'style.body.background': '#ffcccc'
+                    }
+                },
+                {
+                    type: 'darkMode',
+                    condition: ['<', ['get', 'width'], 420],
+                    settings: {
+                        'style.body.background': '#220000'
+                    }
+                }
+            ]
+        }
+    });
+
+    // light mode and wider than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
+    await setTimeout(300);
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 255, 255)');
+
+    // dark mode and wider than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
+    await setTimeout(300);
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(0, 0, 0)');
+
+    // light mode and narrower than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
+    await page.setViewport({ width: 400, height: 600 });
+    await setTimeout(300);
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 204, 204)');
+
+    // dark mode and narrower than 420
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
+    await setTimeout(300);
+    // override color has been inverted automatically
+    t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(34, 0, 0)');
+});

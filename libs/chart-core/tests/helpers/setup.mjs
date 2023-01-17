@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import get from '@datawrapper/shared/get.js';
 import set from '@datawrapper/shared/set.js';
-import clone from '@datawrapper/shared/clone.js';
+import cloneDeep from 'lodash/cloneDeep.js';
 import slugify from '@datawrapper/shared/slugify.js';
 import chartCore from '../../index.js';
 import { createHash } from 'crypto';
@@ -16,6 +16,7 @@ import { JSDOM } from 'jsdom';
 import createEmotion from '@emotion/css/create-instance';
 import createEmotionServer from '@emotion/server/create-instance';
 import { setTimeout } from 'timers/promises';
+import { convertToDarkMode, getBackgroundColors } from '../../lib/darkMode.mjs';
 
 const schemas = new Schemas();
 
@@ -154,7 +155,7 @@ export async function render(page, props, delay) {
         renderFlags: flags,
         // hack for dark mode
         themeDataLight: props.theme.data,
-        themeDataDark: getThemeDataDark(props.theme.data),
+        themeDataDark: await getThemeDataDark(props.theme.data),
         // translate flags into props
         isEditingAllowed: !!flags.inEditor,
         isStylePlain: !!flags.plain,
@@ -196,6 +197,7 @@ export async function render(page, props, delay) {
         const text = event.text();
         if (text.startsWith('Chart rendered in')) return;
         logs.push({ type: event.type(), text: event.text() });
+        if (process.env.DEBUG) process.stdout.write(`LOG: ${event.text()}\n`);
         // log errors instantly
         if (event.type() === 'error') console.error('ERROR: ' + event.text());
     });
@@ -358,23 +360,20 @@ export async function takeTestScreenshot(t, path) {
     });
 }
 
-function getThemeDataDark(themeData) {
-    const themeDataDark = clone(themeData);
-    get(themeData, 'overrides', [])
-        .filter(({ type }) => type === 'darkMode')
-        .forEach(({ settings }) => {
-            Object.entries(settings).forEach(([key, value]) => {
-                set(themeDataDark, key, value);
-            });
-        });
+async function getThemeDataDark(themeData) {
+    const themeDark = { data: cloneDeep(themeData) };
+
+    // automatically invert colors
+    const themeSchema = schemas.getSchemaJSON('themeData');
+    const { darkBg, origBg } = getBackgroundColors(themeDark);
+    await convertToDarkMode(themeSchema, { theme: themeDark, origBg, darkBg });
 
     // emulating functionality in API
     // https://github.com/datawrapper/code/blob/ba88779294ea9363f692fc51bdaa102a47a13101/services/api/src/routes/themes/%7Bid%7D/index.js#LL368-L387
-    set(themeDataDark, '_computed.bgLight', get(themeData, 'colors.background', '#ffffff'));
-    set(themeDataDark, '_computed.bgDark', get(themeDataDark, 'colors.background', '#ffffff'));
-    set(themeDataDark, '_computed.origGradients', get(themeData, 'colors.gradients', []));
-
-    return themeDataDark;
+    set(themeDark.data, '_computed.bgLight', get(themeData, 'colors.background', '#ffffff'));
+    set(themeDark.data, '_computed.bgDark', get(themeDark.data, 'colors.background', '#ffffff'));
+    set(themeDark.data, '_computed.origGradients', get(themeData, 'colors.gradients', []));
+    return themeDark.data;
 }
 
 /*

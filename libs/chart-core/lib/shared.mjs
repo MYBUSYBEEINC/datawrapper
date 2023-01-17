@@ -93,11 +93,16 @@ export function resolveCondition(condition, context) {
  * @param {object} context - the chart context to evaluate the override conditions in
  * @returns {object} - themeData with overrides
  */
-export function computeThemeData(themeData, context = {}) {
+export function computeThemeData(themeData, context = {}, isStyleDark = false) {
     if (themeData.overrides && themeData.overrides.length > 0) {
         const themeDataClone = clone(themeData);
         for (const override of themeData.overrides) {
-            if (!override.type && override.condition) {
+            if (
+                // general override with condition
+                (!override.type && override.condition) ||
+                // darkmode override with condition
+                (override.type === 'darkMode' && isStyleDark && override.condition)
+            ) {
                 if (resolveCondition(override.condition, context)) {
                     for (const [key, value] of Object.entries(override.settings)) {
                         if (key.startsWith('overrides.'))

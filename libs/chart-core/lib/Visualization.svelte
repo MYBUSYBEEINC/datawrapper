@@ -168,7 +168,11 @@
         )
     };
 
-    $: $themeData = computeThemeData(isStyleDark ? themeDataDark : themeDataLight, overrideContext);
+    $: $themeData = computeThemeData(
+        isStyleDark ? themeDataDark : themeDataLight,
+        overrideContext,
+        isStyleDark
+    );
 
     const coreBlocks = [
         {

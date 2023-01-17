@@ -303,6 +303,23 @@ test('computeThemeData - overrides may not change overrides', t => {
     t.throws(() => computeThemeData(inputTheme));
 });
 
+test('computeThemeData - darkMode overrides', t => {
+    const inputTheme = {
+        colors: { background: 'white' },
+        overrides: [
+            {
+                condition: true,
+                type: 'darkMode',
+                settings: {
+                    'colors.background': '#222222'
+                }
+            }
+        ]
+    };
+    t.is(computeThemeData(inputTheme, {}, false).colors.background, 'white');
+    t.is(computeThemeData(inputTheme, {}, true).colors.background, '#222222');
+});
+
 test('toPixel - append px only if input is number', t => {
     t.is(toPixel(12), '12px');
     t.is(toPixel('12'), '12');

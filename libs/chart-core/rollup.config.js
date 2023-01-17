@@ -300,5 +300,20 @@ module.exports = [
             file: path.resolve(__dirname, 'dist/dw-2.0.cjs.js'),
             format: 'cjs'
         }
+    },
+    {
+        input: path.resolve(__dirname, 'lib/darkMode.mjs'),
+        plugins: [
+            nodeResolve({
+                modulesOnly: true
+            }),
+            commonjs()
+        ],
+        onwarn,
+        output: {
+            sourcemap: true,
+            file: path.resolve(__dirname, 'dist/darkMode.cjs.js'),
+            format: 'cjs'
+        }
     }
 ];
