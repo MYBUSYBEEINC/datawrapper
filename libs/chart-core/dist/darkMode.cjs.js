@@ -16,6 +16,13 @@ var get__default = /*#__PURE__*/_interopDefaultLegacy(get);
 var set__default = /*#__PURE__*/_interopDefaultLegacy(set);
 var deepmerge__default = /*#__PURE__*/_interopDefaultLegacy(deepmerge);
 
+/**
+ * merges all overrides for which the provided filter function returns true
+ *
+ * @param {object} theme
+ * @param {(override:object) => boolean|null} filterFunc
+ * @returns
+ */
 function mergeOverrides(theme, filterFunc) {
     const merged = {};
     get__default["default"](theme.data, 'overrides', []).forEach(({ type, settings, condition }) => {
@@ -35,8 +42,8 @@ function mergeOverrides(theme, filterFunc) {
  * @param {object} themeSchema - the JSON build of the themeData schemas
  * @param {object} opts
  * @param {object} opts.theme - the theme to invert
- * @param {object} opts.origBg - the original "light" background
- * @param {object} opts.darkBg - the dark background
+ * @param {string} opts.origBg - the original "light" background
+ * @param {string} opts.darkBg - the dark background
  * @return {object} the inverted theme
  */
 async function convertToDarkMode(themeSchema, { theme, origBg, darkBg }) {
@@ -176,7 +183,13 @@ async function convertToDarkMode(themeSchema, { theme, origBg, darkBg }) {
         set__default["default"](theme, 'data.style.body.background', darkBg);
     }
 }
-
+/**
+ * returns the original background color as well as its lumincance
+ * along with the inverted or user-defined background color for the theme
+ *
+ * @param {object} theme
+ * @returns {{ darkBg: string, origBg: string, origBgLum: number }}
+ */
 function getBackgroundColors(theme) {
     const origBg = get__default["default"](
         theme.data,
@@ -198,6 +211,15 @@ function getBackgroundColors(theme) {
     return { darkBg, origBg, origBgLum };
 }
 
+/**
+ * Extracts all color keys from a theme that support dark mode overrides.
+ * If the color doesn't overrideExclude it will also be automatically
+ * inverted by convertToDarkMode()
+ *
+ * @param {object} themeSchema the JSON build of the themeData schema
+ * @param {object} theme the theme
+ * @returns {{ path:string, noInvert:boolean, isHexColorAndOpacity:boolean }[]}
+ */
 async function findDarkModeOverrideKeys(themeSchema, theme = {}) {
     const keepUnits = new Set(['hexColor', 'cssColor', 'cssBorder', 'hexColorAndOpacity']);
     const out = [];

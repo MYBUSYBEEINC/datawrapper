@@ -3,6 +3,7 @@ import get from '@datawrapper/shared/get.js';
 import set from '@datawrapper/shared/set.js';
 import chroma from 'chroma-js';
 import clone from '@datawrapper/shared/clone.js';
+import deepmerge from 'deepmerge';
 import { all, any } from 'underscore';
 
 const DEFAULT_ALLOWED = [
@@ -153,4 +154,8 @@ export function lineHeight(value) {
 
 export function isTrue(value) {
     return value === 1 || value === true;
+}
+
+export function deepmergeOverwriteArrays(target, source) {
+    return deepmerge(target, source, { arrayMerge: (destArr, sourceArr) => sourceArr });
 }

@@ -34,14 +34,19 @@
 
     import { domReady, width } from './dw/utils/index.mjs';
     import observeFonts from '@datawrapper/shared/observeFonts.js';
-    import deepmerge from 'deepmerge';
     import get from '@datawrapper/shared/get.js';
     import set from '@datawrapper/shared/set.js';
     import { loadScript, loadStylesheet } from '@datawrapper/shared/fetch.js';
     import purifyHtml from '@datawrapper/shared/purifyHtml.js';
     import invertColor from '@datawrapper/shared/invertColor.js';
     import { getBrowser } from '@datawrapper/polyfills/src/getBrowser';
-    import { clean, isTransparentColor, parseFlagsFromURL, computeThemeData } from './shared.mjs';
+    import {
+        clean,
+        isTransparentColor,
+        parseFlagsFromURL,
+        computeThemeData,
+        deepmergeOverwriteArrays as deepmerge
+    } from './shared.mjs';
     import { isObject } from 'underscore';
     import chroma from 'chroma-js';
     import { outerWidth, themeData } from './stores';
