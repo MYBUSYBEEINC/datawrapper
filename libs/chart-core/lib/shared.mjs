@@ -95,8 +95,8 @@ export function resolveCondition(condition, context) {
  * @returns {object} - themeData with overrides
  */
 export function computeThemeData(themeData, context = {}, isStyleDark = false) {
+    const themeDataClone = clone(themeData);
     if (themeData.overrides && themeData.overrides.length > 0) {
-        const themeDataClone = clone(themeData);
         for (const override of themeData.overrides) {
             if (
                 // general override with condition
@@ -115,7 +115,7 @@ export function computeThemeData(themeData, context = {}, isStyleDark = false) {
         }
         return themeDataClone;
     }
-    return themeData;
+    return themeDataClone;
 }
 
 const UNDEFINED_STYLE = '%UNDEFINED%';

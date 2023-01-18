@@ -152,7 +152,7 @@ export function chartStyles(emotion, themeData, isStyleStatic) {
         .filter-ui.filter-links a.active {
             color: ${getProp('style.filter.tabs.active.color', '#000')};
             font-weight: ${getProp('style.filter.tabs.active.fontWeight', 'bold')};
-            border-bottom: ${getProp('style.filter.tabs.active.border.bottom', '3px solid #555')};
+            border-bottom: ${getProp('style.filter.tabs.active.border.bottom', '2px solid #555')};
         }
         /* filter UI select */
         .filter-ui.filter-select {

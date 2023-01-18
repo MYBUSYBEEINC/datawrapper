@@ -30,10 +30,10 @@ export async function after(t) {
     await t.context.browser.close();
 }
 
-export async function afterEach(t) {
+export async function afterEach(t, testPath = './tests') {
     if (!t.passed) {
         console.error({ body: await t.context.page.$eval('body', n => n.innerHTML.trim()) });
-        await takeTestScreenshot(t, './tests/failed');
+        await takeTestScreenshot(t, join(testPath, 'failed'));
     }
     if (DEBUG) await setTimeout(60000);
     await t.context.page.close();

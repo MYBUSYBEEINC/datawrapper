@@ -969,6 +969,7 @@ Please make sure you called __(key) with a key of type "string".
         }
 
         :global(.filter-ui.filter-links) {
+            white-space: nowrap;
             overflow-x: hidden;
             overflow-y: hidden;
             line-height: 28px;
@@ -976,7 +977,7 @@ Please make sure you called __(key) with a key of type "string".
             :global(a) {
                 display: inline-block;
                 height: 28px;
-                padding: 3px 10px;
+                padding: 0px 10px;
                 text-decoration: none;
 
                 &.active {
