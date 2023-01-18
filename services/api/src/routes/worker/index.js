@@ -24,7 +24,7 @@ module.exports = {
                     params: Joi.object({
                         queueName: Joi.string()
                             .required()
-                            .allow(...workerClient.queueNames)
+                            .allow(...Object.keys(workerClient.queues))
                     }),
                     payload: Joi.object({
                         name: Joi.string().required().description('Job name'),
@@ -87,11 +87,10 @@ async function postJobs(request, h, { workerClient }) {
 async function getHealth(request, h, { workerClient }) {
     const { query } = request;
     const { jobsSampleSize, minCompletedJobsRatio } = query;
-    const queueNames = workerClient.queueNames;
 
     const report = {};
     let success = true;
-    for (const queueName of queueNames) {
+    for (const queueName of Object.keys(workerClient.queues)) {
         const { report: queueReport, success: queueSuccess } = await getQueueHealth({
             workerClient,
             queueName,

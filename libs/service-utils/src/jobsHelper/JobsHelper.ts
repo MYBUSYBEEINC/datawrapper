@@ -28,7 +28,7 @@ export class JobsHelper {
         renderNetworkParams: ExportJobOptions
     ) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queueNames.includes(queueName)) {
+        if (this.workerClient && this.workerClient.queues[queueName]) {
             return await this.workerClient.scheduleJobs(
                 queueName,
                 'invalidateCloudflareCache',
@@ -47,7 +47,7 @@ export class JobsHelper {
         renderNetworkParams: ExportJobOptions
     ) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queueNames.includes(queueName)) {
+        if (this.workerClient && this.workerClient.queues[queueName]) {
             return await this.workerClient.scheduleJob(
                 queueName,
                 'invalidateCloudflareCache',

@@ -7,13 +7,11 @@ exports.WorkerClient = void 0;
  * Throw an exception if the worker config is missing or invalid.
  */
 function getWorkerConfig(config) {
-    if (!config.worker?.redis?.host ||
-        !config.worker?.redis?.port ||
-        !Array.isArray(config.worker?.queueNames)) {
+    if (!config.worker?.redis?.host || !config.worker?.redis?.port || !config.worker?.queues) {
         throw new Error('Missing or invalid worker config');
     }
     return {
-        queueNames: config.worker.queueNames.map(String),
+        queues: config.worker.queues,
         connection: {
             host: config.worker.redis.host,
             port: +config.worker.redis.port,
@@ -34,12 +32,12 @@ class WorkerClient {
         this.QueueEvents = QueueEvents;
         this.workerConfig = getWorkerConfig(serverConfig);
     }
-    get queueNames() {
-        return this.workerConfig.queueNames;
+    get queues() {
+        return this.workerConfig.queues;
     }
     async scheduleJob(queueName, jobType, jobPayload) {
-        const { queueNames, connection } = this.workerConfig;
-        if (!queueNames.includes(queueName)) {
+        const { queues, connection } = this.workerConfig;
+        if (!queues[queueName]) {
             throw new Error('unsupported queue name');
         }
         const queue = new this.Queue(queueName, { connection });
@@ -52,8 +50,8 @@ class WorkerClient {
         };
     }
     async scheduleJobs(queueName, jobType, jobPayloads) {
-        const { queueNames, connection } = this.workerConfig;
-        if (!queueNames.includes(queueName)) {
+        const { queues, connection } = this.workerConfig;
+        if (!queues[queueName]) {
             throw new Error('unsupported queue name');
         }
         const queue = new this.Queue(queueName, { connection });
@@ -70,8 +68,8 @@ class WorkerClient {
         return await job.getResult();
     }
     async getQueueHealth(queueName, jobsSampleSize) {
-        const { queueNames, connection } = this.workerConfig;
-        if (!queueNames.includes(queueName)) {
+        const { queues, connection } = this.workerConfig;
+        if (!queues[queueName]) {
             throw new Error('unsupported queue name');
         }
         const report = { connected: false };

@@ -45,7 +45,11 @@ module.exports = {
         }
     },
     worker: {
-        queueNames: ['test'],
+        queues: {
+            test: {
+                concurrency: 1
+            }
+        },
         redis: {
             host: 'redis',
             port: 6379

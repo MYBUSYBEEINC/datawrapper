@@ -17,14 +17,14 @@ class JobsHelper {
     }
     async scheduleInvalidateCloudflareJobs(bulkJobData, renderNetworkParams) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queueNames.includes(queueName)) {
+        if (this.workerClient && this.workerClient.queues[queueName]) {
             return await this.workerClient.scheduleJobs(queueName, 'invalidateCloudflareCache', bulkJobData);
         }
         return await this.renderNetworkClient.scheduleInvalidateCloudflareJobs(bulkJobData, renderNetworkParams);
     }
     async scheduleInvalidateCloudflareJob(jobData, renderNetworkParams) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queueNames.includes(queueName)) {
+        if (this.workerClient && this.workerClient.queues[queueName]) {
             return await this.workerClient.scheduleJob(queueName, 'invalidateCloudflareCache', jobData);
         }
         return await this.renderNetworkClient.scheduleInvalidateCloudflareJob(jobData, renderNetworkParams);

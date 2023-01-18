@@ -1,4 +1,4 @@
-import type { WorkerTypes } from '@datawrapper/backend-utils';
+import type { ConfigTypes, WorkerTypes } from '@datawrapper/backend-utils';
 import type { QueueEvents } from 'bullmq';
 import type { JobCreationResult, JobsCreationResult } from './types';
 export declare type BullmqQueueEventsClass = typeof QueueEvents;
@@ -9,7 +9,7 @@ export declare type ServerConfig = {
             port: string | number;
             password?: string;
         };
-        queueNames?: string[];
+        queues?: ConfigTypes.WorkerQueuesConfig;
     };
 };
 export declare class WorkerClient {
@@ -17,7 +17,7 @@ export declare class WorkerClient {
     private readonly QueueEvents;
     private readonly workerConfig;
     constructor(serverConfig: ServerConfig, Queue: WorkerTypes.BullmqQueueClass, QueueEvents: BullmqQueueEventsClass);
-    get queueNames(): string[];
+    get queues(): ConfigTypes.WorkerQueuesConfig;
     scheduleJob<TName extends WorkerTypes.JobName>(queueName: string, jobType: TName, jobPayload: WorkerTypes.JobData<TName>): JobCreationResult<WorkerTypes.JobResult<TName>>;
     scheduleJobs<TName extends WorkerTypes.JobName>(queueName: string, jobType: TName, jobPayloads: WorkerTypes.JobData<TName>[]): JobsCreationResult<WorkerTypes.JobResult<TName>>;
     scheduleJobAndWaitForResults<TName extends WorkerTypes.JobName>(queueName: string, jobType: TName, jobPayload: WorkerTypes.JobData<TName>): Promise<WorkerTypes.JobResult<TName>>;

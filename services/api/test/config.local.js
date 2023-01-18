@@ -47,7 +47,11 @@ module.exports = {
         }
     },
     worker: {
-        queueNames: ['test'],
+        queues: {
+            test: {
+                concurrency: 1
+            }
+        },
         redis: {
             host: 'localhost',
             port: process.env['DW_REDIS_PORT'],

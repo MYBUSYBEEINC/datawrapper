@@ -1,4 +1,4 @@
-import type { WorkerTypes } from '@datawrapper/backend-utils';
+import type { ConfigTypes, WorkerTypes } from '@datawrapper/backend-utils';
 import type { BullmqJob } from '@datawrapper/backend-utils/dist/workerTypes';
 import type { QueueEvents } from 'bullmq';
 import type { JobCreationResult, JobsCreationResult } from './types';
@@ -6,7 +6,7 @@ import type { JobCreationResult, JobsCreationResult } from './types';
 export type BullmqQueueEventsClass = typeof QueueEvents;
 
 type WorkerConfig = {
-    queueNames: string[];
+    queues: ConfigTypes.WorkerQueuesConfig;
     connection: {
         host: string;
         port: number;
@@ -21,7 +21,7 @@ export type ServerConfig = {
             port: string | number;
             password?: string;
         };
-        queueNames?: string[];
+        queues?: ConfigTypes.WorkerQueuesConfig;
     };
 };
 
@@ -31,15 +31,11 @@ export type ServerConfig = {
  * Throw an exception if the worker config is missing or invalid.
  */
 function getWorkerConfig(config: ServerConfig) {
-    if (
-        !config.worker?.redis?.host ||
-        !config.worker?.redis?.port ||
-        !Array.isArray(config.worker?.queueNames)
-    ) {
+    if (!config.worker?.redis?.host || !config.worker?.redis?.port || !config.worker?.queues) {
         throw new Error('Missing or invalid worker config');
     }
     return {
-        queueNames: config.worker.queueNames.map(String),
+        queues: config.worker.queues,
         connection: {
             host: config.worker.redis.host,
             port: +config.worker.redis.port,
@@ -72,8 +68,8 @@ export class WorkerClient {
         this.workerConfig = getWorkerConfig(serverConfig);
     }
 
-    get queueNames() {
-        return this.workerConfig.queueNames;
+    get queues() {
+        return this.workerConfig.queues;
     }
 
     async scheduleJob<TName extends WorkerTypes.JobName>(
@@ -81,8 +77,8 @@ export class WorkerClient {
         jobType: TName,
         jobPayload: WorkerTypes.JobData<TName>
     ): JobCreationResult<WorkerTypes.JobResult<TName>> {
-        const { queueNames, connection } = this.workerConfig;
-        if (!queueNames.includes(queueName)) {
+        const { queues, connection } = this.workerConfig;
+        if (!queues[queueName]) {
             throw new Error('unsupported queue name');
         }
 
@@ -102,8 +98,8 @@ export class WorkerClient {
         jobType: TName,
         jobPayloads: WorkerTypes.JobData<TName>[]
     ): JobsCreationResult<WorkerTypes.JobResult<TName>> {
-        const { queueNames, connection } = this.workerConfig;
-        if (!queueNames.includes(queueName)) {
+        const { queues, connection } = this.workerConfig;
+        if (!queues[queueName]) {
             throw new Error('unsupported queue name');
         }
 
@@ -130,8 +126,8 @@ export class WorkerClient {
     }
 
     async getQueueHealth(queueName: string, jobsSampleSize: number) {
-        const { queueNames, connection } = this.workerConfig;
-        if (!queueNames.includes(queueName)) {
+        const { queues, connection } = this.workerConfig;
+        if (!queues[queueName]) {
             throw new Error('unsupported queue name');
         }
 
