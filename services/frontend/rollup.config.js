@@ -17,6 +17,7 @@ const sourceDirFullPath = path.resolve(path.join(__dirname, sourceDir));
 const pluginsDirFullPath = path.resolve(path.join(__dirname, '../../plugins'));
 
 const stripCode = require('rollup-plugin-strip-code');
+const babel = require('@rollup/plugin-babel');
 
 const production = !process.env.ROLLUP_WATCH;
 const modes = process.env.NODE_ENV === 'test' ? ['ssr'] : ['csr', 'ssr'];
@@ -41,6 +42,21 @@ function relativeIfSubpath(from, to) {
 
     return null;
 }
+
+const babelConfig = {
+    babelHelpers: 'bundled',
+    presets: [
+        [
+            '@babel/preset-env',
+            {
+                useBuiltIns: 'entry',
+                corejs: 3
+            }
+        ]
+    ],
+    targets: '> 1%, not dead, chrome >= 77',
+    extensions: ['.js', '.mjs', '.svelte']
+};
 
 /**
  * Creates a rollup input object for passed views.
@@ -170,6 +186,7 @@ function createViewInput({ views, mode, replacements = {}, pluginsInfo }) {
                 preferBuiltins: false
             }),
             commonjs(),
+            production && mode !== 'ssr' && babel(babelConfig),
             production && mode !== 'ssr' && terser()
         ],
         onwarn
@@ -219,6 +236,7 @@ function createCustomElementInput({ customElement, mode }) {
                     return undefined;
                 }
             }),
+            production && mode !== 'ssr' && babel(babelConfig),
             production && mode !== 'ssr' && terser(),
             commonjs()
         ],

@@ -410,7 +410,7 @@
         </ViewComponent>
     </section>
 
-    {#if customViews && customViews.belowEditor && customViews.belowEditor.length > 0}
+    {#if customViews?.belowEditor?.length > 0}
         {#each customViews.belowEditor as comp}
             <ViewComponent
                 id={comp.id}
