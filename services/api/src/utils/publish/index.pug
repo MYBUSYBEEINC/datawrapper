@@ -62,3 +62,16 @@ html(lang=CHART_LANGUAGE)
       window.parent.postMessage('datawrapper:vis:reload', '*');
 
     script(src=CORE_SCRIPT)
+
+    script.
+      if (!window.dw || !window.dw.scriptLoaded) {
+            const chart = document.querySelector('#chart');
+            chart.innerHTML = "<img\
+                        style='max-width: 100%'\
+                        src='../plain.png'\
+                        aria-hidden='true'\
+                        alt='fallback image' />\
+                        <p style='opacity:0.6;padding:1ex; text-align:center'>\
+                            (Please use a modern browser to see the interactive version of this visualization)\
+                        </p>";
+      }

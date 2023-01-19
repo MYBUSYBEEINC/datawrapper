@@ -19,5 +19,7 @@ function render() {
         hydrate: true
     });
 }
-
+if (window.dw) {
+    window.dw.scriptLoaded = true;
+}
 render();

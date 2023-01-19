@@ -148,7 +148,9 @@ module.exports = [
             production &&
                 babel({
                     ...babelConfig,
-                    presets: [['@babel/env', { targets: '> 1%', corejs: 3, useBuiltIns: 'entry' }]],
+                    presets: [
+                        ['@babel/preset-env', { targets: '> 1%', corejs: 3, useBuiltIns: 'entry' }]
+                    ],
                     plugins: ['babel-plugin-transform-async-to-promises']
                 }),
             production && terser()

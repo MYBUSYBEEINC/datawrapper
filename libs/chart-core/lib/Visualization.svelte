@@ -39,7 +39,6 @@
     import { loadScript, loadStylesheet } from '@datawrapper/shared/fetch.js';
     import purifyHtml from '@datawrapper/shared/purifyHtml.js';
     import invertColor from '@datawrapper/shared/invertColor.js';
-    import { getBrowser } from '@datawrapper/polyfills/src/getBrowser';
     import {
         clean,
         isTransparentColor,
@@ -93,8 +92,6 @@
     let target, dwChart, vis;
     let postEvent = () => {};
     let flags = { isIframe, isEditingAllowed, previewId };
-
-    let useFallbackImage = false;
 
     const FLAG_TYPES = {
         plain: Boolean,
@@ -519,8 +516,6 @@ Please make sure you called __(key) with a key of type "string".
     }
 
     async function run() {
-        if (typeof dw === 'undefined') return;
-
         // initialize $outerWidth to compute reactive theme data
         $outerWidth = outerContainer.clientWidth;
         await tick();
@@ -650,28 +645,26 @@ Please make sure you called __(key) with a key of type "string".
             });
         }
 
-        if (!useFallbackImage) {
-            // render chart
-            if (window.parent === window) {
-                console.time('Chart rendered in'); // eslint-disable-line no-console
-            }
-            dwChart.render(outerContainer);
-            if (window.parent === window) {
-                console.timeEnd('Chart rendered in'); // eslint-disable-line no-console
-            }
-
-            // await necessary reload triggers
-            observeFonts(theme.fonts, theme.data.typography)
-                .then(() => dwChart.render(outerContainer))
-                .catch(() => dwChart.render(outerContainer));
-
-            // iPhone/iPad fix
-            if (/iP(hone|od|ad)/.test(navigator.platform)) {
-                window.onload = dwChart.render(outerContainer);
-            }
-
-            isIframe && initResizeHandler(target);
+        // render chart
+        if (window.parent === window) {
+            console.time('Chart rendered in'); // eslint-disable-line no-console
         }
+        dwChart.render(outerContainer);
+        if (window.parent === window) {
+            console.timeEnd('Chart rendered in'); // eslint-disable-line no-console
+        }
+
+        // await necessary reload triggers
+        observeFonts(theme.fonts, theme.data.typography)
+            .then(() => dwChart.render(outerContainer))
+            .catch(() => dwChart.render(outerContainer));
+
+        // iPhone/iPad fix
+        if (/iP(hone|od|ad)/.test(navigator.platform)) {
+            window.onload = dwChart.render(outerContainer);
+        }
+
+        isIframe && initResizeHandler(target);
 
         function updateActiveCSS(isDark) {
             // @todo: access these without using document
@@ -788,7 +781,6 @@ Please make sure you called __(key) with a key of type "string".
     });
 
     onMount(async () => {
-        useFallbackImage = getBrowser().browser === 'ie' && !isPreview;
         const dwChart = await run();
 
         outerContainer.classList.toggle('dir-rtl', textDirection === 'rtl');
@@ -815,6 +807,9 @@ Please make sure you called __(key) with a key of type "string".
 
             // fire events on hashchange
             domReady(() => {
+                if (!dwChart) {
+                    return;
+                }
                 postEvent = dwChart.createPostEvent();
                 window.addEventListener('hashchange', () => {
                     postEvent('hash.change', { hash: window.location.hash });
@@ -1210,7 +1205,7 @@ Please make sure you called __(key) with a key of type "string".
         aria-hidden={!!ariaDescription}
         class="dw-chart-body"
     >
-        {#if useFallbackImage}
+        <noscript>
             <img
                 style="max-width: 100%"
                 src="../plain.png"
@@ -1220,19 +1215,7 @@ Please make sure you called __(key) with a key of type "string".
             <p style="opacity:0.6;padding:1ex; text-align:center">
                 {__('fallback-image-note')}
             </p>
-        {:else}
-            <noscript>
-                <img
-                    style="max-width: 100%"
-                    src="../plain.png"
-                    aria-hidden="true"
-                    alt="fallback image"
-                />
-                <p style="opacity:0.6;padding:1ex; text-align:center">
-                    {__('fallback-image-note')}
-                </p>
-            </noscript>
-        {/if}
+        </noscript>
     </div>
 
     {#if get(theme, 'data.template.afterChart')}
