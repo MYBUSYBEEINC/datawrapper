@@ -74,7 +74,7 @@ module.exports = async ({ config, db, event, events }) => {
             ],
             key: 'edit-screenshot',
             priority: 0,
-            save: {
+            upload: {
                 s3: {
                     bucket: cfg.s3.bucket,
                     acl: cfg.s3.acl || 'public-read',

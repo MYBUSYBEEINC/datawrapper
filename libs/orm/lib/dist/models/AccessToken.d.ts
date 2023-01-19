@@ -15,6 +15,6 @@ declare class AccessToken extends Model<InferAttributes<AccessToken>, InferCreat
         type: string;
         data?: Record<string, unknown>;
     }): Promise<AccessToken>;
-    static createChartExportToken(chart: ChartModel): Promise<AccessToken>;
+    static createChartExportToken(chart: ChartModel, userId?: number): Promise<AccessToken>;
     static getExportedChartId(token: string): Promise<string | undefined>;
 }

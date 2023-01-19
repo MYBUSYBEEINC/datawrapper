@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createExportFileS3Tasks = exports.createExportFilePublishTasks = exports.createPngTasks = exports.createSvgTasks = exports.createPdfTasks = exports.createCloudflareInvalidateTask = void 0;
 const node_path_1 = __importDefault(require("node:path"));
-const types_1 = require("../types");
 const createCloudflareInvalidateTask = (urls) => ({
     action: 'cloudflare',
     params: {
@@ -16,7 +15,7 @@ exports.createCloudflareInvalidateTask = createCloudflareInvalidateTask;
 const createPdfTasks = (exports) => exports.map(data => {
     const { colorMode, ...pdfOptions } = data.options;
     return {
-        action: types_1.ExportFormat.PDF,
+        action: 'pdf',
         params: {
             ...pdfOptions,
             mode: colorMode,
@@ -26,7 +25,7 @@ const createPdfTasks = (exports) => exports.map(data => {
 });
 exports.createPdfTasks = createPdfTasks;
 const createSvgTasks = (exports) => exports.map(data => ({
-    action: types_1.ExportFormat.SVG,
+    action: 'svg',
     params: {
         ...data.options,
         out: data.filename
@@ -35,7 +34,7 @@ const createSvgTasks = (exports) => exports.map(data => ({
 exports.createSvgTasks = createSvgTasks;
 const createPngTasks = (exports) => [
     {
-        action: types_1.ExportFormat.PNG,
+        action: 'png',
         params: {
             sizes: exports.map(data => ({
                 ...data.options,

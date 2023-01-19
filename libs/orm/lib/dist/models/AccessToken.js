@@ -42,12 +42,13 @@ class AccessToken extends sequelize_1.Model {
             token: (0, generate_1.default)(alphabet, 64)
         });
     }
-    static async createChartExportToken(chart) {
-        if (!chart.author_id) {
-            throw new Error('Charts created by guests are not supported');
+    static async createChartExportToken(chart, userId) {
+        const tokenUserId = userId ?? chart.author_id;
+        if (!tokenUserId) {
+            throw new Error('Anonymous exports of charts created by guests are not supported');
         }
         return this.newToken({
-            user_id: chart.author_id,
+            user_id: tokenUserId,
             type: 'chart-export',
             data: {
                 chartId: chart.id

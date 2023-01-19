@@ -301,7 +301,6 @@ async function create({
     server.method('createChartWebsite', require('./utils/publish/create-chart-website.js'));
     server.method('registerVisualization', createRegisterVisualization(server));
     server.method('registerFeatureFlag', registerFeatureFlag(server));
-
     server.register(require('./utils/jobs'));
 
     await server.register(computeFileHashPlugin);

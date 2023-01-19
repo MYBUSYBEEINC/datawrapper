@@ -1,17 +1,20 @@
 import type { ExportPrint } from '@datawrapper/shared/exportPrintTypes';
-import type { ExportFormat, Filename } from '../types';
+declare type PdfFilename = `${string}.pdf`;
+declare type SvgFilename = `${string}.svg`;
+declare type PngFilename = `${string}.png`;
+declare type Filename = PdfFilename | SvgFilename | PngFilename;
 declare type ChartPdfExportTaskOptions = {
-    out: Filename<ExportFormat.PDF>;
+    out: PdfFilename;
     mode: Parameters<ExportPrint['pdf']>[0]['colorMode'];
 } & Pick<Parameters<ExportPrint['pdf']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'unit' | 'scale' | 'border' | 'transparent' | 'fullVector' | 'ligatures' | 'dark'> & Partial<Pick<Parameters<ExportPrint['pdf']>[0], 'delay'>>;
 declare type ChartSvgExportTaskOptions = {
-    out: Filename<ExportFormat.SVG>;
+    out: SvgFilename;
 } & Pick<Parameters<ExportPrint['svg']>[0], 'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'delay' | 'dark' | 'transparent'>;
 declare type ChartPngExportTaskOptions = {
     sizes: {
         width: number;
         height: number | 'auto';
-        out: Filename<ExportFormat.PNG>;
+        out: PngFilename;
         zoom: number;
         plain: boolean;
         transparent: boolean;
@@ -27,21 +30,21 @@ declare type GenericTask<TAction extends string, TParams> = {
 export declare type Task = GenericTask<'cloudflare', {
     urls: string[];
 }> | GenericTask<'pdf', ChartPdfExportTaskOptions> | GenericTask<'png', ChartPngExportTaskOptions> | GenericTask<'svg', ChartSvgExportTaskOptions> | GenericTask<'border', {
-    image: Filename<ExportFormat.PNG>;
-    out: Filename<ExportFormat.PNG>;
+    image: PngFilename;
+    out: PngFilename;
     padding: number;
     color: string;
 }> | GenericTask<'compress', {
-    image: Filename<ExportFormat.PNG>;
+    image: PngFilename;
 }> | GenericTask<'exif', {
-    image: Filename<ExportFormat.PNG>;
+    image: PngFilename;
     tags: Record<string, string>;
 }> | GenericTask<'publish', {
-    file: Filename<ExportFormat>;
+    file: Filename;
     teamId: string | null;
     outFile: string;
 }> | GenericTask<'s3', {
-    file: Filename<ExportFormat>;
+    file: Filename;
     bucket: string;
     path: string;
     acl: 'private' | 'public-read';

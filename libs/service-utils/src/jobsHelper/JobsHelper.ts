@@ -17,7 +17,7 @@ export class JobsHelper {
     ) {
         this.renderNetworkClient = new RenderNetworkClient(db);
         try {
-            this.workerClient = new WorkerClient(config, Queue, QueueEvents);
+            this.workerClient = new WorkerClient(config, Queue, QueueEvents, db);
         } catch (e) {
             onError(e);
         }
@@ -28,7 +28,7 @@ export class JobsHelper {
         renderNetworkParams: ExportJobOptions
     ) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queues[queueName]) {
+        if (this.workerClient?.queues[queueName]) {
             return await this.workerClient.scheduleJobs(
                 queueName,
                 'invalidateCloudflareCache',
@@ -47,7 +47,7 @@ export class JobsHelper {
         renderNetworkParams: ExportJobOptions
     ) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queues[queueName]) {
+        if (this.workerClient?.queues[queueName]) {
             return await this.workerClient.scheduleJob(
                 queueName,
                 'invalidateCloudflareCache',
@@ -62,6 +62,10 @@ export class JobsHelper {
     }
 
     async scheduleChartExport(jobData: ExportChartJobData, renderNetworkParams: ExportJobOptions) {
+        const queueName = 'render';
+        if (this.workerClient?.queues[queueName]) {
+            return await this.workerClient.scheduleChartExport(queueName, jobData);
+        }
         return await this.renderNetworkClient.scheduleChartExport(jobData, renderNetworkParams);
     }
 }

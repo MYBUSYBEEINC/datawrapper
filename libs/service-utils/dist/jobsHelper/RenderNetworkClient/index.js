@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderNetworkClient = void 0;
+const backend_utils_1 = require("@datawrapper/backend-utils");
 const lodash_1 = require("lodash");
 const types_1 = require("../types");
 const tasks_1 = require("./tasks");
@@ -87,19 +88,19 @@ class RenderNetworkClient {
     async scheduleChartExport(jobData, options) {
         const exportFilenames = jobData.exports.map(({ filename }) => filename);
         const publishOptions = jobData.publish;
-        const s3Options = jobData.save?.s3;
+        const s3Options = jobData.upload?.s3;
         const exportsByType = (0, lodash_1.groupBy)(jobData.exports, data => data.format);
         return await this.create({
-            chartId: jobData.chartId,
+            chartId: jobData.chart.id,
             userId: jobData.userId,
             tasks: [
                 ...Object.keys(exportsByType).flatMap(format => {
                     switch (format) {
-                        case types_1.ExportFormat.PDF:
+                        case backend_utils_1.ExportChartTypes.ExportFormat.PDF:
                             return (0, tasks_1.createPdfTasks)(exportsByType[format]);
-                        case types_1.ExportFormat.SVG:
+                        case backend_utils_1.ExportChartTypes.ExportFormat.SVG:
                             return (0, tasks_1.createSvgTasks)(exportsByType[format]);
-                        case types_1.ExportFormat.PNG:
+                        case backend_utils_1.ExportChartTypes.ExportFormat.PNG:
                             return (0, tasks_1.createPngTasks)(exportsByType[format]);
                         default:
                             throw new Error(`Unsupported format ${format}`);

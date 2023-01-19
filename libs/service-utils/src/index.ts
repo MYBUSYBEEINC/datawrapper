@@ -6,7 +6,7 @@ export { defaultChartMetadata } from './defaultChartMetadata';
 export { findChartId } from './findChartId';
 export { fsUtils } from './fsUtils';
 export { initGCTrap } from './gcTrap';
-export { ExportFormat, JobCompletionError, JobsHelper } from './jobsHelper';
+export { JobCompletionError, JobsHelper } from './jobsHelper';
 export {
     addLocalizationScope,
     allLocalizationScopes,

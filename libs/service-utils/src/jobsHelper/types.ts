@@ -1,77 +1,11 @@
-import type { ExportPrint } from '@datawrapper/shared/exportPrintTypes';
+import type { ExportChartTypes } from '@datawrapper/backend-utils';
+import type { ChartModel } from '@datawrapper/orm';
 
 export type InvalidateCloudflareJobData = {
     chartId: string | null;
     userId: number | null;
     urls: string[];
 };
-
-export enum ExportFormat {
-    PDF = 'pdf',
-    PNG = 'png',
-    SVG = 'svg'
-}
-
-export type Filename<TFormat extends ExportFormat> = `${string}.${TFormat}`;
-
-export type PdfJobData = {
-    format: ExportFormat.PDF;
-    filename: Filename<ExportFormat.PDF>;
-    options: Pick<
-        Parameters<ExportPrint['pdf']>[0],
-        | 'width'
-        | 'height'
-        | 'plain'
-        | 'logo'
-        | 'logoId'
-        | 'unit'
-        | 'scale'
-        | 'border'
-        | 'transparent'
-        | 'colorMode'
-        | 'fullVector'
-        | 'ligatures'
-        | 'dark'
-    >;
-};
-
-export type SvgJobData = {
-    format: ExportFormat.SVG;
-    filename: Filename<ExportFormat.SVG>;
-    options: Pick<
-        Parameters<ExportPrint['svg']>[0],
-        'width' | 'height' | 'plain' | 'logo' | 'logoId' | 'fullVector' | 'dark' | 'transparent'
-    >;
-};
-
-export type PngJobData = {
-    format: ExportFormat.PNG;
-    filename: Filename<ExportFormat.PNG>;
-    options: {
-        width: number;
-        height: number | 'auto';
-        zoom: number;
-        plain: boolean;
-        transparent: boolean;
-        logo: string | undefined;
-        logoId: string | undefined;
-        dark: boolean;
-    };
-    border?:
-        | {
-              padding: number;
-              color: string;
-          }
-        | undefined;
-    compress: boolean;
-    exif?:
-        | {
-              tags: Record<string, string>;
-          }
-        | undefined;
-};
-
-export type AnyFormatJobData = PdfJobData | SvgJobData | PngJobData;
 
 export type ExportFilesPublishOptions = {
     teamId: string | null;
@@ -85,11 +19,11 @@ export type ExportFilesS3Options = {
 };
 
 export type ExportChartJobData = {
-    chartId: string;
+    chart: ChartModel;
     userId: number;
-    exports: AnyFormatJobData[];
+    exports: ExportChartTypes.AnyFormatJobData[];
     publish?: ExportFilesPublishOptions;
-    save?: {
+    upload?: {
         s3?: ExportFilesS3Options | undefined;
     };
 };

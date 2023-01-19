@@ -44,13 +44,14 @@ class AccessToken extends Model<
         });
     }
 
-    static async createChartExportToken(chart: ChartModel) {
-        if (!chart.author_id) {
-            throw new Error('Charts created by guests are not supported');
+    static async createChartExportToken(chart: ChartModel, userId?: number) {
+        const tokenUserId = userId ?? chart.author_id;
+        if (!tokenUserId) {
+            throw new Error('Anonymous exports of charts created by guests are not supported');
         }
 
         return this.newToken({
-            user_id: chart.author_id,
+            user_id: tokenUserId,
             type: 'chart-export',
             data: {
                 chartId: chart.id

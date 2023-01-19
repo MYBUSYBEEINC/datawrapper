@@ -110,6 +110,28 @@ const defaultSettings = {
         })
     }),
     restrictDefaultThemes: optional(false, boolean),
+    publishTarget: optional(undefined, {
+        provider: required('gcs'),
+        config: required({
+            bucket: required(string),
+            project_id: required(string),
+            client_email: required(string),
+            private_key: required(string)
+        }),
+        url_prefix: optional(undefined, string)
+    }, {
+        provider: required('s3'),
+        config: required({
+            acl: optional(undefined, 'private', 'public-read'),
+            accesskey: required(string),
+            bucket: required(string),
+            cacheControl: optional(undefined, string),
+            secretkey: required(string),
+            endpoint: optional(undefined, string),
+            region: optional(undefined, string)
+        }),
+        url_prefix: optional(undefined, string)
+    }),
     css: optional('', string),
     // Note that these flags do not include the default feature flags
     // which are set during server initialization and can also be

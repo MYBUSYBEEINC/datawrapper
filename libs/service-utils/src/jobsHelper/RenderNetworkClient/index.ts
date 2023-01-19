@@ -1,9 +1,8 @@
+import { ExportChartTypes } from '@datawrapper/backend-utils';
 import type { DB, ExportJobModel } from '@datawrapper/orm';
 import { groupBy } from 'lodash';
 import {
-    AnyFormatJobData,
     ExportChartJobData,
-    ExportFormat,
     InvalidateCloudflareJobData,
     JobCompletionError,
     JobCreationResult,
@@ -142,25 +141,28 @@ export class RenderNetworkClient {
     ) {
         const exportFilenames = jobData.exports.map(({ filename }) => filename);
         const publishOptions = jobData.publish;
-        const s3Options = jobData.save?.s3;
+        const s3Options = jobData.upload?.s3;
         const exportsByType: {
-            [key in ExportFormat]?: Extract<AnyFormatJobData, { format: key }>[];
+            [key in ExportChartTypes.ExportFormat]?: Extract<
+                ExportChartTypes.AnyFormatJobData,
+                { format: key }
+            >[];
         } = groupBy(jobData.exports, data => data.format);
 
         return await this.create(
             {
-                chartId: jobData.chartId,
+                chartId: jobData.chart.id,
                 userId: jobData.userId,
                 tasks: [
                     ...Object.keys(exportsByType).flatMap(format => {
                         switch (format) {
-                            case ExportFormat.PDF:
+                            case ExportChartTypes.ExportFormat.PDF:
                                 return createPdfTasks(exportsByType[format]!);
 
-                            case ExportFormat.SVG:
+                            case ExportChartTypes.ExportFormat.SVG:
                                 return createSvgTasks(exportsByType[format]!);
 
-                            case ExportFormat.PNG:
+                            case ExportChartTypes.ExportFormat.PNG:
                                 return createPngTasks(exportsByType[format]!);
 
                             default:

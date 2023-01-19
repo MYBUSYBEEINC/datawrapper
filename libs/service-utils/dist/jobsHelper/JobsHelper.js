@@ -9,7 +9,7 @@ class JobsHelper {
     constructor(config, Queue, QueueEvents, db, onError) {
         this.renderNetworkClient = new RenderNetworkClient_1.RenderNetworkClient(db);
         try {
-            this.workerClient = new WorkerClient_1.WorkerClient(config, Queue, QueueEvents);
+            this.workerClient = new WorkerClient_1.WorkerClient(config, Queue, QueueEvents, db);
         }
         catch (e) {
             onError(e);
@@ -17,19 +17,23 @@ class JobsHelper {
     }
     async scheduleInvalidateCloudflareJobs(bulkJobData, renderNetworkParams) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queues[queueName]) {
+        if (this.workerClient?.queues[queueName]) {
             return await this.workerClient.scheduleJobs(queueName, 'invalidateCloudflareCache', bulkJobData);
         }
         return await this.renderNetworkClient.scheduleInvalidateCloudflareJobs(bulkJobData, renderNetworkParams);
     }
     async scheduleInvalidateCloudflareJob(jobData, renderNetworkParams) {
         const queueName = 'compute';
-        if (this.workerClient && this.workerClient.queues[queueName]) {
+        if (this.workerClient?.queues[queueName]) {
             return await this.workerClient.scheduleJob(queueName, 'invalidateCloudflareCache', jobData);
         }
         return await this.renderNetworkClient.scheduleInvalidateCloudflareJob(jobData, renderNetworkParams);
     }
     async scheduleChartExport(jobData, renderNetworkParams) {
+        const queueName = 'render';
+        if (this.workerClient?.queues[queueName]) {
+            return await this.workerClient.scheduleChartExport(queueName, jobData);
+        }
         return await this.renderNetworkClient.scheduleChartExport(jobData, renderNetworkParams);
     }
 }

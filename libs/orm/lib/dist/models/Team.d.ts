@@ -70,6 +70,28 @@ declare const defaultSettings: {
         } | undefined;
     } | undefined;
     readonly restrictDefaultThemes: boolean | undefined;
+    readonly publishTarget: {
+        provider: "gcs";
+        config: {
+            bucket: string;
+            project_id: string;
+            client_email: string;
+            private_key: string;
+        };
+        url_prefix: string | undefined;
+    } | {
+        provider: "s3";
+        config: {
+            acl: "private" | "public-read" | undefined;
+            accesskey: string;
+            bucket: string;
+            cacheControl: string | undefined;
+            secretkey: string;
+            endpoint: string | undefined;
+            region: string | undefined;
+        };
+        url_prefix: string | undefined;
+    } | undefined;
     readonly css: string | undefined;
     readonly flags: Record<string, boolean> | undefined;
     readonly displayLocale: boolean | undefined;
@@ -155,6 +177,28 @@ declare class Team extends Model<InferAttributes<Team>, InferCreationAttributes<
             } | undefined;
         } | undefined;
         readonly restrictDefaultThemes: boolean | undefined;
+        readonly publishTarget: {
+            provider: "gcs";
+            config: {
+                bucket: string;
+                project_id: string;
+                client_email: string;
+                private_key: string;
+            };
+            url_prefix: string | undefined;
+        } | {
+            provider: "s3";
+            config: {
+                acl: "private" | "public-read" | undefined;
+                accesskey: string;
+                bucket: string;
+                cacheControl: string | undefined;
+                secretkey: string;
+                endpoint: string | undefined;
+                region: string | undefined;
+            };
+            url_prefix: string | undefined;
+        } | undefined;
         readonly css: string | undefined;
         readonly flags: Record<string, boolean> | undefined;
         readonly displayLocale: boolean | undefined;

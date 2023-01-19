@@ -1,13 +1,6 @@
+import type { ExportChartTypes } from '@datawrapper/backend-utils';
 import path from 'node:path';
-import {
-    ExportFilesPublishOptions,
-    ExportFilesS3Options,
-    ExportFormat,
-    Filename,
-    PdfJobData,
-    PngJobData,
-    SvgJobData
-} from '../types';
+import type { ExportFilesPublishOptions, ExportFilesS3Options } from '../types';
 import type { Task } from './types';
 
 export const createCloudflareInvalidateTask = (urls: string[]): Task => ({
@@ -17,11 +10,11 @@ export const createCloudflareInvalidateTask = (urls: string[]): Task => ({
     }
 });
 
-export const createPdfTasks = (exports: PdfJobData[]): Task[] =>
+export const createPdfTasks = (exports: ExportChartTypes.PdfJobData[]): Task[] =>
     exports.map(data => {
         const { colorMode, ...pdfOptions } = data.options;
         return {
-            action: ExportFormat.PDF,
+            action: 'pdf',
             params: {
                 ...pdfOptions,
                 mode: colorMode,
@@ -30,18 +23,18 @@ export const createPdfTasks = (exports: PdfJobData[]): Task[] =>
         };
     });
 
-export const createSvgTasks = (exports: SvgJobData[]): Task[] =>
+export const createSvgTasks = (exports: ExportChartTypes.SvgJobData[]): Task[] =>
     exports.map(data => ({
-        action: ExportFormat.SVG,
+        action: 'svg',
         params: {
             ...data.options,
             out: data.filename
         }
     }));
 
-export const createPngTasks = (exports: PngJobData[]): Task[] => [
+export const createPngTasks = (exports: ExportChartTypes.PngJobData[]): Task[] => [
     {
-        action: ExportFormat.PNG,
+        action: 'png',
         params: {
             sizes:
                 exports.map(data => ({
@@ -89,7 +82,7 @@ export const createPngTasks = (exports: PngJobData[]): Task[] => [
 
 export const createExportFilePublishTasks = (
     publishOptions: ExportFilesPublishOptions,
-    filenames: Filename<ExportFormat>[]
+    filenames: ExportChartTypes.Filename<ExportChartTypes.ExportFormat>[]
 ): Task[] =>
     filenames.map(filename => ({
         action: 'publish',
@@ -102,7 +95,7 @@ export const createExportFilePublishTasks = (
 
 export const createExportFileS3Tasks = (
     s3Options: ExportFilesS3Options,
-    filenames: Filename<ExportFormat>[]
+    filenames: ExportChartTypes.Filename<ExportChartTypes.ExportFormat>[]
 ): Task[] =>
     filenames.map(filename => ({
         action: 's3',
