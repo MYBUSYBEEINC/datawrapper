@@ -355,6 +355,14 @@ export function getElementsInnerHtml(page, selector) {
  */
 export async function takeTestScreenshot(t, path) {
     await mkdir(path, { recursive: true });
+    const width = await t.context.page.evaluate(() => window.innerWidth);
+    const height =
+        (await t.context.page.$eval('.dw-chart-styles', d => {
+            let h = 0;
+            for (const el of d.children) h += el.clientHeight || 0;
+            return h;
+        })) + 10;
+    await t.context.page.setViewport({ deviceScaleFactor: 3, width, height });
     await t.context.page.screenshot({
         path: join(path, `${slugify(t.title.split('hook for')[1])}.png`)
     });

@@ -1,9 +1,9 @@
 const Joi = require('joi');
 const Boom = require('@hapi/boom');
 const assign = require('assign-deep');
+const get = require('lodash/get.js');
 const { Theme } = require('@datawrapper/orm/db');
 const { compileCSS } = require('@datawrapper/chart-core/lib/styles/compile-css.js');
-const get = require('lodash/get');
 
 function getThemeCacheKey(id, { dark = false, extend = false } = {}) {
     return `${id}?dark=${dark}&extend=${extend}`;

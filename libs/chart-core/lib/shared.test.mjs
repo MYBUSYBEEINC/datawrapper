@@ -6,6 +6,7 @@ import {
     lineHeight
 } from './shared.mjs';
 import test from 'ava';
+import set from 'lodash/set.js';
 
 const searchString =
     'a=text&' +
@@ -320,6 +321,35 @@ test('computeThemeData - darkMode overrides', t => {
     t.is(computeThemeData(inputTheme, {}, true).colors.background, '#222222');
 });
 
+test('computeThemeData - override grid settings', t => {
+    const res = computeThemeData(
+        createTheme({
+            'style.body.background': '#ffffff',
+            'style.chart.grid.general.gridLines.major.color': '#e2e2e2',
+            'style.chart.grid.general.gridLines.major.width': 0.666667,
+            'style.chart.grid.horizontal.gridLines.major.color': '#e2e2e2',
+            'style.chart.grid.horizontal.gridLines.major.width': 0.666667,
+            overrides: [
+                {
+                    condition: [
+                        'in',
+                        ['get', 'type'],
+                        ['d3-dot-plot', 'd3-range-plot', 'd3-arrow-plot']
+                    ],
+                    settings: {
+                        'style.chart.grid.general.gridLines.major.color': '#adadad',
+                        'style.chart.grid.vertical.gridLines.major.color': '#adadad'
+                    }
+                }
+            ]
+        }),
+        { type: 'd3-dot-plot' }
+    );
+    t.is(res.style.chart.grid.general.gridLines.major.color, '#adadad');
+    t.is(res.style.chart.grid.horizontal.gridLines.major.color, '#e2e2e2');
+    t.is(res.style.chart.grid.vertical.gridLines.major.color, '#adadad');
+});
+
 test('toPixel - append px only if input is number', t => {
     t.is(toPixel(12), '12px');
     t.is(toPixel('12'), '12');
@@ -334,3 +364,11 @@ test('lineHeight - only append px for line heights > 3', t => {
     t.is(lineHeight(4), '4px');
     t.is(lineHeight(14), '14px');
 });
+
+function createTheme(keyvals = {}) {
+    const theme = {};
+    for (const [key, val] of Object.entries(keyvals)) {
+        set(theme, key, val);
+    }
+    return theme;
+}
