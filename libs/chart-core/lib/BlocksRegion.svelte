@@ -8,38 +8,27 @@
     export let styles = null;
     export let emotion;
 
+    function blockEl(tag) {
+        return tag === ('h3' || 'p') ? tag : 'div';
+    }
+
     if (!emotion) throw new Error('need to pass emotion for block region ' + name);
 </script>
 
 {#if blocks.length}
     <div {id} class="{name} {emotion && styles ? styles(emotion, $themeData) : ''}">
         {#each blocks as block}
-            {#if block.tag === 'h3'}
-                <h3
-                    class="block {block.id}-block {emotion && block.styles
-                        ? block.styles(emotion, $themeData)
-                        : ''}"
-                >
-                    <Block {block} />
-                </h3>
-            {:else if block.tag === 'p'}
-                <p
-                    class="block {block.id}-block {emotion && block.styles
-                        ? block.styles(emotion, $themeData)
-                        : ''}"
-                >
-                    <Block {block} />
-                </p>
-            {:else}
-                <div
-                    class="block {block.id}-block {emotion && block.styles
-                        ? block.styles(emotion, $themeData)
-                        : ''}"
-                    style={block.id.includes('svg-rule') ? 'font-size:0px;' : ''}
-                >
-                    <Block {block} />
-                </div>
-            {/if}
+            <svelte:element
+                this={blockEl(block.tag)}
+                class="block {block.id}-block {emotion && block.styles
+                    ? block.styles(emotion, $themeData)
+                    : ''}"
+                style={blockEl(block.tag) === 'div' && block.id.includes('svg-rule')
+                    ? 'font-size:0px;'
+                    : ''}
+            >
+                <Block {block} />
+            </svelte:element>
         {/each}
     </div>
 {/if}
