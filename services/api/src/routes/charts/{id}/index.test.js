@@ -877,6 +877,164 @@ test('PATCH from admin with authorId and organizationId payload returns error wh
     }
 });
 
+test('PATCH with folderId from folder not in organization sets organization_id to null', async t => {
+    let teamObj, chart, folder;
+    try {
+        teamObj = await createTeamWithUser(t.context.server);
+
+        const { user, team, token } = teamObj;
+
+        // create chart in team
+        chart = await createChart({
+            organization_id: team.id,
+            author_id: user.id,
+            in_folder: null
+        });
+
+        // create private folder in user's account
+        folder = await createFolder({ org_id: null, user_id: user.id });
+
+        const res = await t.context.server.inject({
+            method: 'GET',
+            url: `/v3/charts/${chart.id}`,
+            headers: { authorization: `Bearer ${token}` }
+        });
+
+        t.is(res.statusCode, 200);
+        t.is(res.result.authorId, user.id);
+        t.is(res.result.folderId, null);
+        t.is(res.result.organizationId, team.id);
+
+        // user updates chart's folderId to private folder
+        const res1 = await t.context.server.inject({
+            method: 'PATCH',
+            url: `/v3/charts/${chart.id}`,
+            headers: { authorization: `Bearer ${token}` },
+            payload: { folderId: folder.id }
+        });
+
+        t.is(res1.statusCode, 200);
+        t.is(res1.result.authorId, user.id);
+        t.is(res1.result.folderId, folder.id);
+        t.is(res1.result.organizationId, null);
+    } finally {
+        destroy(chart, folder, ...Object.values(teamObj));
+    }
+});
+
+test('PATCH with folderId from folder in organization sets organization_id to folder organization', async t => {
+    let teamObj, chart, folder;
+    try {
+        teamObj = await createTeamWithUser(t.context.server);
+
+        const { user, team, token } = teamObj;
+
+        // create chart in team
+        chart = await createChart({
+            organization_id: null,
+            author_id: user.id,
+            in_folder: null
+        });
+
+        // create folder in team
+        folder = await createFolder({ org_id: team.id, user_id: null });
+
+        const res = await t.context.server.inject({
+            method: 'GET',
+            url: `/v3/charts/${chart.id}`,
+            headers: { authorization: `Bearer ${token}` }
+        });
+
+        t.is(res.statusCode, 200);
+        t.is(res.result.authorId, user.id);
+        t.is(res.result.folderId, null);
+        t.is(res.result.organizationId, null);
+
+        // user updates chart's folderId to team folder
+        const res1 = await t.context.server.inject({
+            method: 'PATCH',
+            url: `/v3/charts/${chart.id}`,
+            headers: { authorization: `Bearer ${token}` },
+            payload: { folderId: folder.id }
+        });
+
+        t.is(res1.statusCode, 200);
+        t.is(res1.result.authorId, user.id);
+        t.is(res1.result.folderId, folder.id);
+        t.is(res1.result.organizationId, team.id);
+    } finally {
+        destroy(chart, folder, ...Object.values(teamObj));
+    }
+});
+
+test('PATCH with new organizationId resets folder to null if current chart folder not in target organization', async t => {
+    let teamObj, chart, folder;
+    try {
+        teamObj = await createTeamWithUser(t.context.server);
+
+        const { user, team, token } = teamObj;
+
+        // create folder in team
+        folder = await createFolder({ org_id: null, user_id: user.id });
+
+        // create chart in private folder
+        chart = await createChart({
+            organization_id: null,
+            author_id: user.id,
+            in_folder: folder.id
+        });
+
+        // user updates chart's folderId to team folder
+        const res = await t.context.server.inject({
+            method: 'PATCH',
+            url: `/v3/charts/${chart.id}`,
+            headers: { authorization: `Bearer ${token}` },
+            payload: { organizationId: team.id }
+        });
+
+        t.is(res.statusCode, 200);
+        t.is(res.result.authorId, user.id);
+        t.is(res.result.folderId, null);
+        t.is(res.result.organizationId, team.id);
+    } finally {
+        destroy(chart, folder, ...Object.values(teamObj));
+    }
+});
+
+test('PATCH with null organizationId resets folder to null', async t => {
+    let teamObj, chart, folder;
+    try {
+        teamObj = await createTeamWithUser(t.context.server);
+
+        const { user, team, token } = teamObj;
+
+        // create folder in team
+        folder = await createFolder({ org_id: team.id, user_id: null });
+
+        // create chart in team folder
+        chart = await createChart({
+            organization_id: team.id,
+            author_id: user.id,
+            in_folder: folder.id
+        });
+
+        // user updates chart's folderId to team folder
+        const res = await t.context.server.inject({
+            method: 'PATCH',
+            url: `/v3/charts/${chart.id}`,
+            headers: { authorization: `Bearer ${token}` },
+            payload: { organizationId: null }
+        });
+
+        t.is(res.statusCode, 200);
+        t.is(res.result.authorId, user.id);
+        t.is(res.result.folderId, null);
+        t.is(res.result.organizationId, null);
+    } finally {
+        destroy(chart, folder, ...Object.values(teamObj));
+    }
+});
+
 test('PATCH with null value removes key from metadata', async t => {
     let userObj = {},
         chart;

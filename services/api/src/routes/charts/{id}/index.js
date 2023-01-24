@@ -279,10 +279,33 @@ async function editChart(request) {
         }
     }
 
-    const folderId = camelizedPayload.folderId || camelizedPayload.inFolder;
-    if (folderId) {
-        // check if folder belongs to user to team
-        const folder = await Folder.findOne({ where: { id: folderId } });
+    // @todo: deprecate inFolder payload in favor of folderId
+    const payloadFolder = get(camelizedPayload, 'folderId', camelizedPayload.inFolder);
+    if (payloadFolder) {
+        camelizedPayload.inFolder = payloadFolder;
+        delete camelizedPayload.folderId;
+    }
+
+    const chart = await Chart.findOne({
+        where: {
+            id: params.id,
+            deleted: { [Op.not]: true }
+        }
+    });
+
+    if (!chart) {
+        return Boom.notFound();
+    }
+
+    const isEditable = await chart.isEditableBy(auth.artifacts, auth.credentials.session);
+
+    if (!isEditable) {
+        return Boom.unauthorized();
+    }
+
+    if (camelizedPayload.inFolder) {
+        // check if folder belongs to user or team
+        const folder = await Folder.findByPk(camelizedPayload.inFolder);
 
         if (
             !folder ||
@@ -294,27 +317,13 @@ async function editChart(request) {
                 'User does not have access to the specified folder, or it does not exist.'
             );
         }
-        camelizedPayload.inFolder = folderId;
-        delete camelizedPayload.folderId;
-        camelizedPayload.organizationId = folder.org_id ? folder.org_id : null;
-    }
-
-    const chart = await Chart.findOne({
-        where: {
-            id: params.id,
-            deleted: { [Op.not]: true }
-        },
-        ...(camelizedPayload.organizationId ? { include: [User] } : {})
-    });
-
-    if (!chart) {
-        return Boom.notFound();
-    }
-
-    const isEditable = await chart.isEditableBy(auth.artifacts, auth.credentials.session);
-
-    if (!isEditable) {
-        return Boom.unauthorized();
+        // @todo: if payload contains both folder & organization, reject if they are mismatched,
+        // instead of simply ignoring payload organizationId
+        camelizedPayload.organizationId = folder.org_id;
+    } else if ('organizationId' in camelizedPayload) {
+        if (camelizedPayload.organizationId !== chart.organization_id && chart.in_folder) {
+            camelizedPayload.inFolder = null;
+        }
     }
 
     if ('isFork' in camelizedPayload && !isAdmin) {
@@ -331,7 +340,7 @@ async function editChart(request) {
         if (!newAuthor) return Boom.badRequest('Specified user does not exist');
 
         const newAuthorTeams = (await newAuthor.getTeams()).map(t => t.id);
-        const chartTeam = camelizedPayload.organizationId || chart.organization_id;
+        const chartTeam = get(camelizedPayload, 'organizationId', chart.organization_id);
 
         if (chartTeam && !newAuthorTeams.includes(chartTeam)) {
             return Boom.badRequest(`Specified user may not access team`);
@@ -346,7 +355,8 @@ async function editChart(request) {
         // check if chart author has access to new team
         // (in case admin set new author, and there was a conflict, the request would have already returned 400)
         if (!newAuthor) {
-            const chartAuthorTeamIds = (await chart.user.getTeams()).map(t => t.id);
+            const chartAuthorUser = await User.findByPk(chart.author_id);
+            const chartAuthorTeamIds = (await chartAuthorUser.getTeams()).map(t => t.id);
             // chart author does not have access to new team
             if (!chartAuthorTeamIds.includes(camelizedPayload.organizationId)) {
                 const newAuthorId = await getNewChartAuthor(user, camelizedPayload.organizationId);
@@ -371,20 +381,20 @@ async function editChart(request) {
         );
     }
 
-    const chartOld = cloneDeep(chart.dataValues);
-    const newData = assignWithEmptyObjects(await prepareChart(chart), camelizedPayload);
+    const oldData = await prepareChart(chart);
+    const newData = { ...oldData, ...camelizedPayload };
 
-    if (request.method === 'put' && camelizedPayload.metadata) {
-        // in PUT request we replace the entire metadata object
-        newData.metadata = camelizedPayload.metadata;
+    if (request.method === 'patch' && camelizedPayload.metadata) {
+        newData.metadata = assignWithEmptyObjects(
+            cloneDeep(oldData.metadata),
+            camelizedPayload.metadata
+        );
     }
 
     // check if we have actually changed something
-    const chartNew = {
-        ...chartOld,
-        ...decamelizeKeys(newData),
-        metadata: newData.metadata
-    };
+    const chartOld = cloneDeep(chart.dataValues);
+    const chartNew = decamelizeKeys(newData);
+
     const ignoreKeys = new Set([
         'guest_session',
         'public_id',
@@ -393,6 +403,7 @@ async function editChart(request) {
         'author',
         'folder_id'
     ]);
+
     const hasChanged = Object.keys(chartNew).find(
         key =>
             !ignoreKeys.has(key) &&
