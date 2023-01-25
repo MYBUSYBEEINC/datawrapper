@@ -9,7 +9,7 @@
     export let emotion;
 
     function blockEl(tag) {
-        return tag === ('h3' || 'p') ? tag : 'div';
+        return tag === 'h3' || tag === 'p' ? tag : 'div';
     }
 
     if (!emotion) throw new Error('need to pass emotion for block region ' + name);
