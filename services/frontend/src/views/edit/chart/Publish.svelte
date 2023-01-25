@@ -5,7 +5,7 @@
     import { getContext, onMount } from 'svelte';
     import { headerProps } from '_layout/stores';
     // load stores from context
-    const { chart, theme, navigateTo } = getContext('page/edit');
+    const { chart, theme, navigateTo, isFixedHeight, enforceFitHeight } = getContext('page/edit');
 
     const user = getContext('user');
     const userData = getContext('userData');
@@ -110,6 +110,8 @@
                     getIframePreview() {
                         return iframePreview;
                     },
+                    isFixedHeight: $isFixedHeight,
+                    enforceFitHeight: $enforceFitHeight,
                     // mimic old store values
                     user: {
                         isActivated: $user.isActivated,

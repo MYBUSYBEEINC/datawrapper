@@ -19,9 +19,9 @@
         editorMode,
         isDark,
         isFixedHeight,
+        enforceFitHeight,
         onNextSave,
         theme,
-        visualization,
         readonlyKeys
     } = getContext('page/edit');
 
@@ -394,7 +394,7 @@
     bind:this={iframePreview}
     bind:previewWidth
     chart={$chart}
-    enforceFitHeight={$editorMode === 'print' && $visualization.supportsFitHeight}
+    enforceFitHeight={$enforceFitHeight}
     fixedHeight={$isFixedHeight}
     isDark={$isDark}
     resizable={allowResizing && $editorMode === 'web'}

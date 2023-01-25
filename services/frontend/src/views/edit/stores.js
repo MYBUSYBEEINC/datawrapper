@@ -177,6 +177,12 @@ export function initStores({
         })
     );
 
+    const enforceFitHeight$ = combineLatest([visualization$, editorMode$]).pipe(
+        map(([visualization, editorMode]) => {
+            return editorMode === 'print' && visualization.supportsFitHeight;
+        })
+    );
+
     const locale$ = distinctChart$.pipe(
         map(chart => chart.language || 'en-US'),
         map(chartLocale => rawLocales.find(l => l.id === chartLocale))
@@ -488,6 +494,7 @@ export function initStores({
         vendorLocales: vendorLocales$,
         editorMode: editorMode$,
         isFixedHeight: isFixedHeight$,
+        enforceFitHeight: enforceFitHeight$,
         onNextSave(handler) {
             return merge(putData$, patchChart$, of(true))
                 .pipe(debounceTime(100), skip(1), take(1), tap(handler))
