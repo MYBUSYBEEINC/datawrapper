@@ -42,7 +42,6 @@
     import {
         clean,
         isTransparentColor,
-        parseFlagsFromURL,
         computeThemeData,
         deepmergeOverwriteArrays as deepmerge
     } from './shared.mjs';
@@ -68,21 +67,19 @@
     export let origin;
     export let externalDataUrl;
     export let outerContainer;
-    // transparent style means no background is set on body
-    export let isStyleTransparent = false;
-    // plain style means no header and footer
-    export let isStylePlain = false;
+
     // static style means user can't interact (e.g. in a png version)
-    export let isStyleStatic = false;
-    export let isStyleDark = false;
+
     // autodark means dark/light display follows user prefers-color-scheme
     export let isAutoDark = false;
-    // can be on|off|auto (on/off will overwrite chart setting)
-    export let forceLogo = 'auto';
-    export let logoId = null;
-    export let isEditingAllowed = false;
-    export let previewId = null;
     export let renderFlags = {};
+
+    $: isStylePlain = renderFlags.plain;
+    $: isStyleStatic = renderFlags.static;
+    $: isStyleTransparent = renderFlags.transparent;
+    $: isStyleDark = renderFlags.dark;
+    $: logoId = renderFlags.logoId;
+    $: forceLogo = !!renderFlags.logo;
 
     export let emotion;
 
@@ -91,20 +88,6 @@
     // .dw-chart-body
     let target, dwChart, vis;
     let postEvent = () => {};
-    let flags = { isIframe, isEditingAllowed, previewId };
-
-    const FLAG_TYPES = {
-        plain: Boolean,
-        static: Boolean,
-        svgonly: Boolean,
-        map2svg: Boolean,
-        transparent: Boolean,
-        fitchart: Boolean,
-        fitheight: Boolean,
-        theme: String,
-        search: String,
-        previewId: String
-    };
 
     const datasetName = `dataset.${get(chart.metadata, 'data.json') ? 'json' : 'csv'}`;
 
@@ -157,7 +140,7 @@
         mode: {
             plain: isStylePlain,
             static: isStyleStatic,
-            print: !!flags.svgonly
+            print: renderFlags.svgonly
         },
         ...metadataFields,
         blocks: Object.fromEntries(
@@ -535,10 +518,6 @@ Please make sure you called __(key) with a key of type "string".
                 locales[vendor] = deepmerge(localeBase, locales[vendor].custom);
             }
         });
-        // read flags
-        const newFlags = isIframe ? parseFlagsFromURL(window.location.search, FLAG_TYPES) : {}; // TODO parseFlagsFromElement(scriptEl, FLAG_TYPES);
-        Object.assign(flags, newFlags, renderFlags);
-        flags = flags;
 
         const useDwCdn = get(chart, 'metadata.data.use-datawrapper-cdn', true);
 
@@ -572,7 +551,8 @@ Please make sure you called __(key) with a key of type "string".
             .locale((chart.language || 'en-US').substr(0, 2))
             .translations(translations)
             .theme(dw.theme(chart.theme))
-            .flags(flags);
+            // TODO: remove isEditingAllowed alias and make sure all visualizations use allowEditing directly
+            .flags({ isIframe, isEditingAllowed: renderFlags.allowEditing, ...renderFlags });
 
         dwChart.emotion = emotion;
 
@@ -623,8 +603,6 @@ Please make sure you called __(key) with a key of type "string".
         // add theme._computed to theme.data for better dark mode support
         theme.data._computed = theme._computed;
 
-        const browserSupportsPrefersColorScheme = CSS.supports('color-scheme', 'dark');
-
         // we only apply dark mode if base theme is light
         const lightBg = get(themeDataLight, 'colors.background', '#ffffff');
         if (chroma(lightBg).luminance() >= 0.3) {
@@ -635,14 +613,19 @@ Please make sure you called __(key) with a key of type "string".
             if (isStyleDark) vis.darkMode(true);
         }
 
-        if (!isPreview && isAutoDark) {
+        if (isAutoDark) {
+            // update dark mode state when browser preferences changes
             const matchMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            // for browsers that don't support prefers-color-scheme
-            if (!browserSupportsPrefersColorScheme) updateActiveCSS(matchMediaQuery.matches);
-
             matchMediaQuery.addEventListener('change', e => {
                 updateDarkModeState(e.matches);
             });
+
+            if (!CSS.supports('color-scheme', 'dark')) {
+                // if the browser doesn't support prefer-color-scheme we need
+                // to remove the media="(prefers-color-scheme: light)" attribute
+                // from the light styles, or else no styles would be shown at all
+                updateActiveCSS(false);
+            }
         }
 
         // render chart
@@ -666,20 +649,46 @@ Please make sure you called __(key) with a key of type "string".
 
         isIframe && initResizeHandler(target);
 
-        function updateActiveCSS(isDark) {
-            // @todo: access these without using document
-            const cssLight = document.getElementById('css-light');
-            const cssDark = document.getElementById('css-dark');
-            (isDark ? cssLight : cssDark).setAttribute('media', '--disabled--');
-            (isDark ? cssDark : cssLight).removeAttribute('media');
-        }
-
+        /**
+         * updateDarkModeState is called when we detect a change in color-schema media preference.
+         * It calls `vis.darkMode()` which will then trigger `onDarkModeChange()`
+         * @param {boolean} isDark
+         */
         function updateDarkModeState(isDark) {
-            isStyleDark = isDark;
-            if (!browserSupportsPrefersColorScheme) updateActiveCSS(isDark);
+            renderFlags = { ...renderFlags, dark: isDark };
             vis.darkMode(isDark);
         }
 
+        /**
+         * This is called by our visualization render code in vis.darkMode()
+         * @param {boolean} isDark
+         */
+        async function onDarkModeChange(isDark) {
+            // update renderFlag.dark in case someone just called vis.darkMode()
+            // without the color-scheme preference changing in browser
+            if (renderFlags.dark !== isDark) {
+                renderFlags = { ...renderFlags, dark: isDark };
+            }
+
+            await updateChartThemeData();
+
+            // manually swap active css if we're not in automatic darkmode
+            if (!isAutoDark) {
+                updateActiveCSS(isDark);
+            }
+
+            // revert dark palette to prevent double-mapping
+            if (isDark) {
+                set(theme.data, 'colors.palette', get(themeDataLight, 'colors.palette', []));
+            }
+            outerContainer.classList.toggle('is-dark-mode', isDark);
+            dwChart.render(outerContainer);
+        }
+
+        /**
+         * After switching dark mode we need to wait for the computed themeData
+         * to uppate.
+         */
         async function updateChartThemeData() {
             // wait for reactive themeData to be ready
             await tick();
@@ -695,20 +704,24 @@ Please make sure you called __(key) with a key of type "string".
             });
         }
 
-        async function onDarkModeChange(isDark) {
-            await updateChartThemeData();
-
-            // swap active css
-            if (isPreview || !isAutoDark || (isAutoDark && !browserSupportsPrefersColorScheme)) {
-                updateActiveCSS(isDark);
+        /**
+         * in some cases we need to manually switch from light to dark styles
+         * without relying on the browser prefer-color-schema
+         *
+         * @param {boolean} isDark
+         */
+        function updateActiveCSS(isDark) {
+            // @todo: access these without using document
+            if (isIframe) {
+                const metaColorSchema = document.querySelector('meta[name="color-scheme"]');
+                if (metaColorSchema) {
+                    metaColorSchema.setAttribute('content', isDark ? 'dark' : 'light');
+                }
             }
-
-            // revert dark palette to prevent double-mapping
-            if (isDark) {
-                set(theme.data, 'colors.palette', get(themeDataLight, 'colors.palette', []));
-            }
-            outerContainer.classList.toggle('is-dark-mode', isDark);
-            dwChart.render(outerContainer);
+            const cssLight = document.getElementById('css-light');
+            const cssDark = document.getElementById('css-dark');
+            (isDark ? cssLight : cssDark).setAttribute('media', '--disabled--');
+            (isDark ? cssDark : cssLight).removeAttribute('media');
         }
 
         function initResizeHandler(container) {
@@ -784,19 +797,7 @@ Please make sure you called __(key) with a key of type "string".
         const dwChart = await run();
 
         outerContainer.classList.toggle('dir-rtl', textDirection === 'rtl');
-
         if (isIframe) {
-            // set some classes - still needed?
-            document.body.classList.toggle('plain', isStylePlain);
-            document.body.classList.toggle('static', isStyleStatic);
-            document.body.classList.toggle('png-export', isStyleStatic);
-            document.body.classList.toggle('transparent', isStyleTransparent);
-            document.body.classList.toggle('in-editor', isEditingAllowed);
-
-            if (isStyleStatic) {
-                document.body.style['pointer-events'] = 'none';
-            }
-
             if (isStyleStatic && !isStyleTransparent) {
                 const bodyBackground = get(theme.data, 'style.body.background', 'transparent');
                 const previewBackground = get(theme.data, 'colors.background');

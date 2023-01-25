@@ -1,6 +1,6 @@
 import test from 'ava';
 import { before, beforeEach, after, afterEach, renderDummy } from '../helpers/utils.mjs';
-import { getElementStyle } from '../helpers/setup.mjs';
+import { getElementClasses, getElementStyle } from '../helpers/setup.mjs';
 import { setTimeout } from 'timers/promises';
 
 test.before(before);
@@ -71,7 +71,7 @@ test(':global styles', async t => {
     const { page } = t.context;
 
     await renderDummy(t, {
-        flags: { inEditor: true, dark: 'auto' },
+        flags: { allowEditing: true, dark: 'auto' },
         textDirection: 'rtl',
         chart: {
             metadata: {
@@ -121,6 +121,13 @@ test(':global styles', async t => {
         }
     });
 
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
+    await setTimeout(300);
+
+    t.true(
+        (await getElementClasses(page, 'body')).includes('in-editor'),
+        'body has in-editor class'
+    );
     t.is(await getElementStyle(page, 'body', 'padding-bottom'), '10px');
     t.is(await getElementStyle(page, '.chart.vis-height-fit', 'overflow'), 'hidden');
 

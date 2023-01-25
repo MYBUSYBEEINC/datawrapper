@@ -57,7 +57,7 @@ function onwarn(warning, warn) {
 module.exports = [
     {
         // Svelte Visualization Component as web component
-        input: path.resolve(__dirname, 'web-component.js'),
+        input: path.resolve(__dirname, 'main.wc.mjs'),
         plugins: [
             // Why are there two svelte calls here?
             //
@@ -124,7 +124,7 @@ module.exports = [
     },
     {
         // Client side Svelte Visualization Component
-        input: path.resolve(__dirname, 'main.mjs'),
+        input: path.resolve(__dirname, 'main.iframe.mjs'),
         plugins: [
             svelte({
                 compilerOptions: {

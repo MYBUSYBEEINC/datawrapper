@@ -63,11 +63,14 @@ const PROPS_REGEXP = /(var props|window\.__DW_SVELTE_PROPS__) = JSON\.parse\((?<
  * @returns {Object} Svelte properties object, for example { chartData: { title: "My chart" } }.
  */
 export function parseSvelteProps(html) {
-    const m = html.match(PROPS_REGEXP);
-    if (m) {
-        return JSON.parse(JSON.parse(m.groups.json));
+    const doc = parseHTML(html);
+    for (const tag of doc.$$('script')) {
+        const m = tag.innerHTML.match(PROPS_REGEXP);
+        if (m) {
+            return JSON.parse(JSON.parse(m.groups.json));
+        }
     }
-    return null;
+    return {};
 }
 
 export function parseHTML(html) {

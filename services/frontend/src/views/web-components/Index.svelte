@@ -13,6 +13,17 @@
             [[]]
         );
     }
+
+    const BOOLEAN_FLAGS = [
+        'plain',
+        'dark',
+        'static',
+        'transparent',
+        'allowEditing',
+        'svgonly',
+        'map2svg'
+    ];
+    const flags = Object.fromEntries(BOOLEAN_FLAGS.map(k => [k, false]));
 </script>
 
 <section class="section">
@@ -27,6 +38,11 @@
                     <input name="charts" class="input" value={chartIds} />
                     <input type="submit" value="Go" />
                 </form>
+                {#each BOOLEAN_FLAGS as key}
+                    <label class="checkbox mr-3"
+                        ><input type="checkbox" bind:checked={flags[key]} /> {key}</label
+                    >
+                {/each}
             </div>
         </div>
 
@@ -36,7 +52,7 @@
             <div class="columns">
                 {#each charts as chart}
                     <div class="column">
-                        <WebComponentEmbed id={chart} />
+                        <WebComponentEmbed id={chart} {flags} />
                     </div>
                 {/each}
             </div>

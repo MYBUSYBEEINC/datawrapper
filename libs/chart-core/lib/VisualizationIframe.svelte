@@ -22,21 +22,12 @@
     export let renderFlags = {}; // allow tests to pass flags directly
     export let emotion;
 
-    // transparent style means background is set on body
-    export let isStyleTransparent = false;
-    // plain style means no header and footer
-    export let isStylePlain = false;
-    // static style means user can't interact (e.g. in a png version)
-    export let isStyleStatic = false;
-    export let isStyleDark = false;
-    // autodark means dark/light display follows user prefers-color-scheme
-    export let isAutoDark = false;
-    // can be on|off|auto (on/off will overwrite chart setting)
-    export let forceLogo = 'auto';
-    export let logoId = null;
+    $: isStyleTransparent = renderFlags.transparent;
+    $: isStylePlain = renderFlags.plain;
+    $: isStyleStatic = renderFlags.static;
+    $: isEditingAllowed = renderFlags.allowEditing;
 
-    export let isEditingAllowed = false;
-    export let previewId = null;
+    export let isAutoDark = false;
 
     $: customCSS = purifyHtml(get(chart, 'metadata.publish.custom-css', ''), []);
 
@@ -44,7 +35,7 @@
         Object.assign(chart, newAttrs.chart);
         chart = chart; // to force re-rendering
         if (newAttrs.isStyleDark !== undefined) {
-            isStyleDark = newAttrs.isStyleDark;
+            renderFlags = { ...renderFlags, dark: newAttrs.isStyleDark };
         }
     };
 
@@ -54,6 +45,8 @@
         // the body class "png-export" kept for backwards compatibility
         document.body.classList.toggle('png-export', isStyleStatic);
         document.body.classList.toggle('transparent', isStyleTransparent);
+        document.body.classList.toggle('in-editor', isEditingAllowed);
+
         if (isStyleStatic) {
             document.body.style['pointer-events'] = 'none';
         }
@@ -81,15 +74,7 @@
     {isPreview}
     {assets}
     {externalDataUrl}
-    {isStylePlain}
-    {isStyleStatic}
-    {isStyleTransparent}
-    {isStyleDark}
     {isAutoDark}
-    {forceLogo}
-    {logoId}
-    {isEditingAllowed}
-    {previewId}
     {outerContainer}
     {textDirection}
     {renderFlags}

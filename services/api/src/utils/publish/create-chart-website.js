@@ -244,6 +244,9 @@ module.exports = async function createChartWebsite(
         .filter(Boolean)
         .join('\n');
 
+    publishData.published = true;
+    publishData.chartAutoDark = autoDark;
+
     /**
      * Render the visualizations entry: "index.html"
      */
@@ -258,7 +261,6 @@ module.exports = async function createChartWebsite(
         CORE_SCRIPT: getAssetLink(`../../lib/${coreScript}`),
         CSS: getAssetLink(`../../lib/vis/${cssFile}`),
         CSS_DARK: getAssetLink(`../../lib/vis/${cssFileDark}`),
-        AUTO_DARK: autoDark,
         SCRIPTS: dependencies.map(file => getAssetLink(`../../${file}`)),
         CHART_CLASS: [
             `vis-height-${get(publishData.visualization, 'height', 'fit')}`,

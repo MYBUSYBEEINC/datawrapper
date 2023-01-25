@@ -17,16 +17,12 @@ import createEmotion from '@emotion/css/create-instance';
 import createEmotionServer from '@emotion/server/create-instance';
 import { setTimeout } from 'timers/promises';
 import { convertToDarkMode, getBackgroundColors } from '../../lib/darkMode.mjs';
+import { parseFlagsFromObject } from '../../lib/shared.mjs';
 
 const schemas = new Schemas();
 
 const pathToChartCore = join(dirname(fileURLToPath(import.meta.url)), '../..');
-
-const emptyPage = `<html>
-        <body>
-            <div class="dw-chart" id="__svelte-dw"></div>
-        </body>
-    </html>`;
+const pathToPlugins = join(pathToChartCore, '../../plugins');
 
 /**
  * Creates a new Puppeteer browser
@@ -39,6 +35,13 @@ const emptyPage = `<html>
 export function createBrowser(puppeteerOptions = {}) {
     return puppeteer.launch(puppeteerOptions);
 }
+
+const emptyPage = `<html>
+        <head><meta name="color-scheme" content="light dark" /></head>
+        <body>
+            <div class="dw-chart" id="__svelte-dw"></div>
+        </body>
+    </html>`;
 
 /**
  * Creates a new empty HTML page with a DOM ready to
@@ -69,24 +72,29 @@ export async function createPage(browser, viewportOpts = {}) {
     return page;
 }
 
-/**
- * Renders a chart described by `props` on a Puppeteer `page`.
- *
- * @param {Page} page Puppeteer page instance
- * @param {Object} props
- * @param {Object} props.chart
- * @param {string} props.dataset
- * @param {Object} props.theme
- * @param {Object} props.translations
- * @param {Object} props.visMeta
- * @param {Object} props.flags
- * @param {Object} props.assets
- * @param {Object} props.textDirection
- * @param {number} delay further delay render promise (useful for debugging)
- * @returns {Object[]} console log messages
- */
-export async function render(page, props, delay) {
+const emptyPageWC = `<html>
+    <head />
+    <body>
+        <div id="wc-container"></div>
+    </body>
+</html>`;
+
+export async function createPageWebComponent(browser, viewportOpts = {}) {
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 600,
+        height: 500,
+        deviceScaleFactor: 1,
+        ...viewportOpts
+    });
+    await page.setContent(emptyPageWC);
+    return page;
+}
+
+async function prepareProps(props) {
     if (!props.visMeta) throw new Error('need to provide visMeta');
+    if (!props.flags) props.flags = {};
+    if (!props.blocksPlugins) props.blocksPlugins = [];
     if (props.theme) {
         console.warn('Warning: `theme` is deprecated, please use `themeData` instead');
         props.themeData = props.theme;
@@ -104,19 +112,38 @@ export async function render(page, props, delay) {
     }
     // validate theme data
     await schemas.validateThemeData(props.theme.data);
+
     // extend chart metadata from default chart metadata
     props.chart.id = '00000';
     props.chart.metadata = deepmerge.all([{}, defaultChartMetadata, props.chart.metadata || {}]);
     props.chart.theme = props.theme.id;
     // default translations
     props.translations = props.translations || { 'en-US': {} };
+}
+
+/**
+ * Renders a chart described by `props` on a Puppeteer `page`.
+ *
+ * @param {Page} page Puppeteer page instance
+ * @param {Object} props
+ * @param {Object} props.chart
+ * @param {string} props.dataset
+ * @param {Object} props.theme
+ * @param {Object} props.translations
+ * @param {Object} props.visMeta
+ * @param {Object} props.flags
+ * @param {Object} props.assets
+ * @param {Object} props.textDirection
+ * @param {number} delay further delay render promise (useful for debugging)
+ * @returns {Object[]} console log messages
+ */
+export async function render(page, props, delay) {
+    await prepareProps(props);
 
     // compile and load LESS styles
     const css = await getCSS(props);
     if (css) {
-        await page.addStyleTag({
-            content: css
-        });
+        await page.addStyleTag({ content: css });
     }
 
     // preload chart assets
@@ -145,7 +172,13 @@ export async function render(page, props, delay) {
     }
     await Promise.all(loadPlugins);
 
-    const flags = props.flags || {};
+    const flags = parseFlagsFromObject(props.flags || {});
+
+    const themeAutoDark = get(props.theme.data, 'options.darkMode.auto', 'user');
+    const chartAutoDark =
+        themeAutoDark === 'user'
+            ? get(props.chart, 'metadata.publish.autoDarkMode', false)
+            : themeAutoDark;
 
     const state = {
         ...props,
@@ -156,12 +189,8 @@ export async function render(page, props, delay) {
         // hack for dark mode
         themeDataLight: props.theme.data,
         themeDataDark: await getThemeDataDark(props.theme.data),
-        // translate flags into props
-        isEditingAllowed: !!flags.inEditor,
-        isStylePlain: !!flags.plain,
-        isStyleStatic: !!flags.static,
-        isStyleTransparent: !!flags.transparent,
-        isAutoDark: flags.dark === 'auto'
+        isAutoDark: flags.dark === 'auto',
+        chartAutoDark
     };
 
     if (!props.skipSSR) {
@@ -172,18 +201,35 @@ export async function render(page, props, delay) {
             key: `datawrapper`,
             container: dom.window.document.head
         }));
-        const { html } = chartCore.svelte.render({ ...state, emotion });
-        const { extractCritical } = createEmotionServer.default(emotion.cache);
-        const { css: emotionCSS } = extractCritical(html);
 
+        const { html } = chartCore.svelte.render({
+            ...state,
+            renderFlags: { ...state.renderFlags, dark: false },
+            emotion
+        });
+        const { extractCritical } = createEmotionServer.default(emotion.cache);
+
+        const { css: emotionCSSLight } = extractCritical(html);
         await page.evaluate(
             async ({ html }) => {
                 document.querySelector('#__svelte-dw').innerHTML = html;
             },
             { html }
         );
+        await addStyleTagWithId(page, emotionCSSLight, 'css-light');
 
-        await page.addStyleTag({ content: emotionCSS });
+        // render again for dark styles
+        const { html: htmlDark } = chartCore.svelte.render({
+            ...state,
+            renderFlags: { ...state.renderFlags, dark: true },
+            emotion
+        });
+        const { css: emotionCSSDark } = extractCritical(htmlDark);
+        await addStyleTagWithId(page, emotionCSSDark, 'css-dark');
+    } else {
+        // insert fake style tags
+        await addStyleTagWithId(page, '/* empty */', 'css-light');
+        await addStyleTagWithId(page, '/* empty */', 'css-dark');
     }
 
     // inject state to page
@@ -225,6 +271,79 @@ export async function render(page, props, delay) {
     });
     if (delay) await setTimeout(delay);
     return logs;
+}
+
+export async function renderAsWebComponent(page, props, delay = 1000) {
+    await prepareProps(props);
+
+    // intercept requests to JS dependencies
+    await page.setRequestInterception(true);
+    page.on('request', interceptRequest);
+
+    const themeDataDark = await getThemeDataDark(props.theme.data);
+
+    const frontendBase = 'http://dw-render-test';
+    const state = {
+        ...props,
+        isIframe: false,
+        isPreview: true,
+        isStyleDark: props.flags.dark || false,
+        themeDataLight: props.theme.data,
+        themeDataDark,
+        visualization: props.visMeta,
+        polyfillUri: '/lib/polyfills',
+        styles: (await getCSS(props)) || '/* no styles */',
+        // locales: {
+        //     dayjs: await loadVendorLocale('dayjs', chartLocale, team),
+        //     numeral: await loadVendorLocale('numeral', chartLocale, team)
+        // },
+        textDirection: props.textDirection || 'ltr',
+        teamPublicSettings: props.teamPublicSettings || {},
+        ...(props.flags.dark ? { theme: { data: themeDataDark } } : {}),
+        assets: Object.fromEntries(
+            Object.entries(props.assets || {}).map(([filename, content]) => [
+                filename,
+                { load: true, value: content }
+            ])
+        ),
+        frontendDomain: frontendBase,
+        dependencies: [
+            `${frontendBase}/lib/chart-core/dw-2.0.min.js`,
+            ...(props.visMeta.libraries ?? []).map(lib => `${frontendBase}${lib.uri}`),
+            `${frontendBase}/lib/plugins/${props.visMeta.__plugin}/static/${props.visMeta.id}.js`
+        ],
+        blocks: props.blocksPlugins.map(block => {
+            block.source.js = `${frontendBase}${block.source.js}`;
+            block.source.css = `${frontendBase}${block.source.css}`;
+            return block;
+        })
+    };
+
+    const webComponentJS = await readFile(join(pathToChartCore, 'dist/web-component.js'), 'utf-8');
+    const embedJS = `${webComponentJS} \n\nwindow.datawrapper.render(${JSON.stringify(state)});`;
+
+    // inject embedjs script
+    await page.$eval(
+        '#wc-container',
+        (div, embedJS, flags) => {
+            div.innerHTML = '';
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.text = embedJS;
+            for (const [key, value] of Object.entries(flags)) {
+                script.setAttribute(`data-${key}`, value);
+            }
+            div.appendChild(script);
+        },
+        embedJS,
+        props.flags
+    );
+    if (delay) await setTimeout(delay);
+}
+
+async function addStyleTagWithId(page, content, id) {
+    const tag = await page.addStyleTag({ content });
+    await tag.evaluate((el, id) => el.setAttribute('id', id), id);
 }
 
 /**
@@ -356,12 +475,16 @@ export function getElementsInnerHtml(page, selector) {
 export async function takeTestScreenshot(t, path) {
     await mkdir(path, { recursive: true });
     const width = await t.context.page.evaluate(() => window.innerWidth);
-    const height =
-        (await t.context.page.$eval('.dw-chart-styles', d => {
-            let h = 0;
-            for (const el of d.children) h += el.clientHeight || 0;
-            return h;
-        })) + 10;
+
+    const height = t.context.webComponent
+        ? (await t.context.page.$eval('#wc-container', d => {
+              return Math.ceil(d.getBoundingClientRect().height);
+          })) + 15
+        : (await t.context.page.$eval('.dw-chart-styles', d => {
+              let h = 0;
+              for (const el of d.children) h += el.clientHeight || 0;
+              return h;
+          })) + 10;
     await t.context.page.setViewport({ deviceScaleFactor: 3, width, height });
     await t.context.page.screenshot({
         path: join(path, `${slugify(t.title.split('hook for')[1])}.png`)
@@ -411,4 +534,36 @@ export async function updateMetadata(page, updatedProps) {
         // re-render
         window.__dw.render();
     }, updatedProps);
+}
+
+async function interceptRequest(interceptedRequest) {
+    if (interceptedRequest.isInterceptResolutionHandled()) return;
+    if (interceptedRequest.url().startsWith('http://dw-render-test/')) {
+        //  interceptedRequest.abort();
+        const path = interceptedRequest.url().substring(22);
+        let content = '';
+        if (path === 'lib/chart-core/dw-2.0.min.js') {
+            content = await readFile(join(pathToChartCore, 'dist/dw-2.0.min.js'), 'utf-8');
+        } else if (path === 'lib/chart-core/dw-2.0.min.js.map') {
+            content = await readFile(join(pathToChartCore, 'dist/dw-2.0.min.js.map'), 'utf-8');
+        } else if (path === 'lib/plugins/dummy/static/dummy.js') {
+            content = await readFile(
+                join(pathToChartCore, 'tests/helpers/data/dummy.vis.js'),
+                'utf-8'
+            );
+        } else if (path.startsWith('lib/plugins')) {
+            content = await readFile(join(pathToPlugins, path.substring(11)), 'utf-8');
+        } else {
+            interceptedRequest.abort();
+        }
+        if (content) {
+            interceptedRequest.respond({
+                content: path.endsWith('.js') ? 'text/javascript' : 'application/json',
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                body: content
+            });
+        }
+    } else {
+        interceptedRequest.continue();
+    }
 }

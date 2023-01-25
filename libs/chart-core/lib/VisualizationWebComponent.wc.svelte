@@ -26,10 +26,8 @@
     export let origin = '';
     export let fonts = {};
     export let outerContainer;
-    // plain style means no header and footer
-    export let isStylePlain = false;
-    // static style means user can't interact (e.g. in a png version)
-    export let isStyleStatic = false;
+    export let renderFlags = {}; // allow passing render flags directly
+
     let stylesLoaded = false;
     let dependenciesLoaded = false;
     let styleHolder;
@@ -116,10 +114,9 @@
                 {origin}
                 {fonts}
                 {styleHolder}
-                {isStylePlain}
-                {isStyleStatic}
                 {outerContainer}
                 {emotion}
+                {renderFlags}
             />
         </div>
     {/if}

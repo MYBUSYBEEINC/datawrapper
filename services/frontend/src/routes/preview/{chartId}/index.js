@@ -60,7 +60,6 @@ module.exports = {
                 props = Object.assign(props, {
                     isIframe: true,
                     isPreview: true,
-                    isEditingAllowed: request.query.allowEditing,
                     isStyleDark: request.query.dark,
                     themeDataDark: themeDark.json.data,
                     themeDataLight: props.theme.data,

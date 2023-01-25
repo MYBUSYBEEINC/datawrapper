@@ -1,10 +1,12 @@
 import {
     parseFlagsFromURL,
+    parseFlagsFromElement,
     resolveCondition,
     computeThemeData,
     toPixel,
     lineHeight
 } from './shared.mjs';
+import '../tests/helpers/setup-browser-env.mjs';
 import test from 'ava';
 import set from 'lodash/set.js';
 
@@ -110,6 +112,34 @@ test('parseFlagsFromURL uses the first value in case of duplicate parameters', t
         }),
         {
             a: '1'
+        }
+    );
+});
+
+test('parse dark flag from URL', t => {
+    t.is(parseFlagsFromURL('dark=true').dark, true);
+    t.is(parseFlagsFromURL('dark=1').dark, true);
+    t.is(parseFlagsFromURL('dark=0').dark, false);
+    t.is(parseFlagsFromURL('dark=false').dark, false);
+    t.is(parseFlagsFromURL('dark=auto').dark, 'auto');
+    t.is(parseFlagsFromURL('a=2').dark, null); // check we don't set to false automatically
+});
+
+test('parseFlagsFromElement', t => {
+    const el = window.document.createElement('div');
+    el.setAttribute('data-a', 'foo');
+    el.setAttribute('data-answer', 42);
+    el.setAttribute('data-dark', 'true');
+    t.deepEqual(
+        parseFlagsFromElement(el, {
+            a: String,
+            answer: Number,
+            dark: Boolean
+        }),
+        {
+            a: 'foo',
+            answer: 42,
+            dark: true
         }
     );
 });

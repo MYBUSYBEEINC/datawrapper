@@ -3,13 +3,11 @@ html(lang=CHART_LOCALE)
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="color-scheme", content="light dark")
     style!=FONT_CSS
-    if DARK_MODE
-      style(id="css-dark")!=CSS_DARK
-      style(id="css-light" media="--disabled--")!=CSS
-    else
-      style(id="css-dark" media="--disabled--")!=CSS_DARK
-      style(id="css-light")!=CSS
+    style(id="css-light" media="(prefers-color-scheme: light)")!=CSS
+    style(id="css-dark" media="(prefers-color-scheme: dark)")!=CSS_DARK
+    
     | !{CHART_HEAD}
 
     if SENTRY
@@ -38,13 +36,6 @@ html(lang=CHART_LOCALE)
     //- https://v8.dev/blog/cost-of-javascript-2019#json
     script.
       window.__DW_SVELTE_PROPS__ = JSON.parse(!{__DW_SVELTE_PROPS__});
-      window.__DW_SVELTE_PROPS__.isStylePlain = /[?&]plain=(1|true)/.test(window.location.search);
-      window.__DW_SVELTE_PROPS__.isStyleStatic = /[?&]static=(1|true)/.test(window.location.search);
-      window.__DW_SVELTE_PROPS__.isStyleTransparent = /[?&]transparent=(1|true)/.test(window.location.search);
-      if (/[?&]logo=(auto|on|off)/.test(window.location.search)) {
-        window.__DW_SVELTE_PROPS__.forceLogo = (window.location.search).match(/[?&]logo=(auto|on|off)/)[1];
-      }
-      window.__DW_SVELTE_PROPS__.logoId = new URLSearchParams(window.location.search).get('logoId');
     each src in DEPS
       script(src=src)
 
