@@ -1111,7 +1111,8 @@ Please make sure you called __(key) with a key of type "string".
     }
 
     // static style (make links look like normal text)
-    :global(.static .chart a) {
+    .static :global(a) {
+        pointer-events: none;
         color: currentColor;
         text-decoration: none;
         font-weight: unset;

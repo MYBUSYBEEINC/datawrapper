@@ -282,6 +282,13 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
 
     const themeDataDark = await getThemeDataDark(props.theme.data);
 
+    const webComponentCSS = await readFile(
+        join(pathToChartCore, 'dist/web-component.css'),
+        'utf-8'
+    );
+
+    // console.log({ webComponentCSS });
+
     const frontendBase = 'http://dw-render-test';
     const state = {
         ...props,
@@ -292,7 +299,7 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
         themeDataDark,
         visualization: props.visMeta,
         polyfillUri: '/lib/polyfills',
-        styles: (await getCSS(props)) || '/* no styles */',
+        styles: `${webComponentCSS}\n\n${await getCSS(props)}`,
         // locales: {
         //     dayjs: await loadVendorLocale('dayjs', chartLocale, team),
         //     numeral: await loadVendorLocale('numeral', chartLocale, team)

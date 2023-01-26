@@ -38,8 +38,7 @@
         if (typeof document !== 'undefined') {
             if (!stylesLoaded && styleHolder && styles) {
                 const style = document.createElement('style');
-                style.type = 'text/css';
-                style.innerHTML = styles;
+                style.textContent = styles;
                 styleHolder.appendChild(style);
                 emotion = createEmotion({
                     key: `datawrapper-${chart.id}`,
