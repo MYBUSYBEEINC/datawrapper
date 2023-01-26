@@ -79,7 +79,7 @@
     $: isStyleTransparent = renderFlags.transparent;
     $: isStyleDark = renderFlags.dark;
     $: logoId = renderFlags.logoId;
-    $: forceLogo = !!renderFlags.logo;
+    $: forceLogo = renderFlags.logo;
 
     export let emotion;
 
