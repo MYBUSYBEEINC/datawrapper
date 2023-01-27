@@ -33,7 +33,7 @@ export async function prepareChart(
     return {
         ...camelizeTopLevelKeys(additionalData),
         publicId,
-        language: 'en_US',
+        language: 'en-US',
         theme: 'datawrapper',
         ...camelizeTopLevelKeys(dataValues),
         folderId,

@@ -6,6 +6,7 @@ import objectDiff from '@datawrapper/shared/objectDiff.js';
 import get from '@datawrapper/shared/get.js';
 import set from '@datawrapper/shared/set.js';
 import { filterNestedObjectKeys } from '../../utils';
+import { findValidLocale } from '../../utils/charts.cjs';
 import delimited from '@datawrapper/chart-core/lib/dw/dataset/delimited.mjs';
 import coreMigrate from '@datawrapper/chart-core/lib/migrate';
 import reorderColumns from '@datawrapper/chart-core/lib/dw/dataset/reorderColumns.mjs';
@@ -184,8 +185,14 @@ export function initStores({
     );
 
     const locale$ = distinctChart$.pipe(
-        map(chart => chart.language || 'en-US'),
-        map(chartLocale => rawLocales.find(l => l.id === chartLocale))
+        map(chart => {
+            const locale = findValidLocale(chart, rawLocales);
+            if (locale.id !== chart.language) {
+                chart.language = locale.id;
+                chart$.set(chart);
+            }
+            return locale;
+        })
     );
 
     const vendorLocales$ = combineLatest([locale$, team$]).pipe(

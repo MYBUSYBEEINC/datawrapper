@@ -61,7 +61,7 @@ async function createChart({ server, user, payload = {}, session: sessionId, tok
         if (!session)
             throw new Error('Unknown session id');
     }
-    const language = user && user.role !== 'guest' ? user.language : (0, get_1.default)(session, 'data.dw-lang') || 'en-US';
+    const language = (user && user.role !== 'guest' ? user.language : (0, get_1.default)(session, 'data.dw-lang', 'en-US')).replace('_', '-');
     const defaults = (server.methods.config('general')?.['defaults'] || {
         type: 'bar-chart',
         theme: 'default'

@@ -25,7 +25,7 @@ async function prepareChart(chart, additionalData = {}) {
     return {
         ...(0, camelizeTopLevelKeys_1.camelizeTopLevelKeys)(additionalData),
         publicId,
-        language: 'en_US',
+        language: 'en-US',
         theme: 'datawrapper',
         ...(0, camelizeTopLevelKeys_1.camelizeTopLevelKeys)(dataValues),
         folderId,

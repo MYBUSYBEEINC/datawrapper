@@ -59,4 +59,13 @@ function groupCharts({ charts, groupBy, __ }) {
     throw new Error('Unknown groupBy value');
 }
 
-module.exports = { groupCharts };
+function findValidLocale(chart, locales) {
+    const chartLocale = (chart.language || 'en-US').replace('_', '-').toLowerCase();
+    let locale = locales.find(l => l.id.toLowerCase() === chartLocale);
+    if (locale) return locale;
+    locale = locales.find(l => l.id.split('-')[0].toLowerCase() === chartLocale.split('-')[0]);
+    if (locale) return locale;
+    return locales.find(l => l.id === 'en-US');
+}
+
+module.exports = { groupCharts, findValidLocale };
