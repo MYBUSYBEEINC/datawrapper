@@ -310,6 +310,9 @@
     .dark-background .resizer:hover {
         background-color: rgba(255, 255, 255, 0.15);
     }
+    .dark-mode {
+        color-scheme: dark;
+    }
     .fixed-height .resizer {
         cursor: ew-resize;
     }
@@ -347,6 +350,7 @@
         class="iframe-border"
         class:resizing
         class:fixed-height={fixedHeight}
+        class:dark-mode={isDark}
         style="background:{background};width:{resizeWidth || width}px; height:{resizeHeight ||
             height}px;border-color:{borderColor}; padding:{border}px; padding-bottom:{Math.max(
             border - (allowInlineEditing ? 10 : 0),
