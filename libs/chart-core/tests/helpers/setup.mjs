@@ -519,7 +519,7 @@ async function getThemeDataDark(themeData) {
  * @param {Page} page
  * @param {oject} updatedProps
  */
-export async function updateMetadata(page, updatedProps) {
+export async function updateMetadata(page, updatedProps, delay = 0) {
     await page.evaluate(async updatedProps => {
         const merge = (target, source) => {
             // Iterate through `source` properties and if an `Object` set property to merge of `target` and `source` properties
@@ -541,6 +541,10 @@ export async function updateMetadata(page, updatedProps) {
         // re-render
         window.__dw.render();
     }, updatedProps);
+
+    if (delay) {
+        await setTimeout(delay);
+    }
 }
 
 async function interceptRequest(interceptedRequest) {
