@@ -17,6 +17,7 @@
     export let themeDataDark = {};
     export let themeDataLight = {};
     export let locales = {};
+    export let textDirection = 'ltr';
     export let translations;
     export let blocks = {};
     export let chartAfterBodyHTML = '';
@@ -26,6 +27,8 @@
     export let origin = '';
     export let fonts = {};
     export let outerContainer;
+    export let themeCSSDark;
+    export let isAutoDark;
     export let renderFlags = {}; // allow passing render flags directly
 
     let stylesLoaded = false;
@@ -37,9 +40,19 @@
     $: {
         if (typeof document !== 'undefined') {
             if (!stylesLoaded && styleHolder && styles) {
-                const style = document.createElement('style');
-                style.textContent = styles;
-                styleHolder.appendChild(style);
+                // light styles
+                const styleLight = document.createElement('style');
+                styleLight.id = 'css-light';
+                styleLight.textContent = styles;
+                styleLight.media = '(prefers-color-scheme: light)';
+                styleHolder.appendChild(styleLight);
+
+                const styleDark = document.createElement('style');
+                styleDark.id = 'css-dark';
+                styleDark.media = '(prefers-color-scheme: dark)';
+                styleDark.textContent = themeCSSDark;
+                styleHolder.appendChild(styleDark);
+
                 emotion = createEmotion({
                     key: `datawrapper-${chart.id}`,
                     container: styleHolder
@@ -95,7 +108,7 @@
 
 <div class="web-component-body">
     {#if stylesLoaded && dependenciesLoaded}
-        <div class="chart dw-chart vis-{chart.type}">
+        <div class="chart dw-chart vis-{chart.type}" class:dir-rtl={textDirection === 'rtl'}>
             <Visualization
                 {data}
                 {chart}
@@ -109,6 +122,7 @@
                 {chartAfterBodyHTML}
                 isIframe={false}
                 {isPreview}
+                {isAutoDark}
                 {assets}
                 {origin}
                 {fonts}
@@ -116,6 +130,7 @@
                 {outerContainer}
                 {emotion}
                 {renderFlags}
+                {textDirection}
             />
         </div>
     {/if}

@@ -3,6 +3,7 @@ const { loadVendorLocale, loadLocaleConfig } = require('@datawrapper/service-uti
 const { Team } = require('@datawrapper/orm/db');
 const chartCore = require('@datawrapper/chart-core');
 const Joi = require('joi');
+const get = require('lodash/get');
 const { getChart } = require('../utils.js');
 
 const fs = require('fs').promises;
@@ -57,6 +58,12 @@ module.exports = {
                 const chartLocale = props.chart.language || 'en-US';
                 const team = await Team.findByPk(props.chart.organizationId);
 
+                const themeAutoDark = get(props.theme.data, 'options.darkMode.auto', 'user');
+                const chartAutoDark =
+                    themeAutoDark === 'user'
+                        ? get(props.chart, 'metadata.publish.autoDarkMode', false)
+                        : themeAutoDark;
+
                 const webComponentJS = await fs.readFile(
                     path.join(chartCore.path.dist, 'web-component.js'),
                     'utf-8'
@@ -68,8 +75,10 @@ module.exports = {
                     isIframe: false,
                     isPreview: true,
                     isStyleDark: request.query.dark,
+                    chartAutoDark,
                     themeDataDark: themeDark.json.data,
                     themeDataLight: props.theme.data,
+                    themeCSSDark: themeDark.css,
                     polyfillUri: '/lib/polyfills',
                     locales: {
                         dayjs: await loadVendorLocale('dayjs', chartLocale, team),

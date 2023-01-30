@@ -119,6 +119,12 @@ async function prepareProps(props) {
     props.chart.theme = props.theme.id;
     // default translations
     props.translations = props.translations || { 'en-US': {} };
+
+    const themeAutoDark = get(props.theme.data, 'options.darkMode.auto', 'user');
+    props.chartAutoDark =
+        themeAutoDark === 'user'
+            ? get(props.chart, 'metadata.publish.autoDarkMode', false)
+            : themeAutoDark;
 }
 
 /**
@@ -174,12 +180,6 @@ export async function render(page, props, delay) {
 
     const flags = parseFlagsFromObject(props.flags || {});
 
-    const themeAutoDark = get(props.theme.data, 'options.darkMode.auto', 'user');
-    const chartAutoDark =
-        themeAutoDark === 'user'
-            ? get(props.chart, 'metadata.publish.autoDarkMode', false)
-            : themeAutoDark;
-
     const state = {
         ...props,
         blocks,
@@ -189,8 +189,7 @@ export async function render(page, props, delay) {
         // hack for dark mode
         themeDataLight: props.theme.data,
         themeDataDark: await getThemeDataDark(props.theme.data),
-        isAutoDark: flags.dark === 'auto',
-        chartAutoDark
+        isAutoDark: flags.dark === 'auto'
     };
 
     if (!props.skipSSR) {
@@ -238,20 +237,7 @@ export async function render(page, props, delay) {
     });
 
     // collect console.logs
-    const logs = [];
-    page.on('console', event => {
-        const text = event.text();
-        if (text.startsWith('Chart rendered in')) return;
-        logs.push({ type: event.type(), text: event.text() });
-        if (process.env.DEBUG) process.stdout.write(`LOG: ${event.text()}\n`);
-        // log errors instantly
-        if (event.type() === 'error') console.error('ERROR: ' + event.text());
-    });
-    page.on('pageerror', ({ message }) => {
-        // log errors instantly
-        console.error('ERROR: ' + message);
-        logs.push({ type: 'error', text: message });
-    });
+    const logs = traceLogs(page);
 
     // set container classes
     await page.evaluate(async ({ chart, textDirection }) => {
@@ -286,8 +272,6 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
         join(pathToChartCore, 'dist/web-component.css'),
         'utf-8'
     );
-
-    // console.log({ webComponentCSS });
 
     const frontendBase = 'http://dw-render-test';
     const state = {
@@ -326,6 +310,8 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
         })
     };
 
+    const logs = traceLogs(page);
+
     const webComponentJS = await readFile(join(pathToChartCore, 'dist/web-component.js'), 'utf-8');
     const embedJS = `${webComponentJS} \n\nwindow.datawrapper.render(${JSON.stringify(state)});`;
 
@@ -346,6 +332,24 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
         props.flags
     );
     if (delay) await setTimeout(delay);
+    return logs;
+}
+
+function traceLogs(page, logs = []) {
+    page.on('console', event => {
+        const text = event.text();
+        if (text.startsWith('Chart rendered in')) return;
+        logs.push({ type: event.type(), text: event.text() });
+        if (process.env.DEBUG) process.stdout.write(`LOG: ${event.text()}\n`);
+        // log errors instantly
+        if (event.type() === 'error') console.error('ERROR: ' + event.text());
+    });
+    page.on('pageerror', ({ message }) => {
+        // log errors instantly
+        console.error('ERROR: ' + message);
+        logs.push({ type: 'error', text: message });
+    });
+    return logs;
 }
 
 async function addStyleTagWithId(page, content, id) {

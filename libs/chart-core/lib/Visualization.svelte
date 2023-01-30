@@ -77,7 +77,7 @@
     $: isStylePlain = renderFlags.plain;
     $: isStyleStatic = renderFlags.static;
     $: isStyleTransparent = renderFlags.transparent;
-    $: isStyleDark = renderFlags.dark;
+    $: isStyleDark = renderFlags.dark !== 'auto' && renderFlags.dark;
     $: logoId = renderFlags.logoId;
     $: forceLogo = renderFlags.logo;
 
@@ -619,6 +619,10 @@ Please make sure you called __(key) with a key of type "string".
             matchMediaQuery.addEventListener('change', e => {
                 updateDarkModeState(e.matches);
             });
+            if (!isIframe && renderFlags.dark === 'auto') {
+                // initialize dark flag in web components
+                renderFlags = { ...renderFlags, dark: matchMediaQuery.matches };
+            }
 
             if (!CSS.supports('color-scheme', 'dark')) {
                 // if the browser doesn't support prefer-color-scheme we need
@@ -718,8 +722,8 @@ Please make sure you called __(key) with a key of type "string".
                     metaColorSchema.setAttribute('content', isDark ? 'dark' : 'light');
                 }
             }
-            const cssLight = document.getElementById('css-light');
-            const cssDark = document.getElementById('css-dark');
+            const cssLight = (styleHolder || document).querySelector('#css-light');
+            const cssDark = (styleHolder || document).querySelector('#css-dark');
             (isDark ? cssLight : cssDark).setAttribute('media', '--disabled--');
             (isDark ? cssDark : cssLight).removeAttribute('media');
         }
@@ -900,7 +904,7 @@ Please make sure you called __(key) with a key of type "string".
         Right: get($themeData, 'options.footer.right.layout', 'inline')
     };
 
-    $: if (emotion) updateGlobalStyles(globalStyles(emotion, $themeData));
+    $: if (emotion) updateGlobalStyles(globalStyles(emotion, $themeData, isIframe));
 
     let prevChartBodyEmotionClass = '';
     $: chartBodyEmotionClass = emotion ? chartBodyStyles(emotion, $themeData) : '';
@@ -1154,7 +1158,9 @@ Please make sure you called __(key) with a key of type "string".
 
 <div
     class:static={isStyleStatic}
-    class="dw-chart-styles {emotion ? chartStyles(emotion, $themeData, isStyleStatic) : ''}"
+    class="dw-chart-styles {emotion
+        ? chartStyles(emotion, $themeData, isStyleStatic, isIframe)
+        : ''}"
 >
     {#if !isStylePlain}
         {#if !regions.headerRight.length}

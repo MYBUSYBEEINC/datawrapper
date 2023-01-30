@@ -26,13 +26,18 @@ if (!window.datawrapper) {
             data.script.parentNode.insertBefore(target, data.script);
 
             // @todo: support automatic dark mode initialization
-
+            const renderFlags = parseFlagsFromElement(data.script);
             const props = {
                 target,
                 props: {
                     outerContainer: target,
                     dependencyStates: window.datawrapper.dependencyStates,
-                    renderFlags: parseFlagsFromElement(data.script),
+                    renderFlags,
+                    isAutoDark:
+                        renderFlags.dark === 'auto' ||
+                        (renderFlags.dark !== true &&
+                            renderFlags.dark !== false &&
+                            data.chartAutoDark),
                     ...data
                 },
                 hydrate: false

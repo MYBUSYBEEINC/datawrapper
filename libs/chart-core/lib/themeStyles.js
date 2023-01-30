@@ -4,14 +4,18 @@ import { cache } from '@emotion/css';
 import createCache from '@emotion/cache';
 import { serializeStyles } from '@emotion/serialize';
 
-export function globalStyles(emotion, themeData) {
+export function globalStyles(emotion, themeData, isIframe) {
     const { getProp, cssTemplate } = getThemeStyleHelpers(emotion, themeData);
-    return cssTemplate`body:not(.transparent), .web-component-body:not(.transparent) {
+    return cssTemplate`${
+        isIframe
+            ? `body:not(.transparent) {
         background: ${getProp('style.body.background')};
+    }`
+            : ``
     }`;
 }
 
-export function chartStyles(emotion, themeData, isStyleStatic) {
+export function chartStyles(emotion, themeData, isStyleStatic, isIframe) {
     const { css, getProp } = getThemeStyleHelpers(emotion, themeData);
     const bgCol = getProp('colors.background');
     return css`
@@ -27,6 +31,7 @@ export function chartStyles(emotion, themeData, isStyleStatic) {
         margin: ${getProp('style.body.margin', 0)};
         padding: ${getProp('style.body.padding')};
         text-transform: ${getProp('typography.chart.textTransform')};
+        ${!isIframe ? `background: ${getProp('style.body.background')};` : ''}
 
         ${isStyleStatic
             ? ''
