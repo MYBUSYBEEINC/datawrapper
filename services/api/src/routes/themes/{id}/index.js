@@ -144,7 +144,10 @@ module.exports = {
                     {
                         where: {
                             theme: theme.id
-                        }
+                        },
+                        // workaround for invisible admin-cleanups, that don't update last_modified_at
+                        // @todo: implement better way of sorting charts by recently edited, that doesn't rely on last_modified_at
+                        silent: true
                     }
                 );
                 const updatedTeamDefaultTheme = await Team.update(
