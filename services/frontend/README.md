@@ -374,16 +374,15 @@ Then a core view can dynamically import the view component using the `ViewCompon
 
 ```svelte
 <script>
-    import ViewComponent from '_partials/ViewComponent.svelte';
+    const viewComponents = getContext('viewComponents');
 </script>
 
-<ViewComponent id="publish/export-pdf" {props} {__} />
+<svelte:component this={viewComponents.get("publish/export-pdf")} {props} {__} on:custom-event={handleCustomEvent} />
 ```
 
 Internally, the view component import statements are injected into the core view Svelte files by
 rollup before it compiles the files. Then the imported view components are store in the
-`viewComponents` context, from which they're loaded by
-[ViewComponent](src/views/_partials/ViewComponent.svelte). Search the project for
+`viewComponents` context. Search the project for
 `ROLLUP IMPORT VIEW COMPONENTS` to find the relevant code.
 
 See [our dashboard](src/views/dashboard/Index.svelte) for a live example.
