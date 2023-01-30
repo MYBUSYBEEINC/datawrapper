@@ -18,6 +18,7 @@ test('findDarkModeOverrideKeys identifies keys within schema items of type link'
 
     const expected = [
         'options.blocks.logo.data.options',
+        'options.blocks.rectangle.data.background',
         'options.blocks.hr.data.border',
         'options.blocks.hr1.data.border',
         'options.blocks.hr2.data.border',
