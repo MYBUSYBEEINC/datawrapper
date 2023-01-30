@@ -12,22 +12,26 @@ module.exports = {
                 }
             },
             async handler(request) {
+                const isAdmin = server.methods.isAdmin(request);
+
+                let offset = 0;
+                const data = [];
+
                 try {
-                    const isAdmin = server.methods.isAdmin(request);
-                    const url = isAdmin ? '/v3/admin/themes' : '/v3/themes';
-                    const res = await request.server.inject({
-                        method: 'GET',
-                        url,
-                        auth: request.auth,
-                        headers: request.headers
-                    });
+                    let res = await fetchThemes(offset);
 
                     if (!res.result.error) {
-                        return {
-                            status: 'ok',
-                            data: res.result.list
-                        };
+                        data.push(...res.result.list);
+
+                        while (data.length < res.result.total) {
+                            offset += res.result.list.length;
+                            res = await fetchThemes(offset);
+                            data.push(...res.result.list);
+                        }
+
+                        return { status: 'ok', data };
                     }
+
                     if (res.result.message === 'Insufficient scope') {
                         return boomErrorWithData(Boom.forbidden('Insufficient scope'), {
                             code: 'access-denied'
@@ -45,6 +49,16 @@ module.exports = {
                     return boomErrorWithData(Boom.badGateway('unexpected error'), {
                         code: 'unknown_error',
                         message: 'Unknown error'
+                    });
+                }
+
+                function fetchThemes(offset = 0) {
+                    const url = `${isAdmin ? '/v3/admin/themes' : '/v3/themes'}?offset=${offset}`;
+                    return request.server.inject({
+                        method: 'GET',
+                        url,
+                        auth: request.auth,
+                        headers: request.headers
                     });
                 }
             }
