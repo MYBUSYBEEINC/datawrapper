@@ -15,6 +15,7 @@
     import { debounceTime, skip, startWith } from 'rxjs/operators';
     // load stores from context
     const { chart, theme, visualization, locale, dataset } = getContext('page/edit');
+    const viewComponents = getContext('viewComponents');
 
     export let __;
     export let dwChart;
@@ -208,33 +209,40 @@
             >
         {/each}
     {/if}
-    <Svelte2Wrapper
-        id={$visualization.controls.amd}
-        js="/lib/plugins/{$visualization.controls.js}?sha={$visualization.__controlsHash}"
-        css="/lib/plugins/{$visualization.controls.css}?sha={$visualization.__controlsHash}"
-        module={controlsModule}
-        {storeData}
-        on:update={onStoreDataUpdate}
-        storeMethods={{ getMetadata, setMetadata, observeDeep }}
-        bind:data={state}
-        on:init={evt => {
-            notifications = evt.detail._state.notifications || [];
-        }}
-        on:state={evt => {
-            notifications = evt.detail.current.notifications || [];
-        }}
-    >
-        <article slot="error" class="message is-danger my-6">
-            <div class="message-header">{__('edit / controls-loading-error / title')}</div>
-            <div class="message-body">
-                <p>{@html __('edit / controls-loading-error / description')}</p>
-                <button
-                    class="button my-3"
-                    on:click|stopPropagation={() => window.location.reload()}
-                    >{__('edit / controls-loading-error / button')}</button
-                >
-                <p>{@html __('edit / controls-loading-error / contact')}</p>
-            </div>
-        </article>
-    </Svelte2Wrapper>
+    {#if $visualization.controls.views && $visualization.controls.views[controlsModule]}
+        <svelte:component
+            this={viewComponents.get($visualization.controls.views[controlsModule])}
+            {__}
+        />
+    {:else}
+        <Svelte2Wrapper
+            id={$visualization.controls.amd}
+            js="/lib/plugins/{$visualization.controls.js}?sha={$visualization.__controlsHash}"
+            css="/lib/plugins/{$visualization.controls.css}?sha={$visualization.__controlsHash}"
+            module={controlsModule}
+            {storeData}
+            on:update={onStoreDataUpdate}
+            storeMethods={{ getMetadata, setMetadata, observeDeep }}
+            bind:data={state}
+            on:init={evt => {
+                notifications = evt.detail._state.notifications || [];
+            }}
+            on:state={evt => {
+                notifications = evt.detail.current.notifications || [];
+            }}
+        >
+            <article slot="error" class="message is-danger my-6">
+                <div class="message-header">{__('edit / controls-loading-error / title')}</div>
+                <div class="message-body">
+                    <p>{@html __('edit / controls-loading-error / description')}</p>
+                    <button
+                        class="button my-3"
+                        on:click|stopPropagation={() => window.location.reload()}
+                        >{__('edit / controls-loading-error / button')}</button
+                    >
+                    <p>{@html __('edit / controls-loading-error / contact')}</p>
+                </div>
+            </article>
+        </Svelte2Wrapper>
+    {/if}
 {/if}

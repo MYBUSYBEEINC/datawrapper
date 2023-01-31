@@ -32,7 +32,7 @@ async function registerVisualization(
         // compute hash for visualization styles and controls
         const [styleHash, controlsHash, visHash] = await Promise.all([
             server.methods.computeFileGlobHash(path.join(pluginRoot, plugin, 'less/**/*.less')),
-            vis.controls
+            vis.controls && vis.controls.js
                 ? server.methods.computeFileHash(path.join(pluginRoot, vis.controls.js))
                 : undefined,
             vis.script ? server.methods.computeFileHash(vis.script) : undefined

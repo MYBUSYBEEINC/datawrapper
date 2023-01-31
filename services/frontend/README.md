@@ -369,6 +369,7 @@ A view component needs to be defined in plugin's `plugin.json` file:
         }
     ]
 }
+```
 
 Then a core view can dynamically import the view component using the `ViewComponent` partial:
 

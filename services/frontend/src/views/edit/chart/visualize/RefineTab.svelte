@@ -1,5 +1,5 @@
 <script>
-    import Svelte2ChartControls from './Svelte2ChartControls.svelte';
+    import ChartControls from './ChartControls.svelte';
     import { onMount, getContext } from 'svelte';
 
     const { chart } = getContext('page/edit');
@@ -14,4 +14,4 @@
     });
 </script>
 
-<Svelte2ChartControls controlsModule="Refine" {dwChart} {teamSettings} {__} />
+<ChartControls controlsModule="Refine" {dwChart} {teamSettings} {__} />
