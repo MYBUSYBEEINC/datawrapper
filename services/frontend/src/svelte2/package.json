@@ -10,8 +10,8 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@datawrapper/chart-core": "file:../../../libs/chart-core",
-        "@datawrapper/controls": "^2.57.2",
+        "@datawrapper/chart-core": "file:../../../../libs/chart-core",
+        "@datawrapper/controls": "^2.61.1",
         "@datawrapper/shared": "^1.5.4",
         "@rollup/plugin-commonjs": "^20.0.0",
         "@rollup/plugin-json": "^4.1.0",
