@@ -316,7 +316,7 @@
             if (groupBy) {
                 newCharts.list = groupCharts({ charts: newCharts.list, groupBy, __ });
             }
-            if (!newCharts.list.length && /[a-zA-Z0-9]{5}/.test(search)) {
+            if (!newCharts.list.length && /^[a-zA-Z0-9]{5}$/.test(search)) {
                 // search for specific chart id
                 try {
                     const chart = await httpReq.get(`/v3/charts/${search}`);
