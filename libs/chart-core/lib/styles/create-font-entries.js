@@ -53,9 +53,9 @@ function createFontEntries(fonts, themeData) {
             .filter(([format]) => !['eot', 'woff2'].includes(format))
             .map(([f, v]) => {
                 const fmt = fmtMap[f] || f;
-                return `url(${processUrl(v)}${
-                    f === 'svg' ? `#${encodeURIComponent(sanitizedFont)}` : ''
-                }) format('${fmt}')`;
+                return `url('${processUrl(v)}${
+                    f === 'svg' ? `#${sanitizedFont}` : ''
+                }') format('${fmt}')`;
             });
 
         const propsCSS = ['weight', 'style', 'display', 'stretch']
