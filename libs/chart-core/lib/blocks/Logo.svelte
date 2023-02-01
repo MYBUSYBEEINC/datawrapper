@@ -8,7 +8,7 @@
     let logo;
 
     $: {
-        const metadataLogo = get(chart, 'metadata.publish.blocks.logo');
+        const metadataLogo = get(chart, 'metadata.publish.blocks.logo', {});
         const themeLogoOptions = get(themeData, 'options.blocks.logo.data.options', []);
         const thisLogoId = logoId || metadataLogo.id;
         logo = themeLogoOptions.find(logo => logo.id === thisLogoId);

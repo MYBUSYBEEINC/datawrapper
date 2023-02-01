@@ -425,7 +425,14 @@ export function getElementStyle(page, selector, style, pseudo = undefined) {
 export function getElementBoundingBox(page, selector) {
     return page.$eval(selector, node => {
         const bbox = node.getBoundingClientRect();
-        return { left: bbox.left, right: bbox.right, top: bbox.top, bottom: bbox.bottom };
+        return {
+            left: bbox.left,
+            right: bbox.right,
+            top: bbox.top,
+            bottom: bbox.bottom,
+            width: bbox.width,
+            height: bbox.height
+        };
     });
 }
 
