@@ -81,7 +81,12 @@ test('should create font rule declarations', t => {
         Roboto: importedFont
     });
 
-    t.is(result, "@import 'https://static.dwcdn.net/css/roboto.css';");
+    t.deepEqual(result, [
+        {
+            family: 'Roboto',
+            css: "@import 'https://static.dwcdn.net/css/roboto.css';"
+        }
+    ]);
 
     // css for font file, (no font families defined)
     result = createFontEntries({
@@ -118,7 +123,12 @@ test('should change a css @import without protocol to use https', t => {
         }
     });
 
-    t.is(result, "@import 'https://static.dwcdn.net/css/roboto.css';");
+    t.deepEqual(result, [
+        {
+            family: 'Roboto',
+            css: "@import 'https://static.dwcdn.net/css/roboto.css';"
+        }
+    ]);
 });
 
 test('should flatten a nested theme object', t => {

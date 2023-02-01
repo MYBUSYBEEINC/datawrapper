@@ -4,6 +4,8 @@
     import createEmotion from '@emotion/css/create-instance';
     import Visualization from './Visualization.svelte';
     import { loadScript } from '@datawrapper/shared/fetch.js';
+    import { createFontEntries } from './styles/create-font-entries.js';
+
     const DEPENDENCY_STATE = {
         loading: 'loading',
         finished: 'finished'
@@ -26,6 +28,7 @@
     export let styles;
     export let origin = '';
     export let fonts = {};
+    export let themeFonts = {};
     export let outerContainer;
     export let themeCSSDark;
     export let isAutoDark;
@@ -46,7 +49,7 @@
                 styleLight.textContent = styles;
                 styleLight.media = '(prefers-color-scheme: light)';
                 styleHolder.appendChild(styleLight);
-
+                // dark styles
                 const styleDark = document.createElement('style');
                 styleDark.id = 'css-dark';
                 styleDark.media = '(prefers-color-scheme: dark)';
@@ -62,15 +65,27 @@
         }
     }
     $: {
-        // fonts need to be appended globally, and can then be used in every WebComponent
+        // fonts need to be loaded globally, and can then be used in every WebComponent
         if (chart.theme) {
             const styleId = `datawrapper-${chart.theme}`;
             if (typeof document !== 'undefined') {
                 if (!document.head.querySelector(`#${styleId}`)) {
                     const style = document.createElement('style');
                     style.id = styleId;
-                    style.type = 'text/css';
-                    style.innerHTML = theme.fontsCSS;
+                    const skipExistingFonts =
+                        document.fonts &&
+                        document.fonts.check &&
+                        // browsers may decide not to reveal whether or not a font is installed to limit
+                        // fingerprinting. we're finding out if this is the case by checking for a font
+                        // name that definitely doesn't exist
+                        !document.fonts.check('16px fNECMNZabqSjpxnZRdS');
+                    const fontsCSS = createFontEntries(themeFonts, themeDataLight)
+                        .filter(
+                            d => !skipExistingFonts || !document.fonts.check(`16px ${d.family}`)
+                        )
+                        .map(d => d.css)
+                        .join('\n');
+                    style.textContent = fontsCSS;
                     document.head.appendChild(style);
                 }
             }

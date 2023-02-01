@@ -293,11 +293,12 @@ function setOrigAnnotations(theme) {
     });
 }
 
+/**
+ * filters theme assets to only return assets with type 'font'
+ * @param {object} theme
+ */
 function getThemeFonts(theme) {
-    const fonts = {};
-
-    for (const [key, value] of Object.entries(theme.assets)) {
-        if (theme.assets[key].type === 'font') fonts[key] = value;
-    }
-    return fonts;
+    return Object.fromEntries(
+        Object.entries(theme.assets).filter(([, asset]) => asset.type === 'font')
+    );
 }

@@ -1,20 +1,11 @@
 <script type="text/javascript">
     import WebComponentEmbed from './WebComponentEmbed.svelte';
-    import { onMount } from 'svelte';
-    export let chartIds = [];
-    let groupedCharts = [];
-    $: {
-        groupedCharts = chartIds.reduce(
-            (acc, cur) => {
-                const group = acc[acc.length - 1];
-                group.push(cur);
-                if (group.length === 2) acc.push([]);
-                return acc;
-            },
-            [[]]
-        );
-    }
+    import { onMount, getContext } from 'svelte';
 
+    const request = getContext('request');
+    export let chartIds = [];
+
+    let chartIdsString = chartIds.join(', ');
     let isDark;
 
     onMount(() => {
@@ -25,9 +16,20 @@
         });
     });
 
+    function loadCharts() {
+        chartIds = chartIdsString.split(',').map(d => d.trim());
+        // update url
+        window.history.pushState(
+            null,
+            null,
+            `${$request.path}?${new URLSearchParams({ charts: chartIds.join(',') })}`
+        );
+    }
+
     const BOOLEAN_FLAGS = ['plain', 'static', 'transparent', 'allowEditing', 'svgonly', 'map2svg'];
     const CHOICE_FLAGS = {
-        dark: ['true', 'false', 'auto']
+        dark: ['true', 'false', 'auto'],
+        logo: ['on', 'off', 'auto']
     };
     const flags = Object.fromEntries(BOOLEAN_FLAGS.map(k => [k, false]));
     const choicesActive = Object.fromEntries(Object.keys(CHOICE_FLAGS).map(k => [k, false]));
@@ -43,15 +45,23 @@
 <section class="section">
     <div class="container">
         <div class="columns">
-            <div class="column">
-                <p>
-                    Provide a list of comma-separated chart IDs to test them as web component
+            <div class="column is-two-thirds">
+                <label for="ids" class="label"
+                    >Provide a list of comma-separated chart IDs to test them as web component
                     embeds:
-                </p>
-                <form action="/v2/web-components" method="GET">
-                    <input name="charts" class="input" value={chartIds} />
-                    <input type="submit" value="Go" />
-                </form>
+                </label>
+
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input id="ids" name="charts" class="input" bind:value={chartIdsString} />
+                    </div>
+                    <div class="control">
+                        <button class="button is-primary" on:click={loadCharts}>Go!</button>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <strong>Render flags:</strong><br />
                 {#each Object.entries(CHOICE_FLAGS) as [key, v]}
                     <label class="checkbox mr-3"
                         ><input type="checkbox" bind:checked={choicesActive[key]} />
@@ -66,7 +76,7 @@
                                 {choice}</label
                             >
                         {/each}</label
-                    >
+                    ><br />
                 {/each}
                 {#each BOOLEAN_FLAGS as key}
                     <label class="checkbox mr-3"
@@ -78,16 +88,17 @@
 
         <hr />
 
-        {#each groupedCharts as charts}
-            <div
-                class="columns preview"
-                class:has-background-black-ter={(choicesActive.dark && choices.dark === 'true') ||
-                    (isDark && isAutoDark)}
-            >
-                {#each charts as chart}
-                    <div class="column">
+        <div class="columns is-multiline">
+            {#each chartIds as chartId}
+                <div
+                    class="column is-half"
+                    class:has-background-black-ter={(choicesActive.dark &&
+                        choices.dark === 'true') ||
+                        (isDark && isAutoDark)}
+                >
+                    {#key chartId}
                         <WebComponentEmbed
-                            id={chart}
+                            id={chartId}
                             flags={{
                                 ...flags,
                                 ...Object.fromEntries(
@@ -97,9 +108,9 @@
                                 )
                             }}
                         />
-                    </div>
-                {/each}
-            </div>
-        {/each}
+                    {/key}
+                </div>
+            {/each}
+        </div>
     </div>
 </section>

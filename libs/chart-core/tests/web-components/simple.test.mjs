@@ -31,7 +31,7 @@ test('default headline + footer', async t => {
     t.is((await getElementInnerText(page, 'shadow/.byline-block')).trim(), 'Chart: Someone');
 });
 
-test.only('web component right to left', async t => {
+test('web component right to left', async t => {
     const { page } = t.context;
 
     await renderDummy(t, {

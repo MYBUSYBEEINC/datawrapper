@@ -80,6 +80,12 @@ module.exports = {
                     themeDataLight: props.theme.data,
                     themeCSSDark: themeDark.css,
                     polyfillUri: '/lib/polyfills',
+                    themeFonts: Object.fromEntries(
+                        Object.entries(props.theme.assets).filter(
+                            ([, asset]) => asset.type === 'font'
+                        ),
+                        props.theme.data
+                    ),
                     locales: {
                         dayjs: await loadVendorLocale('dayjs', chartLocale, team),
                         numeral: await loadVendorLocale('numeral', chartLocale, team)

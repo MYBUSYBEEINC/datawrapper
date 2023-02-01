@@ -4,6 +4,7 @@ const less = require('less');
 const postcssLess = require('postcss-less');
 const pCSS = require('postcss');
 const noop = require('lodash/noop');
+const { createFontEntries } = require('./create-font-entries.js');
 
 const CSS_ELIMINATION_KEYWORD = '__UNDEFINED__';
 const POST_CSS_NO_DEFAULT_UNIT = {
@@ -78,79 +79,11 @@ async function compileCSS({ theme, filePaths }) {
 }
 
 async function compileFontCSS(fonts, themeData) {
-    const fontCSS = createFontEntries(fonts, themeData);
+    const fontEntries = createFontEntries(fonts, themeData);
+    const fontCSS = fontEntries.map(entry => entry.css).join('\n\n');
     let { css } = await less.render(fontCSS);
-    css = (await postcss.process(css, { from: undefined })).css;
+    css = (await postcss.process(fontCSS, { from: undefined })).css;
     return css;
-}
-
-function createFontEntries(fonts, themeData) {
-    const usedFonts = [];
-    const fontStrings = [];
-
-    if (themeData && themeData.typography && themeData.typography.fontFamilies) {
-        Object.entries(themeData.typography.fontFamilies).forEach(([fontFamily, familyFonts]) => {
-            familyFonts.forEach(props => {
-                if (fonts[props.name] && !props.printOnly) {
-                    usedFonts.push(props.name);
-                    fontStrings.push(
-                        `${createFontCSS(fontFamily, fonts[props.name].files, props)}`
-                    );
-                }
-            });
-        });
-    }
-
-    Object.entries(fonts).forEach(([font, attr]) => {
-        switch (attr.method) {
-            case 'file':
-            case 'url':
-                if (!usedFonts.includes(font)) {
-                    fontStrings.push(`${createFontCSS(font, attr.files)}`);
-                }
-                break;
-            case 'import':
-                fontStrings.push(`@import '${processUrl(attr.import)}';`);
-                break;
-            default:
-                break;
-        }
-    });
-
-    return fontStrings.join('\n\n');
-
-    function processUrl(url) {
-        if (url.substring(0, 2) === '//') {
-            return `https:${url}`;
-        } else {
-            return url;
-        }
-    }
-
-    function createFontCSS(font, fileFormats, props = {}) {
-        const sanitizedFont = font.replace(/'/g, "\\'");
-        props = { display: 'auto', ...props };
-        const fmtMap = { ttf: 'truetype', otf: 'opentype' };
-
-        const fontUrls = Object.entries(fileFormats)
-            .filter(([format]) => !['eot', 'woff2'].includes(format))
-            .map(([f, v]) => {
-                const fmt = fmtMap[f] || f;
-                return `url('${processUrl(v)}${
-                    f === 'svg' ? `#${sanitizedFont}` : ''
-                }') format('${fmt}')`;
-            });
-
-        const propsCSS = ['weight', 'style', 'display', 'stretch']
-            .filter(prop => props[prop])
-            .map(prop => `font-${prop}: ${props[prop]};`);
-
-        return `@font-face {
-    font-family: '${sanitizedFont}';
-    ${propsCSS.join('\n\t')}
-    src: ${fontUrls.join(',\n\t\t ')};
-}`;
-    }
 }
 
 function saveReadFile(filePath) {
