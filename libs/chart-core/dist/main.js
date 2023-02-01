@@ -172,11 +172,12 @@ module=chroma$1,module.exports=function(){for(var e=function(e,t,r){return void 
         }
 
         .label.outline span {
-            text-shadow: '0 1px 0 ${i}, 1px 0 0 ${i}, 0 -1px 0 ${i}, -1px 0 0 ${i},1px 1px 0 ${i}, 1px -1px 0 ${i}, -1px -1px 0 ${i}, -1px 1px 0 ${i},0 2px 1px ${i}, 2px 0 1px ${i}, 0 -2px 1px ${i}, -2px 0 1px ${i},-1px 2px 0px ${i}, 2px -1px 0px ${i}, -1px -2px 0px ${i}, -2px -1px 0px ${i},1px 2px 0px ${i}, 2px 1px 0px ${i}, 1px -2px 0px ${i}, -2px 1px 0px ${i}';
-        }
-
-        .label.axis-label span {
-            text-shadow: '-1px -1px 2px ${i}, -1px 0px 2px ${i}, -1px 1px 2px ${i}, 0px -1px 2px ${i}, 0px 1px 2px ${i}, 1px -1px 2px ${i}, 1px 0px 2px ${i}, 1px 1px 2px ${i}';
+            text-shadow: 0 1px 0 ${i}, 1px 0 0 ${i}, 0 -1px 0 ${i}, -1px 0 0 ${i},
+                1px 1px 0 ${i}, 1px -1px 0 ${i}, -1px -1px 0 ${i}, -1px 1px 0 ${i},
+                0 2px 1px ${i}, 2px 0 1px ${i}, 0 -2px 1px ${i}, -2px 0 1px ${i},
+                -1px 2px 0px ${i}, 2px -1px 0px ${i}, -1px -2px 0px ${i},
+                -2px -1px 0px ${i}, 1px 2px 0px ${i}, 2px 1px 0px ${i},
+                1px -2px 0px ${i}, -2px 1px 0px ${i};
         }
 
         .label sup {

@@ -95,11 +95,12 @@ export function chartStyles(emotion, themeData, isStyleStatic, isIframe) {
         }
 
         .label.outline span {
-            text-shadow: '0 1px 0 ${bgCol}, 1px 0 0 ${bgCol}, 0 -1px 0 ${bgCol}, -1px 0 0 ${bgCol},1px 1px 0 ${bgCol}, 1px -1px 0 ${bgCol}, -1px -1px 0 ${bgCol}, -1px 1px 0 ${bgCol},0 2px 1px ${bgCol}, 2px 0 1px ${bgCol}, 0 -2px 1px ${bgCol}, -2px 0 1px ${bgCol},-1px 2px 0px ${bgCol}, 2px -1px 0px ${bgCol}, -1px -2px 0px ${bgCol}, -2px -1px 0px ${bgCol},1px 2px 0px ${bgCol}, 2px 1px 0px ${bgCol}, 1px -2px 0px ${bgCol}, -2px 1px 0px ${bgCol}';
-        }
-
-        .label.axis-label span {
-            text-shadow: '-1px -1px 2px ${bgCol}, -1px 0px 2px ${bgCol}, -1px 1px 2px ${bgCol}, 0px -1px 2px ${bgCol}, 0px 1px 2px ${bgCol}, 1px -1px 2px ${bgCol}, 1px 0px 2px ${bgCol}, 1px 1px 2px ${bgCol}';
+            text-shadow: 0 1px 0 ${bgCol}, 1px 0 0 ${bgCol}, 0 -1px 0 ${bgCol}, -1px 0 0 ${bgCol},
+                1px 1px 0 ${bgCol}, 1px -1px 0 ${bgCol}, -1px -1px 0 ${bgCol}, -1px 1px 0 ${bgCol},
+                0 2px 1px ${bgCol}, 2px 0 1px ${bgCol}, 0 -2px 1px ${bgCol}, -2px 0 1px ${bgCol},
+                -1px 2px 0px ${bgCol}, 2px -1px 0px ${bgCol}, -1px -2px 0px ${bgCol},
+                -2px -1px 0px ${bgCol}, 1px 2px 0px ${bgCol}, 2px 1px 0px ${bgCol},
+                1px -2px 0px ${bgCol}, -2px 1px 0px ${bgCol};
         }
 
         .label sup {
