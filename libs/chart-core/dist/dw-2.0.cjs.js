@@ -7,8 +7,8 @@ var round_js = require('@datawrapper/shared/round.js');
 var smartRound_js = require('@datawrapper/shared/smartRound.js');
 var equalish_js = require('@datawrapper/shared/equalish.js');
 var clone$1 = require('@datawrapper/shared/clone.js');
-var isPlainObject = require('lodash/isPlainObject.js');
 var get$1 = require('@datawrapper/shared/get.js');
+var isPlainObject = require('lodash/isPlainObject.js');
 var set = require('@datawrapper/shared/set.js');
 var objectDiff = require('@datawrapper/shared/objectDiff.js');
 var PostEvent = require('@datawrapper/shared/postEvent.js');
@@ -24,8 +24,8 @@ var round_js__default = /*#__PURE__*/_interopDefaultLegacy(round_js);
 var smartRound_js__default = /*#__PURE__*/_interopDefaultLegacy(smartRound_js);
 var equalish_js__default = /*#__PURE__*/_interopDefaultLegacy(equalish_js);
 var clone__default = /*#__PURE__*/_interopDefaultLegacy(clone$1);
-var isPlainObject__default = /*#__PURE__*/_interopDefaultLegacy(isPlainObject);
 var get__default = /*#__PURE__*/_interopDefaultLegacy(get$1);
+var isPlainObject__default = /*#__PURE__*/_interopDefaultLegacy(isPlainObject);
 var set__default = /*#__PURE__*/_interopDefaultLegacy(set);
 var objectDiff__default = /*#__PURE__*/_interopDefaultLegacy(objectDiff);
 var PostEvent__default = /*#__PURE__*/_interopDefaultLegacy(PostEvent);
@@ -6324,6 +6324,15 @@ function domReady(callback) {
     }
 }
 
+function getHeightMode({ themeData, visualizationMeta, renderFlags }) {
+    const D3_PIES_IDS = ['d3-pies', 'd3-donuts', 'd3-multiple-pies', 'd3-multiple-donuts'];
+    const themeFitChart =
+        get__default["default"](themeData, 'vis.d3-pies.fitchart', false) && D3_PIES_IDS.includes(visualizationMeta.id);
+    return themeFitChart || renderFlags.fitchart || visualizationMeta.height !== 'fixed'
+        ? 'fit'
+        : 'fixed';
+}
+
 var utils = /*#__PURE__*/Object.freeze({
     __proto__: null,
     purifyHtml: purifyHtml__default["default"],
@@ -6351,7 +6360,8 @@ var utils = /*#__PURE__*/Object.freeze({
     addClass: addClass,
     removeClass: removeClass,
     remove: remove,
-    domReady: domReady
+    domReady: domReady,
+    getHeightMode: getHeightMode
 });
 
 /*
@@ -6880,6 +6890,7 @@ function chart (attributes) {
 
             visualization.chart(chart);
             visualization.container(container);
+            visualization.outerContainer(outerContainer);
 
             // compute chart dimensions
             const w = width(container);
@@ -6901,10 +6912,8 @@ function chart (attributes) {
             }
 
             // set chart mode class
-            [container, outerContainer].forEach(el => {
-                el.classList.toggle('vis-height-fit', heightMode === 'fit');
-                el.classList.toggle('vis-height-fixed', heightMode === 'fixed');
-            });
+            outerContainer.classList.toggle('vis-height-fit', heightMode === 'fit');
+            outerContainer.classList.toggle('vis-height-fixed', heightMode === 'fixed');
 
             // set mobile class
             const breakpoint = get__default["default"](theme, `vis.${chart.type}.mobileBreakpoint`, 450);
@@ -6982,17 +6991,11 @@ function chart (attributes) {
         },
 
         getHeightMode() {
-            const themeFitChart =
-                get__default["default"](visualization.theme(), 'vis.d3-pies.fitchart', false) &&
-                ['d3-pies', 'd3-donuts', 'd3-multiple-pies', 'd3-multiple-donuts'].indexOf(
-                    visualization.meta.id
-                ) > -1;
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlFitChart = !!urlParams.get('fitchart');
-
-            return themeFitChart || urlFitChart || visualization.meta.height !== 'fixed'
-                ? 'fit'
-                : 'fixed';
+            return getHeightMode({
+                themeData: visualization.theme(),
+                visualizationMeta: visualization.meta,
+                renderFlags: flags
+            });
         },
 
         attributes(attrs) {
@@ -7423,6 +7426,14 @@ extend(base, {
     container(el) {
         if (!arguments.length) return this.__container;
         this.__container = el;
+    },
+
+    /**
+     * Get or set the vis's outer container element
+     */
+    outerContainer(el) {
+        if (!arguments.length) return this.__outerContainer;
+        this.__outerContainer = el;
     },
 
     axes(returnAsColumns, noCache) {

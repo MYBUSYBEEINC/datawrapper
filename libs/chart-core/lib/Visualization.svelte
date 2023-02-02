@@ -1,6 +1,6 @@
 <script>
     /* globals dw */
-    import { onMount, tick, afterUpdate, beforeUpdate } from 'svelte';
+    import { onMount, tick, afterUpdate } from 'svelte';
     import BlocksRegion from './BlocksRegion.svelte';
     import Menu from './Menu.svelte';
     import Headline from './blocks/Headline.svelte';
@@ -32,7 +32,7 @@
         updateGlobalStyles
     } from './themeStyles.js';
 
-    import { domReady, width } from './dw/utils/index.mjs';
+    import { domReady, width, getHeightMode } from './dw/utils/index.mjs';
     import observeFonts from '@datawrapper/shared/observeFonts.js';
     import get from '@datawrapper/shared/get.js';
     import set from '@datawrapper/shared/set.js';
@@ -158,6 +158,12 @@
         overrideContext,
         isStyleDark
     );
+
+    $: heightMode = getHeightMode({
+        themeData: $themeData,
+        renderFlags,
+        visualizationMeta: visualization
+    });
 
     const coreBlocks = [
         {
@@ -771,32 +777,6 @@ Please make sure you called __(key) with a key of type "string".
         }
     });
 
-    /*
-     * Swap emotion class on .dw-chart-body via classList.toggle instead of directly on element
-     * to prevent entire class attribute getting updated when emotion class changes,
-     * since that removes classes set on .dw-chart-body by render code.
-     *
-     * TODO: resolve the issue of conflicting class name toggles by
-     *
-     * - toggling "global" classes like `.dir-rtl` on parent container (.dw-chart)
-     *   whose `class` property is not set/managed by Svelte
-     *
-     * - make sure that vis render code (such as d3-bars) is not toggling
-     *   classes on elements that are managed by this Svelte component,
-     *   e.g. by passing these visualizations a new div to render the
-     *   charts into.
-     *
-     */
-    beforeUpdate(() => {
-        if (target === undefined) return;
-        if (prevChartBodyEmotionClass !== chartBodyEmotionClass) {
-            [prevChartBodyEmotionClass, chartBodyEmotionClass].forEach((cl, i) => {
-                if (cl) target.classList.toggle(cl, !!i);
-            });
-            prevChartBodyEmotionClass = chartBodyEmotionClass;
-        }
-    });
-
     onMount(async () => {
         const dwChart = await run();
 
@@ -905,9 +885,6 @@ Please make sure you called __(key) with a key of type "string".
     };
 
     $: if (emotion) updateGlobalStyles(globalStyles(emotion, $themeData, isIframe));
-
-    let prevChartBodyEmotionClass = '';
-    $: chartBodyEmotionClass = emotion ? chartBodyStyles(emotion, $themeData) : '';
 </script>
 
 <style lang="scss">
@@ -934,6 +911,10 @@ Please make sure you called __(key) with a key of type "string".
             direction: rtl;
             unicode-bidi: embed;
         }
+    }
+
+    :global(.chart.dir-rtl) .dw-chart-body {
+        direction: rtl;
     }
 
     :global(.chart.is-dark-mode .hide-in-dark) {
@@ -1024,6 +1005,11 @@ Please make sure you called __(key) with a key of type "string".
                 z-index: 1;
             }
         }
+    }
+
+    .dw-chart-body-content {
+        position: relative;
+        z-index: 0;
     }
 
     :global(.dw-chart-header) {
@@ -1208,22 +1194,26 @@ Please make sure you called __(key) with a key of type "string".
 
     <div
         id="chart"
-        bind:this={target}
         class:content-below-chart={contentBelowChart}
         aria-hidden={!!ariaDescription}
-        class="dw-chart-body"
+        class="dw-chart-body vis-height-{heightMode} {emotion
+            ? chartBodyStyles(emotion, $themeData)
+            : ''}"
+        class:dir-rtl={textDirection === 'rtl'}
     >
-        <noscript>
-            <img
-                style="max-width: 100%"
-                src="../plain.png"
-                aria-hidden="true"
-                alt="fallback image"
-            />
-            <p style="opacity:0.6;padding:1ex; text-align:center">
-                {__('fallback-image-note')}
-            </p>
-        </noscript>
+        <div bind:this={target} class="dw-chart-body-content">
+            <noscript>
+                <img
+                    style="max-width: 100%"
+                    src="../plain.png"
+                    aria-hidden="true"
+                    alt="fallback image"
+                />
+                <p style="opacity:0.6;padding:1ex; text-align:center">
+                    {__('fallback-image-note')}
+                </p>
+            </noscript>
+        </div>
     </div>
 
     {#if get(theme, 'data.template.afterChart')}
