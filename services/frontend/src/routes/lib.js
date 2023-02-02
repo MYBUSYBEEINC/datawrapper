@@ -110,6 +110,26 @@ module.exports = {
                 }
             },
             {
+                path: '/highlightjs-css/{file*}',
+                method: 'GET',
+                config: {
+                    auth: false,
+                    validate: {
+                        params: Joi.object({
+                            file: FILE_SCHEMA
+                        })
+                    }
+                },
+                handler: {
+                    directory: {
+                        path: path.join(
+                            path.dirname(require.resolve('highlight.js/package.json')),
+                            'styles'
+                        )
+                    }
+                }
+            },
+            {
                 path: '/icons/{file*}',
                 method: 'GET',
                 config: {

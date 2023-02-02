@@ -69,6 +69,7 @@ module.exports = {
             },
             async handler(request) {
                 const { params, payload } = request;
+                const { events, event } = request.server.app;
                 const theme = await Theme.findByPk(params.id);
                 if (!theme) return Boom.notFound();
 
@@ -100,6 +101,10 @@ module.exports = {
                     themeCache,
                     styleCache,
                     visualizations: server.app.visualizations
+                });
+                events.emit(event.THEME_SAVE, {
+                    theme,
+                    updated: { less: !!data.less, data: !!data.data }
                 });
 
                 return theme.toJSON();
