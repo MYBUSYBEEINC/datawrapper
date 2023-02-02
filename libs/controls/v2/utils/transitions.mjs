@@ -51,6 +51,19 @@ export function slide(node, { delay = 0, duration = 400, easing = cubicOut }) {
             node.style.marginBottom = `${t * marginBottom}px`;
             node.style.borderTopWidth = `${t * borderTopWidth}px`;
             node.style.borderBottomWidth = `${t * borderBottomWidth}px`;
+
+            // Remove the transition styles when the reveal animation is done.
+            // Not doing so would prevent the element from resizing dynamically and any overflowing content would be cut off.
+            if (t === 1) {
+                node.style.height = '';
+                node.style.paddingTop = '';
+                node.style.paddingBottom = '';
+                node.style.marginTop = '';
+                node.style.marginBottom = '';
+                node.style.borderTopWidth = '';
+                node.style.borderBottomWidth = '';
+                node.style.overflow = '';
+            }
         }
     };
 }
