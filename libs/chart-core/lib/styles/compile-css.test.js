@@ -55,7 +55,7 @@ test('should create font rule declarations', t => {
     const themeData = {
         typography: {
             fontFamilies: {
-                Font: [
+                'The font': [
                     {
                         name: 'Font',
                         style: 'normal',

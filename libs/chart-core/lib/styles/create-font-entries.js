@@ -63,7 +63,7 @@ function createFontEntries(fonts, themeData) {
             .map(prop => `font-${prop}: ${props[prop]};`);
 
         return `@font-face {
-    font-family: ${sanitizedFont};
+    font-family: '${sanitizedFont}';
     ${propsCSS.join('\n\t')}
     src: ${fontUrls.join(',\n\t\t ')};
 }`;
