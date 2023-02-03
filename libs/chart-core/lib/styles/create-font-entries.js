@@ -27,7 +27,7 @@ function createFontEntries(fonts, themeData) {
                 }
                 break;
             case 'import':
-                fontEntries.push({ family: font, css: `@import '${processUrl(attr.import)}';` });
+                fontEntries.unshift({ family: font, css: `@import '${processUrl(attr.import)}';` });
                 break;
             default:
                 break;
