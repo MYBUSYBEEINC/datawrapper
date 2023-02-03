@@ -236,16 +236,19 @@
                 });
                 return url;
             },
-            embedCode({ embedType, publicUrl, metadata }) {
+            embedCode({ embedType, publicUrl, metadata, embedTemplates }) {
                 if (!metadata) return '';
-                if (metadata.publish && !metadata.publish['embed-codes']) {
-                    return `<iframe src="${publicUrl}" width="100%" height="${metadata.publish['embed-height']}" scrolling="no" frameborder="0" allowtransparency="true"></iframe>`;
-                }
-                if (metadata.publish['embed-codes']['embed-method-' + embedType]) {
+                if (
+                    metadata.publish &&
+                    metadata.publish['embed-codes'] &&
+                    metadata.publish['embed-codes']['embed-method-' + embedType]
+                ) {
                     return metadata.publish['embed-codes']['embed-method-' + embedType];
-                } else {
-                    return '';
                 }
+                const embedTemplate = embedTemplates.find(tpl => tpl.id === embedType);
+                if (embedTemplate) return embedTemplate.code;
+                // default embed code
+                return `<iframe src="${publicUrl}" width="100%" height="${metadata.publish['embed-height']}" scrolling="no" frameborder="0" allowtransparency="true"></iframe>`;
             },
             shareOptions({ pluginShareurls }) {
                 const defaultOption = {
