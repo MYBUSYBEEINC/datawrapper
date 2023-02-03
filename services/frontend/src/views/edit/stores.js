@@ -560,13 +560,14 @@ export function initChartStore(initialValue) {
      * @returns {function} - to unsubscribe
      */
     chart$.observeKey = (key, handler, debounce = 100) => {
+        let previousValue;
         const sub = distinctChart$
             .pipe(
                 map(chart => get(chart, key)),
                 distinctUntilChanged(isEqual),
-                pairwise(),
                 debounceTime(debounce),
-                tap(([prevVal, newVal]) => handler(newVal, prevVal))
+                tap(value => (previousValue = value)),
+                tap(newVal => handler(newVal, previousValue))
             )
             .subscribe();
         return () => sub.unsubscribe();
