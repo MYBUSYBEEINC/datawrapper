@@ -37,11 +37,11 @@
     };
 </script>
 
-<div class="container">
-    {#if dataReadonly}
-        <MessageDisplay><IconDisplay icon="locked" /> {__('edit / data-readonly')}</MessageDisplay>
-    {/if}
+{#if dataReadonly}
+    <MessageDisplay><IconDisplay icon="locked" /> {__('edit / data-readonly')}</MessageDisplay>
+{/if}
 
+<div class="block">
     <Svelte2Wrapper
         id="svelte/describe"
         js="/lib/static/js/svelte2/describe.js?sha={$config.GITHEAD}"

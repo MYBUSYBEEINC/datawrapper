@@ -8,6 +8,7 @@
     export let disabled = false;
     export let showBack = true;
     export let showProceed = true;
+    export let stepId = null;
     export let __;
 
     let className = '';
@@ -17,13 +18,23 @@
 {#if !hidden}
     <div class="buttons {className ?? ''}">
         {#if showBack}
-            <button class="button" {disabled} on:click={() => dispatch('back')}>
+            <button
+                class="button"
+                {disabled}
+                on:click={() => dispatch('back')}
+                data-uid="{stepId ?? 'nav'}-back-button"
+            >
                 <IconDisplay icon="arrow-left" />
                 <span>{__('Back')}</span>
             </button>
         {/if}
         {#if showProceed}
-            <button class="button is-primary" {disabled} on:click={() => dispatch('proceed')}>
+            <button
+                class="button is-primary"
+                {disabled}
+                on:click={() => dispatch('proceed')}
+                data-uid="{stepId ?? 'nav'}-proceed-button"
+            >
                 <span>{__('Proceed')}</span>
                 <IconDisplay icon="arrow-right" />
             </button>

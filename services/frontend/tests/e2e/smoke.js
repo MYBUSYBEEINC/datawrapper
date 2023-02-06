@@ -40,7 +40,7 @@ Protests of Islam critical PEGIDA movement in Dresden;3;37;4;41;15
 Financial Crisis in Greece;4;31;2;46;17
 Ukraine conflict between Russia and Western Countries;2;30;2;52;14`
         );
-        const $uploadProceed = await $('>>>[data-uid="upload-proceed-button"]');
+        const $uploadProceed = await $('[data-uid="upload-proceed-button"]');
         await expect($uploadProceed).toBeDisplayed();
         await $uploadProceed.click(); // Go to the next step.
         await browser.waitForUrl(/\/chart\/\w{5}\/describe/);
@@ -50,8 +50,8 @@ Ukraine conflict between Russia and Western Countries;2;30;2;52;14`
         await $describeCell.waitForDisplayed();
         await expect($describeCell).toHaveElementClass('numberType');
         await expect($describeCell).toHaveText('9');
-        const $describeProceed = await $('>>>[data-uid="describe-proceed-button"]');
-        await expect($describeProceed).toBeDisplayed();
+        const $describeProceed = await $('[data-uid="describe-proceed-button"]');
+        await $describeProceed.waitForClickable();
         await $describeProceed.click(); // Go to the next step.
 
         // Visualize

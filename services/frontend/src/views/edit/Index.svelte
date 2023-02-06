@@ -492,6 +492,7 @@
                                         {__}
                                         hidden={step.navButtonsHidden}
                                         showBack={steps[0].id !== $activeStepId}
+                                        stepId={step.id}
                                         on:back={() => changeTabBy(-1)}
                                         on:proceed={() => changeTabBy(+1)}
                                     />
@@ -502,6 +503,7 @@
                                     {__}
                                     hidden={step.navButtonsHidden}
                                     showBack={steps[0].id !== $activeStepId}
+                                    stepId={step.id}
                                     class={step.navButtonsRight && 'is-right'}
                                     on:back={() => changeTabBy(-1)}
                                     on:proceed={() => changeTabBy(+1)}
