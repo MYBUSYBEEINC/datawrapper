@@ -5,6 +5,7 @@
     import Visualization from './Visualization.svelte';
     import { loadScript } from '@datawrapper/shared/fetch.js';
     import { createFontEntries } from './styles/create-font-entries.js';
+    import some from 'lodash/some.js';
 
     const DEPENDENCY_STATE = {
         loading: 'loading',
@@ -81,7 +82,12 @@
                         !document.fonts.check('16px fNECMNZabqSjpxnZRdS');
                     const fontsCSS = createFontEntries(themeFonts, themeDataLight)
                         .filter(
-                            d => !skipExistingFonts || !document.fonts.check(`16px ${d.family}`)
+                            d =>
+                                !skipExistingFonts ||
+                                some(
+                                    d.families || [d.family],
+                                    family => !document.fonts.check(`16px ${family}`)
+                                )
                         )
                         .map(d => d.css)
                         .join('\n');

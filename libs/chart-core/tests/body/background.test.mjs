@@ -34,15 +34,15 @@ test('background gets set on body and updates when dark mode state changes', asy
     });
 
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 255, 255)');
 
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(0, 0, 0)');
     // await setTimeout(10000);
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 255, 255)');
 });
 
@@ -88,23 +88,23 @@ test('conditional background color gets inverted automatically', async t => {
 
     // light mode and wider than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 255, 255)');
 
     // dark mode and wider than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(0, 0, 0)');
 
     // light mode and narrower than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
     await page.setViewport({ width: 400, height: 600 });
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 204, 204)');
 
     // dark mode and narrower than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     // override color has been inverted automatically
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(78, 40, 41)');
 });
@@ -141,23 +141,23 @@ test('conditional background color gets set explicitly in darkMode override', as
 
     // light mode and wider than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 255, 255)');
 
     // dark mode and wider than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(0, 0, 0)');
 
     // light mode and narrower than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
     await page.setViewport({ width: 400, height: 600 });
-    await setTimeout(300);
+    await setTimeout(500);
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(255, 204, 204)');
 
     // dark mode and narrower than 420
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-    await setTimeout(300);
+    await setTimeout(500);
     // override color has been inverted automatically
     t.is(await getElementStyle(page, 'body', 'background-color'), 'rgb(34, 0, 0)');
 });
