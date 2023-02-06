@@ -35,6 +35,8 @@
     const choicesActive = Object.fromEntries(Object.keys(CHOICE_FLAGS).map(k => [k, false]));
     const choices = Object.fromEntries(Object.keys(CHOICE_FLAGS).map(k => [k, CHOICE_FLAGS[k][0]]));
 
+    let perRow = 2;
+
     $: isAutoDark = choicesActive.dark && choices.dark === 'auto';
 </script>
 
@@ -59,6 +61,14 @@
                         <button class="button is-primary" on:click={loadCharts}>Go!</button>
                     </div>
                 </div>
+
+                <b>Number of embeds per row:</b>
+                <label class="radio">
+                    <input type="radio" bind:group={perRow} value={2} /> two</label
+                >
+                <label class="radio">
+                    <input type="radio" bind:group={perRow} value={3} /> three</label
+                >
             </div>
             <div class="column">
                 <strong>Render flags:</strong><br />
@@ -91,7 +101,9 @@
         <div class="columns is-multiline">
             {#each chartIds as chartId}
                 <div
-                    class="column is-half"
+                    class="column"
+                    class:is-one-third={perRow === 3}
+                    class:is-half={perRow === 2}
                     class:has-background-black-ter={(choicesActive.dark &&
                         choices.dark === 'true') ||
                         (isDark && isAutoDark)}

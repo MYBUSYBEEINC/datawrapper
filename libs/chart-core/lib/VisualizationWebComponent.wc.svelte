@@ -5,6 +5,8 @@
     import Visualization from './Visualization.svelte';
     import { loadScript } from '@datawrapper/shared/fetch.js';
     import { createFontEntries } from './styles/create-font-entries.js';
+    import { resize } from 'svelte-resize-observer-action';
+    import debounce from 'lodash/debounce.js';
     import some from 'lodash/some.js';
 
     const DEPENDENCY_STATE = {
@@ -123,11 +125,18 @@
     $: {
         if (dependencies.length) loadDependency(dependencies[0]);
     }
+
+    let containerWidth;
+
+    function onResize(entry) {
+        const newWidth = entry.contentRect.width;
+        containerWidth = newWidth;
+    }
 </script>
 
 <div bind:this={styleHolder} />
 
-<div class="web-component-body">
+<div use:resize={debounce(onResize, 200)} class="web-component-body">
     {#if stylesLoaded && dependenciesLoaded}
         <div class="chart dw-chart vis-{chart.type}" class:dir-rtl={textDirection === 'rtl'}>
             <Visualization
@@ -152,6 +161,7 @@
                 {emotion}
                 {renderFlags}
                 {textDirection}
+                {containerWidth}
             />
         </div>
     {/if}

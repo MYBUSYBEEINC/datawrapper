@@ -1,6 +1,7 @@
 <script>
     import Block from './Block.svelte';
-    import { themeData } from './stores';
+    import { getContext } from 'svelte';
+    const { themeData } = getContext('stores');
 
     export let id;
     export let name;

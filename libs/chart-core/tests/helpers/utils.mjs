@@ -54,15 +54,18 @@ export async function after(t) {
 }
 
 export async function afterEach(t, testPath = './tests') {
+    const { page } = t.context;
     if (!t.passed) {
         const bodySelector = t.context.webComponent ? 'shadow/.dw-chart-styles' : 'body';
-        console.error({
-            body: await t.context.page.$eval(bodySelector, n => n.innerHTML.trim())
-        });
+        const $el = await page.$(bodySelector);
+        if ($el)
+            console.error({
+                body: await page.$eval(bodySelector, n => n.innerHTML.trim())
+            });
         await takeTestScreenshot(t, join(testPath, 'failed'));
     }
     if (DEBUG) await setTimeout(60000);
-    await t.context.page.close();
+    await page.close();
 }
 
 export async function renderDummy(t, props) {

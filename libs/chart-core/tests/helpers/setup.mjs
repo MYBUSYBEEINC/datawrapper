@@ -114,7 +114,7 @@ async function prepareProps(props) {
     await schemas.validateThemeData(props.theme.data);
 
     // extend chart metadata from default chart metadata
-    props.chart.id = '00000';
+    props.chart.id = props.chart.id || '00000';
     props.chart.metadata = deepmerge.all([{}, defaultChartMetadata, props.chart.metadata || {}]);
     props.chart.theme = props.theme.id;
     // default translations
@@ -318,8 +318,8 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
     // inject embedjs script
     await page.$eval(
         '#wc-container',
-        (div, embedJS, flags) => {
-            div.innerHTML = '';
+        (div, embedJS, flags, append) => {
+            if (!append) div.innerHTML = '';
             const script = document.createElement('script');
             script.type = 'text/javascript';
             script.text = embedJS;
@@ -329,7 +329,8 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
             div.appendChild(script);
         },
         embedJS,
-        props.flags
+        props.flags,
+        !!props.append
     );
     if (delay) await setTimeout(delay);
     return logs;
@@ -588,4 +589,9 @@ async function interceptRequest(interceptedRequest) {
     } else {
         interceptedRequest.continue();
     }
+}
+
+export async function setViewportAndWait(page, viewport) {
+    await page.setViewport(viewport);
+    await setTimeout(600);
 }

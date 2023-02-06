@@ -5,6 +5,7 @@ import {
     getElementBoundingBox,
     getElementInnerText
 } from '../helpers/setup.mjs';
+import { setTimeout } from 'timers/promises';
 
 test.before(before);
 test.beforeEach(beforeEach);
@@ -107,6 +108,7 @@ test('image logo with alt tag', async t => {
     });
     t.is(await getElementAttribute(page, '.footer-right .logo-block img', 'src'), dummyLogo);
     t.is(await getElementAttribute(page, '.footer-right .logo-block img', 'alt'), 'Logo Image');
+    await setTimeout(500);
     const bbox = await getElementBoundingBox(page, '.footer-right .logo-block img');
     t.is(bbox.width, 60);
     t.is(bbox.height, 30);

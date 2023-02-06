@@ -1,6 +1,7 @@
 <script>
     /* globals dw */
-    import { onMount, tick, afterUpdate } from 'svelte';
+    import { onMount, tick, afterUpdate, setContext } from 'svelte';
+    import { writable } from 'svelte/store';
     import BlocksRegion from './BlocksRegion.svelte';
     import Menu from './Menu.svelte';
     import Headline from './blocks/Headline.svelte';
@@ -47,7 +48,11 @@
     } from './shared.mjs';
     import { isObject } from 'underscore';
     import chroma from 'chroma-js';
-    import { outerWidth, themeData } from './stores';
+
+    const outerWidth = writable(400);
+    const themeData = writable({});
+
+    setContext('stores', { outerWidth, themeData });
 
     export let chart;
     export let visualization = {};
@@ -67,6 +72,7 @@
     export let origin;
     export let externalDataUrl;
     export let outerContainer;
+    export let containerWidth;
 
     // static style means user can't interact (e.g. in a png version)
 
@@ -734,16 +740,20 @@ Please make sure you called __(key) with a key of type "string".
             (isDark ? cssDark : cssLight).removeAttribute('media');
         }
 
+        async function resizeVis(newWidth) {
+            $outerWidth = newWidth;
+            await updateChartThemeData();
+            dwChart.vis().fire('resize');
+            dwChart.render(outerContainer);
+        }
+
         function initResizeHandler(container) {
             let reloadTimer;
 
             function resize() {
                 clearTimeout(reloadTimer);
                 reloadTimer = setTimeout(async function () {
-                    $outerWidth = outerContainer.clientWidth;
-                    await updateChartThemeData();
-                    dwChart.vis().fire('resize');
-                    dwChart.render(outerContainer);
+                    await resizeVis(outerContainer.clientWidth);
                 }, 200);
             }
 
@@ -762,7 +772,7 @@ Please make sure you called __(key) with a key of type "string".
             window.addEventListener('resize', resizeHandler);
         }
 
-        return dwChart;
+        return { dwChart, resizeVis };
     }
 
     // watch for height changes - still needed?
@@ -777,8 +787,13 @@ Please make sure you called __(key) with a key of type "string".
         }
     });
 
+    let resizeFunc;
+    $: if (resizeFunc && !isIframe) resizeFunc(containerWidth);
+
     onMount(async () => {
-        const dwChart = await run();
+        const { dwChart, resizeVis } = await run();
+        // expose resize method to parent component
+        resizeFunc = resizeVis;
 
         outerContainer.classList.toggle('dir-rtl', textDirection === 'rtl');
         if (isIframe) {
@@ -1216,7 +1231,8 @@ Please make sure you called __(key) with a key of type "string".
         </div>
     </div>
 
-    {#if get(theme, 'data.template.afterChart')}
+    {#if isIframe && get(theme, 'data.template.afterChart')}
+        <!-- we can only allow this arbitrary HTML injection in iframe embeds -->
         {@html theme.data.template.afterChart}
     {/if}
 
