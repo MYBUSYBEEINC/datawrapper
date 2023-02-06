@@ -14,6 +14,16 @@
     export let storeMethods;
     export let module = 'App';
 
+    /**
+     * If enabled, the Svelte2Wrapper will emit changes/updates (in data and storeData) in the svelte 2 component
+     * to the parent component without comparing them to the previous state/value (via `isEqual`).
+     * It also applies incoming changes from the parent component directly to the svelte 2 component props.
+     *
+     * This is useful if the data or storeData is very complex and the comparison is very expensive (or more expensive than just applying/handling the unchanged data).
+     * This is the case for the locator-maps plugin, where the storeData is very complex and we only care about a subset (in this case the dataset).
+     */
+    export let forwardUpdatesWithoutChecks = false;
+
     const messages = getContext('messages');
     const config = getContext('config');
     const userData = getContext('userData');
@@ -108,8 +118,10 @@
         });
 
         // update svelte2 component if data or storeData changes
-        const dataChanged = !isEqual(prevData, clonedData);
-        const storeDataChanged = !isEqual(prevStoreData, storeData);
+        const dataChanged = forwardUpdatesWithoutChecks ? true : !isEqual(prevData, clonedData);
+        const storeDataChanged = forwardUpdatesWithoutChecks
+            ? true
+            : !isEqual(prevStoreData, storeData);
         if (dataChanged || storeDataChanged) {
             if (dataChanged) {
                 prevData = clonedData;
@@ -133,6 +145,11 @@
     });
 
     function update(event) {
+        if (forwardUpdatesWithoutChecks) {
+            eventDispatch('update', event.detail);
+            return;
+        }
+
         // TODO: Notice that this is called all the time. Probably because
         // data and event.detail differ, e.g. in data.settings.defaultTheme
         // vs data.settings.default_theme.

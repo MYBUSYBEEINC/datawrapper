@@ -20,6 +20,16 @@
     import Publish from './chart/Publish.svelte';
     viewComponents.set('edit/chart/publish', Publish);
 
+    // chart workflow tabs
+    import AnnotateTab from './chart/visualize/AnnotateTab.svelte';
+    viewComponents.set('edit/chart/visualize/annotate', AnnotateTab);
+    import ChartTypeTab from './chart/visualize/ChartTypeTab.svelte';
+    viewComponents.set('edit/chart/visualize/select-vis', ChartTypeTab);
+    import LayoutTab from './chart/visualize/LayoutTab.svelte';
+    viewComponents.set('edit/chart/visualize/layout', LayoutTab);
+    import RefineTab from './chart/visualize/RefineTab.svelte';
+    viewComponents.set('edit/chart/visualize/refine', RefineTab);
+
     // core layout tab controls
     import DarkModeControl from './chart/visualize/layout/DarkModeControl.svelte';
     viewComponents.set('edit/chart/visualize/layout/darkMode', DarkModeControl);

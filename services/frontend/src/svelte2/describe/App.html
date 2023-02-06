@@ -58,26 +58,6 @@
                 <p>{@html __(`describe / locale-select / body`)}</p>
                 <LocaleSelectInput />
                 {/if} {/if}
-
-                <hr />
-
-                <div class="btn-group">
-                    <a
-                        href="upload"
-                        on:click|preventDefault="navigateTo('upload')"
-                        class="btn submit"
-                    >
-                        <i class="icon-chevron-left"></i> {__('Back')}
-                    </a>
-                    <a
-                        href="visualize"
-                        on:click|preventDefault="navigateTo('visualize')"
-                        class="submit btn btn-primary"
-                        data-uid="describe-proceed-button"
-                    >
-                        {__('Proceed')} <i class="icon-chevron-right icon-white"></i>
-                    </a>
-                </div>
             </div>
         </div>
         <div class="column pt-5">

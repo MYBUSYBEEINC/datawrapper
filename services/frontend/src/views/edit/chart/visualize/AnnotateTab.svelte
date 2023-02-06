@@ -1,6 +1,6 @@
 <script>
     import ChartControls from './ChartControls.svelte';
-    import ChartDescription from './annotate/ChartDescription.svelte';
+    import ChartDescription from '_partials/editor/ChartDescription.svelte';
     import { getContext } from 'svelte';
     // load stores from context
     const { chart } = getContext('page/edit');

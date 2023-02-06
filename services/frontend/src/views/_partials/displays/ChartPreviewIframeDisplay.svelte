@@ -83,7 +83,7 @@
     $: previewWidth = (2 + border * 2 + (resizeWidth || width)) * scale;
     $: previewHeight = (2 + border * 2 + (resizeHeight || height)) * scale;
 
-    let iframe;
+    export let iframe;
     export let loading = false;
 
     let contentWindow;

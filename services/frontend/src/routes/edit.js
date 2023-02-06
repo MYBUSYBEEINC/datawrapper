@@ -22,11 +22,8 @@ module.exports = {
         // allow plugins to register additional workflows
         const editWorkflows = [];
         const editWorkflowSteps = new Map();
+        const editWorkflowTabs = new Map();
         const defaultWorkflowOptions = {
-            /**
-             * set to true to hide chart type selector in visualize step
-             */
-            hideChartTypeSelector: false,
             /**
              * list other workflow ids to include more visualizations
              * in the chart type selector
@@ -37,9 +34,24 @@ module.exports = {
         server.method('registerEditWorkflow', workflow => {
             workflow.options = { ...defaultWorkflowOptions, ...(workflow.options || {}) };
             editWorkflows.push(workflow);
-            workflow.steps.forEach(step => {
-                editWorkflowSteps.set(`${workflow.id}.${step.id}`, step);
-            });
+            workflow.steps
+                .filter(step => step.id)
+                .forEach(step => {
+                    const workflowStepId = `${workflow.id}.${step.id}`;
+                    if (editWorkflowSteps.has(workflowStepId)) {
+                        throw Error(`Workflow step ${workflowStepId} already exists`);
+                    }
+                    editWorkflowSteps.set(workflowStepId, step);
+                    step.tabs
+                        ?.filter(tab => tab.id)
+                        .forEach(tab => {
+                            const workflowTabId = `${workflow.id}.${step.id}.${tab.id}`;
+                            if (editWorkflowSteps.has(workflowTabId)) {
+                                throw Error(`Workflow tab ${workflowTabId} already exists`);
+                            }
+                            editWorkflowTabs.set(workflowTabId, tab);
+                        });
+                });
         });
 
         server.method('getEditWorkflows', () => {
@@ -79,6 +91,57 @@ module.exports = {
             }
         );
 
+        server.method(
+            'getAnnotateAndLayoutData',
+            async ({ chart, productFeatures, request, team, theme }) => {
+                const { controls, previewWidths, customFields, flags } = assign(
+                    {
+                        // extend flags from default feature flags
+                        flags: Object.fromEntries(
+                            server.methods
+                                .getFeatureFlags()
+                                .map(({ id, default: defValue }) => [id, defValue])
+                        ),
+                        controls: {},
+                        previewWidths: [],
+                        customFields: []
+                    },
+                    cloneDeep(team?.settings || {})
+                );
+                const user = request.auth.artifacts;
+                const layoutControlsGroups = await server.methods.getLayoutControlGroups({
+                    chart,
+                    productFeatures,
+                    request,
+                    teamSettings: { flags },
+                    theme,
+                    user
+                });
+
+                const api = server.methods.createAPI(request);
+                const isAdmin = user.isAdmin();
+                let themes = isAdmin
+                    ? await Theme.findAll({ attributes: ['id', 'title', 'created_at'] })
+                    : (await api('/themes')).list;
+
+                if (!isAdmin && team?.settings?.restrictDefaultThemes) {
+                    const defaultThemes = server.methods.config('general').defaultThemes || [];
+                    themes = themes.filter(({ id }) => !defaultThemes.includes(id));
+                }
+
+                return {
+                    themes,
+                    layoutControlsGroups,
+                    teamSettings: {
+                        flags,
+                        controls,
+                        previewWidths,
+                        customFields
+                    }
+                };
+            }
+        );
+
         // register default chart workflow
         server.methods.registerEditWorkflow({
             id: 'chart',
@@ -89,6 +152,7 @@ module.exports = {
                     view: 'edit/chart/upload',
                     isDataStep: true,
                     title: ['Upload Data', 'core'],
+                    navButtonsRight: true,
                     async data({ request, chart }) {
                         const datasets = await server.methods.getDemoDatasets({ request, chart });
                         const uploadAfterContent = await server.methods.getCustomHTML(
@@ -123,56 +187,51 @@ module.exports = {
                     id: 'visualize',
                     view: 'edit/chart/visualize',
                     title: ['Visualize', 'core'],
-                    async data({ request, team, chart, theme, productFeatures }) {
-                        const { controls, previewWidths, customFields, flags } = assign(
-                            {
-                                // extend flags from default feature flags
-                                flags: Object.fromEntries(
-                                    server.methods
-                                        .getFeatureFlags()
-                                        .map(({ id, default: defValue }) => [id, defValue])
-                                ),
-                                controls: {},
-                                previewWidths: [],
-                                customFields: []
-                            },
-                            cloneDeep(team?.settings || {})
-                        );
-                        const user = request.auth.artifacts;
-                        const layoutControlsGroups = await server.methods.getLayoutControlGroups({
-                            chart,
-                            productFeatures,
-                            request,
-                            teamSettings: { flags },
-                            theme,
-                            user
-                        });
-
-                        const api = server.methods.createAPI(request);
-                        const isAdmin = user.isAdmin();
-                        let themes = isAdmin
-                            ? await Theme.findAll({ attributes: ['id', 'title', 'created_at'] })
-                            : (await api('/themes')).list;
-
-                        if (!isAdmin && team?.settings?.restrictDefaultThemes) {
-                            const defaultThemes =
-                                server.methods.config('general').defaultThemes || [];
-                            themes = themes.filter(({ id }) => !defaultThemes.includes(id));
+                    tabs: [
+                        {
+                            id: 'select-vis',
+                            view: 'edit/chart/visualize/select-vis',
+                            title: ['Chart type', 'core']
+                        },
+                        {
+                            id: 'refine',
+                            view: 'edit/chart/visualize/refine',
+                            title: ['Refine', 'core']
+                        },
+                        {
+                            id: 'annotate',
+                            view: 'edit/chart/visualize/annotate',
+                            title: ['Annotate', 'core']
+                        },
+                        {
+                            id: 'layout',
+                            view: 'edit/chart/visualize/layout',
+                            title: ['Layout', 'core']
                         }
+                    ],
+                    defaultTab(chart) {
+                        return !get(chart, 'metadata.visualize.chart-type-set', false)
+                            ? 'select-vis'
+                            : 'refine';
+                    },
+                    async data({ request, team, chart, theme, productFeatures }) {
+                        const annotateAndLayoutData = await server.methods.getAnnotateAndLayoutData(
+                            {
+                                chart,
+                                productFeatures,
+                                request,
+                                theme,
+                                team
+                            }
+                        );
+
                         const afterChartTypeSelector = await server.methods.getCustomHTML(
                             'edit/visualize/afterChartTypeSelector',
                             { request }
                         );
 
                         return {
-                            themes,
-                            layoutControlsGroups,
-                            teamSettings: {
-                                flags,
-                                controls,
-                                previewWidths,
-                                customFields
-                            },
+                            ...annotateAndLayoutData,
                             afterChartTypeSelector
                         };
                     }
@@ -181,6 +240,7 @@ module.exports = {
                     id: 'publish',
                     view: 'edit/chart/publish',
                     title: ['Publish & Embed', 'core'],
+                    navButtonsHidden: true,
                     async data({ request, chart, theme }) {
                         const { svelte2: afterEmbed } = await server.methods.getCustomData(
                             'edit/publish/afterEmbed',
@@ -363,7 +423,10 @@ module.exports = {
                             .map(step => {
                                 if (step.ref) {
                                     if (editWorkflowSteps.has(step.ref)) {
-                                        const workflowStep = { ...editWorkflowSteps.get(step.ref) };
+                                        const workflowStep = {
+                                            ...editWorkflowSteps.get(step.ref),
+                                            ...step
+                                        };
                                         if (step.hide) workflowStep.hide = step.hide;
                                         return workflowStep;
                                     }
@@ -373,7 +436,19 @@ module.exports = {
                                 }
                                 return step;
                             })
-                            .map(step => ({ ...step }));
+                            .map(step => ({
+                                ...step,
+                                tabs: step.tabs?.map(tab => {
+                                    if (!tab.ref) return tab;
+
+                                    if (editWorkflowTabs.has(tab.ref)) {
+                                        return editWorkflowTabs.get(tab.ref);
+                                    }
+                                    throw Boom.notImplemented(
+                                        'unknown workflow tab reference: ' + tab.ref
+                                    );
+                                })
+                            }));
 
                         // for now we still let users access chart steps for maps, but these are hidden
                         const visibleWorkflowSteps = workflowSteps.filter(step => !step.hide);
@@ -387,7 +462,9 @@ module.exports = {
                             );
                         }
                         if (!workflowSteps.find(step => step.id === params.step)) {
-                            params.step = workflowSteps[0].id;
+                            return h.redirect(
+                                `/${workflow.prefix}/${params.chartId}/${workflowSteps[0].id}`
+                            );
                         }
 
                         const api = server.methods.createAPI(request);
@@ -427,6 +504,17 @@ module.exports = {
                                     });
                                 })
                         );
+
+                        // determine default tab of each step
+                        workflowSteps
+                            .filter(step => step.tabs?.length)
+                            .forEach(step => {
+                                step.defaultTab = !step.defaultTab
+                                    ? step.tabs[0].id
+                                    : typeof step.defaultTab === 'function'
+                                    ? step.defaultTab(chart)
+                                    : step.defaultTab;
+                            });
 
                         const breadcrumbPath = [
                             chart.organization_id

@@ -21,6 +21,7 @@
     export let embedType;
     export let displayURLs;
     export let needsRepublish;
+    export let alwaysReloadPreview = false;
 
     /**
      * chart actions can be added by plugins
@@ -130,7 +131,11 @@
                 class:sticky={isSticky}
                 class:sticky-header={$headerProps.isSticky}
             >
-                <ChartEditorPreview bind:this={iframePreview} previewId="publish" />
+                <ChartEditorPreview
+                    bind:this={iframePreview}
+                    previewId="publish"
+                    alwaysReload={alwaysReloadPreview}
+                />
             </div>
         </div>
     </div>

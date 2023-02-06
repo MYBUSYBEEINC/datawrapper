@@ -32,8 +32,20 @@
      * and other labels
      */
     export let allowInlineEditing = false;
+    /*
+     * this is needed to ignore waitForVis() which sometimes doesn't resolve
+     * for locator maps, most likely because of a race condition
+     * TODO: this is a temporary workaround for locator-maps, remove once the root cause is fixed
+     */
+    export let unsafeInlineEditingActivation = false;
     export let allowResizing = false;
     export let previewId = null;
+    /*
+     * set to true, this will cause the preview iframe to do a reload (e.g. instead of a rerender)
+     * whenever a chart setting changes
+     * TODO: this is a temporary workaround for locator-maps, remove once the root cause is fixed
+     */
+    export let alwaysReload = false;
 
     /*
      * keep track of store subscriptions so we can unsubscribe when this component gets destroyed
@@ -47,7 +59,7 @@
      */
     export let ignoreVisualizeMetadataProps = [];
 
-    let iframePreview;
+    export let iframePreview;
 
     // default html tags allowed for inline-editing
     const DEFAULT_ALLOWED_HTML = [
@@ -287,14 +299,17 @@
         );
         storeSubscriptions.add(
             merge(...UPDATE.map(key => chart.bindKey(key)))
-                .pipe(debounceTime(100), tap(updatePreview))
+                .pipe(
+                    debounceTime(100),
+                    tap(() => (alwaysReload ? reloadPreview() : updatePreview()))
+                )
                 .subscribe()
         );
         storeSubscriptions.add(
             merge(...RERENDER.map(key => chart.bindKey(key)), visMetadataChanges$, data)
                 .pipe(
                     debounceTime(100),
-                    tap(() => rerender())
+                    tap(() => (alwaysReload ? reloadPreview() : rerender()))
                 )
                 .subscribe()
         );
@@ -307,7 +322,7 @@
                 EDITABLE_FIELDS.map(({ key }) => [key, !!get($chart, key)])
             );
             const activateInlineEditingDebounced = debounce(async () => {
-                await iframePreview.waitForVis();
+                if (!unsafeInlineEditingActivation) await iframePreview.waitForVis();
                 iframePreview.getContext((contentWindow, contentDocument) => {
                     activateInlineEditing(contentDocument, $readonlyKeys);
                 });
@@ -388,6 +403,16 @@
     }
 
     export { iframeGetContext as getContext };
+
+    export function getVis() {
+        return new Promise(resolve => {
+            iframePreview.getContext(win => resolve(win.__dw.vis));
+        });
+    }
+
+    export function getIFrame() {
+        return iframePreview.iframe;
+    }
 </script>
 
 <ChartPreviewIframeDisplay

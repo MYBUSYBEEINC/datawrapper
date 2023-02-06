@@ -4,9 +4,9 @@
     import purifyHtml from '@datawrapper/shared/purifyHtml.js';
     import MainLayout from '_layout/MainLayout.svelte';
     import { openedInsideIframe } from '_layout/stores';
-    import ViewComponent from '_partials/ViewComponent.svelte';
     import MessageDisplay from '_partials/displays/MessageDisplay.svelte';
     import Header from './nav/Header.svelte';
+    import NavButtons from '_partials/editor/NavButtons.svelte';
     import { initStores } from './stores';
     import ChartCoreChart from '@datawrapper/chart-core/lib/dw/chart.mjs';
     import escapeHtml from '@datawrapper/shared/escapeHtml.js';
@@ -18,6 +18,7 @@
     import { SubscriptionCollection } from '../../utils/rxjs-store.mjs';
     import { distinctUntilChanged, filter } from 'rxjs/operators';
     import { getChartEditorPath } from '../../utils/chart-editor-path.mjs';
+    import Tabs from '_partials/Tabs.svelte';
 
     export let workflow;
     export let __;
@@ -42,6 +43,7 @@
     const user = getContext('user');
     const userData = getContext('userData');
     const request = getContext('request');
+    const viewComponents = getContext('viewComponents');
 
     /*
      * if set to true, the editor nav is shown even if the app is opened
@@ -89,6 +91,7 @@
         team,
         readonlyKeys,
         activeStepId,
+        locale,
         ...stores
     } = initStores({
         rawChart,
@@ -111,10 +114,12 @@
         onNextSave,
         theme,
         navigateTo,
+        selectTab,
         team,
         readonlyKeys,
         activeStepId,
         onEditorStepChange,
+        locale,
         ...stores
     });
 
@@ -164,17 +169,16 @@
         language: rawChart.language,
         dwChart,
         dataReadonly,
-        readonlyKeys: $readonlyKeys,
-        __
+        readonlyKeys: $readonlyKeys
     };
 
     const steps = workflow.steps.map(step => ({
         ...step,
         title: __(step.title[0], step.title[1]),
-        props: {
-            ...step.data,
-            ...baseProps
-        }
+        tabs: step.tabs?.map(tab => ({
+            ...tab,
+            title: __(tab.title[0], tab.title[1])
+        }))
     }));
 
     // d3-maps has some extra steps that it is hiding from the nav (for now)
@@ -185,6 +189,20 @@
         });
 
     let activeStep = steps.find(s => s.id === initUrlStep) || steps[0];
+    $: findActiveTab(activeStep);
+
+    function findActiveTab(activeStep) {
+        // find the active tab
+        if (!activeStep.tabs?.length) return;
+
+        if (activeStep.tabs.some(t => `#${t.id}` === window.location.hash)) {
+            // read current tab from url hash
+            activeTabId = prevActiveTabId = window.location.hash.substring(1);
+        } else {
+            activeTabId = prevActiveTabId = activeStep.defaultTab;
+            window.location.hash = `#${activeTabId}`;
+        }
+    }
 
     $: lastActiveStep = $chart.lastEditStep || 1;
 
@@ -205,6 +223,7 @@
             __messages: $messages,
             __api_domain: $config.apiDomain,
             __userData: $userData,
+            __locale: $locale,
             hooks:
                 window && window.dw && window.dw.backend && window.dw.backend.hooks
                     ? window.dw.backend.hooks
@@ -231,7 +250,10 @@
         if (!initUrlStep && rawChart.lastEditStep) {
             activeStep = steps[Math.max(1, Math.min(steps.length - 1, rawChart.lastEditStep - 1))];
         }
-        navigateTo(activeStep, initUrlStep !== activeStep.id);
+        await navigateTo(activeStep, initUrlStep !== activeStep.id);
+
+        // preload the annotate tab, so that inline editing of annotations always works
+        tabLoaded.annotate = true;
 
         if ($user.isAdmin) {
             window.__chart = {
@@ -292,20 +314,58 @@
         }
         activeStep = { title: activeStep.title || '', view: null };
         await tick();
-        activeStep = step;
+        activeStep = steps.find(({ id }) => step.id === id) ?? step;
         if (lastActiveStep && step.index > lastActiveStep) {
             $chart.lastEditStep = step.index;
         }
+
         if (typeof window !== 'undefined') {
             const newPath = `${urlPrefix}/${$chart.id}/${step.id}`;
             if ($request.path !== newPath) {
-                // only puth new history state if the path has changed to
-                // preseve initial URL hashes such as #refine
+                // only put new history state if the path has changed to
+                // preserve initial URL hashes such as #refine
                 $request.path = newPath;
                 window.history.pushState({ id: step.id }, '', newPath);
                 trackPageView($user.isGuest ? 'guest' : $user.id, $team.id);
             }
         }
+    }
+    // id of the initially active tab
+    let activeTabId;
+    let prevActiveTabId;
+    $: activeTab = activeStep.tabs?.find(d => d.id === activeTabId) || activeStep.tabs?.[0];
+
+    // store current tab in url hash
+    $: if (prevActiveTabId && activeTabId !== prevActiveTabId) {
+        window.location.hash = `#${activeTabId}`;
+        prevActiveTabId = activeTabId;
+    }
+
+    /**
+     * remember which tabs we've opened already to keep them
+     * in DOM, but without having to load them all at once
+     */
+    let tabLoaded = {};
+    $: if (prevActiveTabId) tabLoaded = { ...tabLoaded, [prevActiveTabId]: true };
+
+    function changeTabBy(offset) {
+        const curTabIndex = (activeStep.tabs ?? []).indexOf(activeTab);
+        const nextTab = activeStep.tabs?.[curTabIndex + Math.sign(offset)];
+        if (curTabIndex > -1 && nextTab) {
+            selectTab(nextTab);
+            return;
+        }
+        // redirect to prev/next workflow step
+        const curStep = window.location.pathname.split('/').at(-1);
+        const curStepIndex = workflow.steps.findIndex(step => step.id === curStep);
+        const nextStep = workflow.steps[curStepIndex + Math.sign(offset)];
+        if (nextStep) {
+            navigateTo(nextStep);
+        }
+    }
+
+    function selectTab({ id }) {
+        activeTabId = id;
     }
 
     function initHooks() {
@@ -395,26 +455,75 @@
                 </MessageDisplay>
             </div>{/if}
         <!-- step content -->
-        <ViewComponent
-            id={workflow.baseView || 'edit/base'}
-            props={{ ...baseProps, step: activeStep.id }}
-            {__}
-        >
-            {#each steps as step}
-                {#if step.view && stepLoaded[step.id]}
-                    <div class:is-sr-only={step.id !== activeStep.id}>
-                        <ViewComponent id={step.view} props={step.props} {__} />
-                    </div>
-                {/if}
-            {/each}
-        </ViewComponent>
+        <div class="container">
+            <svelte:component
+                this={viewComponents.get(workflow.baseView || 'edit/base')}
+                {...baseProps}
+                step={activeStep.id}
+                {__}
+            >
+                {#each steps as step}
+                    {#if step.view && stepLoaded[step.id]}
+                        <div class:is-sr-only={step.id !== activeStep.id}>
+                            <svelte:component
+                                this={viewComponents.get(step.view)}
+                                {...baseProps}
+                                {...step.data}
+                                alwaysReloadPreview={step.alwaysReloadPreview}
+                                {__}
+                            >
+                                {#if step.tabs}
+                                    <div class="vis-controls block">
+                                        <Tabs items={step.tabs} bind:active={activeTabId} />
+                                    </div>
+                                    {#each step.tabs as tab}
+                                        {#if tab === activeTab || tabLoaded[tab.id]}
+                                            <div class="block" class:is-hidden={tab !== activeTab}>
+                                                <svelte:component
+                                                    this={viewComponents.get(tab.view)}
+                                                    {__}
+                                                    {...baseProps}
+                                                    {...step.data}
+                                                />
+                                            </div>
+                                        {/if}
+                                    {/each}
+                                    <NavButtons
+                                        {__}
+                                        hidden={step.navButtonsHidden}
+                                        showBack={steps[0].id !== $activeStepId}
+                                        on:back={() => changeTabBy(-1)}
+                                        on:proceed={() => changeTabBy(+1)}
+                                    />
+                                {/if}
+                            </svelte:component>
+                            {#if !step.tabs}
+                                <NavButtons
+                                    {__}
+                                    hidden={step.navButtonsHidden}
+                                    showBack={steps[0].id !== $activeStepId}
+                                    class={step.navButtonsRight && 'is-right'}
+                                    on:back={() => changeTabBy(-1)}
+                                    on:proceed={() => changeTabBy(+1)}
+                                />
+                            {/if}
+                        </div>
+                    {/if}
+                {/each}
+            </svelte:component>
+        </div>
     </section>
 
     {#if customViews?.belowEditor?.length > 0}
         {#each customViews.belowEditor as comp}
-            <ViewComponent
-                id={comp.id}
-                props={{ ...comp.props, chart, activeStep, workflow, theme }}
+            <svelte:component
+                this={viewComponents.get(comp.id)}
+                {__}
+                {...comp.props}
+                {chart}
+                {activeStep}
+                {workflow}
+                {theme}
             />
         {/each}
     {/if}

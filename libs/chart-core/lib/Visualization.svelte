@@ -686,6 +686,7 @@ Please make sure you called __(key) with a key of type "string".
                 renderFlags = { ...renderFlags, dark: isDark };
             }
 
+            await tick();
             await updateChartThemeData();
 
             // manually swap active css if we're not in automatic darkmode
@@ -706,8 +707,6 @@ Please make sure you called __(key) with a key of type "string".
          * to uppate.
          */
         async function updateChartThemeData() {
-            // wait for reactive themeData to be ready
-            await tick();
             /*
              * Preserve pre-existing theme object,
              * as render code generally captures vis.theme() in variable just once.

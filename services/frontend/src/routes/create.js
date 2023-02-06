@@ -80,8 +80,25 @@ module.exports = {
                 const user = auth.artifacts;
                 const { session } = auth.credentials;
 
+                if (type === 'locator-map') {
+                    // Locator maps always work with json data.
+                    // This flag needs to be set to make sure the dataset is parsed correctly.
+                    set(payload, 'metadata.data.json', true);
+                }
+
                 try {
                     const chart = await createChart({ server, payload, user, session });
+
+                    if (type === 'locator-map') {
+                        // Locator maps always need valid default data that can be parsed.
+                        // If this is not set the map preview won't render for some reason.
+                        const api = server.methods.createAPI(request);
+                        await api(`/charts/${chart.id}/data`, {
+                            method: 'put',
+                            body: `{ "markers": [] }`
+                        });
+                    }
+
                     return h.redirect(
                         type === 'locator-map' ? `/edit/${chart.id}` : `/chart/${chart.id}/edit`
                     );

@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import isEqual from 'lodash/isEqual';
 import cloneDeep from 'lodash/cloneDeep';
+import isNil from 'lodash/isNil';
 import httpReq from '@datawrapper/shared/httpReq.js';
 import objectDiff from '@datawrapper/shared/objectDiff.js';
 import get from '@datawrapper/shared/get.js';
@@ -582,7 +583,7 @@ export function initChartStore(initialValue) {
         const writableKey$ = distinctChart$.pipe(
             map(chart => get(chart, key)),
             map(value => {
-                if (value === null && defaultValue) {
+                if (isNil(value) && !isNil(defaultValue)) {
                     setChartValue(defaultValue);
                     return defaultValue;
                 }
