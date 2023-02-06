@@ -1,8 +1,9 @@
 import get from '@datawrapper/shared/get';
-import { getThemeStyleHelpers, toPixel, lineHeight, isTrue } from './shared.mjs';
+import { getThemeStyleHelpers, toPixel, isTrue } from './shared.mjs';
 import { cache } from '@emotion/css';
 import createCache from '@emotion/cache';
 import { serializeStyles } from '@emotion/serialize';
+import { omit } from 'underscore';
 
 export function globalStyles(emotion, themeData, isIframe) {
     const { getProp, cssTemplate } = getThemeStyleHelpers(emotion, themeData);
@@ -16,37 +17,26 @@ export function globalStyles(emotion, themeData, isIframe) {
 }
 
 export function chartStyles(emotion, themeData, isStyleStatic, isIframe) {
-    const { css, getProp } = getThemeStyleHelpers(emotion, themeData);
+    const { css, getProp, typography } = getThemeStyleHelpers(emotion, themeData);
     const bgCol = getProp('colors.background');
+    // @todo: don't make fontWeight a special case
     return css`
+        ${typography(omit(get(themeData, 'typography.chart', {}), 'fontWeight'))}
         border-bottom: ${getProp('style.body.border.bottom')};
         border-left: ${getProp('style.body.border.left')};
         border-right: ${getProp('style.body.border.right')};
         border-top: ${getProp('style.body.border.top')};
-        color: ${getProp('typography.chart.color')};
-        font-family: ${getProp('typography.chart.typeface')};
-        font-size: ${toPixel(getProp('typography.chart.fontSize'))};
-        font-stretch: ${getProp('typography.chart.fontStretch')};
-        letter-spacing: ${toPixel(getProp('typography.chart.letterSpacing'))};
         margin: ${getProp('style.body.margin', 0)};
         padding: ${getProp('style.body.padding')};
-        text-transform: ${getProp('typography.chart.textTransform')};
         ${!isIframe ? `background: ${getProp('style.body.background')};` : ''}
 
         ${isStyleStatic
             ? ''
             : `
                 a:not(.link-style-ignore) {
+                    ${typography(get(themeData, 'typography.links'))}
                     border-bottom: ${getProp('style.body.links.border.bottom')};
-                    color: ${getProp('typography.links.color')};
-                    font-family: ${getProp('typography.links.typeface')};
-                    font-style: ${getProp('typography.links.cursive') === 1 ? 'italic' : 'normal'};
-                    font-weight: ${getProp('typography.links.fontWeight')};
-                    line-height: ${lineHeight(getProp('typography.links.lineHeight'))};
                     padding: ${getProp('style.body.links.padding')};
-                    text-decoration: ${
-                        getProp('typography.links.underlined') ? 'underline' : 'none'
-                    };
                 }
 
                 a:not(.link-style-ignore):hover {
@@ -67,17 +57,13 @@ export function chartStyles(emotion, themeData, isStyleStatic, isIframe) {
 
         .label.value,
         .label.value span {
+            ${typography(get(themeData, 'style.chart.labels.values'))}
             ${isTrue(get(themeData, 'style.chart.labels.values.tabularNums'))
                 ? `
                 font-feature-settings: 'tnum';
                 -webkit-font-feature-settings: 'tnum';
                 -moz-font-feature-settings: 'tnum';`
                 : ''}
-
-            font-size: ${toPixel(getProp('style.chart.labels.values.fontSize'))};
-            letter-spacing: ${toPixel(getProp('style.chart.labels.values.letterSpacing'))};
-            color: ${getProp('style.chart.labels.values.color')};
-            font-family: ${getProp('style.chart.labels.values.typeface')};
         }
 
         .label span {
@@ -127,20 +113,13 @@ export function chartStyles(emotion, themeData, isStyleStatic, isIframe) {
 
         .label.legend-text span,
         .label.legend-text {
+            ${typography(get(themeData, 'style.chart.labels.legend'))}
             ${isTrue(get(themeData, 'style.chart.labels.legend.tabularNums'))
                 ? `
                 font-feature-settings: 'tnum';
                 -webkit-font-feature-settings: 'tnum';
                 -moz-font-feature-settings: 'tnum';`
                 : ''}
-
-            font-weight: ${getProp('style.chart.labels.legend.fontWeight')};
-            font-size: ${toPixel(getProp('style.chart.labels.legend.fontSize'))};
-            color: ${getProp('style.chart.labels.legend.color')};
-            font-family: ${getProp('style.chart.labels.legend.typeface')};
-            letter-spacing: ${toPixel(getProp('style.chart.labels.legend.letterSpacing'))};
-            text-transform: ${getProp('style.chart.labels.legend.textTransform')};
-            line-height: ${lineHeight(getProp('style.chart.labels.legend.lineHeight'))};
         }
 
         /* filter UI tabs */
@@ -275,28 +254,17 @@ export function chartBodyStyles(emotion, themeData) {
  * @returns {string} className
  */
 export function aboveFooterStyles(emotion, themeData) {
-    const { css, getProp } = getThemeStyleHelpers(emotion, themeData);
+    const { css, typography, getProp } = getThemeStyleHelpers(emotion, themeData);
     return css`
+        ${typography(get(themeData, 'typography.aboveFooter'))}
         background: ${getProp('style.aboveFooter.background')};
         border-bottom: ${getProp('style.aboveFooter.border.bottom')};
         border-left: ${getProp('style.aboveFooter.border.left')};
         border-right: ${getProp('style.aboveFooter.border.right')};
         border-top: ${getProp('style.aboveFooter.border.top')};
-        color: ${getProp('typography.aboveFooter.color')};
-        font-family: ${getProp('typography.aboveFooter.typeface')};
-        font-size: ${toPixel(getProp('typography.aboveFooter.fontSize'))};
-        font-stretch: ${getProp('typography.aboveFooter.fontStretch')};
-        font-style: ${isTrue(getProp('typography.aboveFooter.cursive')) ? 'italic' : 'normal'};
-        font-weight: ${getProp('typography.aboveFooter.fontWeight')};
-        letter-spacing: ${toPixel(getProp('typography.aboveFooter.letterSpacing'))};
-        line-height: ${lineHeight(getProp('typography.aboveFooter.lineHeight'))};
+        text-align: ${getProp('style.aboveFooter.textAlign')};
         margin: ${getProp('style.aboveFooter.margin', '0px 0px 5px 0px')};
         padding: ${getProp('style.aboveFooter.padding')};
-        text-align: ${getProp('style.aboveFooter.textAlign')};
-        text-decoration: ${isTrue(getProp('typography.aboveFooter.underlined'))
-            ? 'underline'
-            : 'none'};
-        text-transform: ${getProp('typography.aboveFooter.textTransform')};
     `;
 }
 
@@ -308,25 +276,16 @@ export function aboveFooterStyles(emotion, themeData) {
  * @returns {string} className
  */
 export function chartFooterStyles(emotion, themeData, isStyleStatic) {
-    const { css, getProp } = getThemeStyleHelpers(emotion, themeData);
+    const { css, getProp, typography } = getThemeStyleHelpers(emotion, themeData);
     return css`
+        ${typography(get(themeData, 'typography.footer'))}
         background: ${getProp('style.footer.background')};
         border-bottom: ${getProp('style.footer.border.bottom')};
         border-left: ${getProp('style.footer.border.left')};
         border-right: ${getProp('style.footer.border.right')};
         border-top: ${getProp('style.footer.border.top')};
-        color: ${getProp('typography.footer.color')};
-        font-family: ${getProp('typography.footer.typeface')};
-        font-size: ${toPixel(getProp('typography.footer.fontSize'))};
-        font-stretch: ${getProp('typography.footer.fontStretch')};
-        font-style: ${isTrue(getProp('typography.footer.cursive')) ? 'italic' : 'normal'};
-        font-weight: ${getProp('typography.footer.fontWeight')};
-        letter-spacing: ${toPixel(getProp('typography.footer.letterSpacing'))};
-        line-height: ${lineHeight(getProp('typography.footer.lineHeight'))};
         margin: ${getProp('style.footer.margin')};
         padding: ${getProp('style.footer.padding')};
-        text-decoration: ${getProp('typography.footer.underlined') ? 'underline' : 'none'};
-        text-transform: ${getProp('typography.footer.textTransform')};
         align-items: ${getProp('options.footer.alignItems', 'center')};
         gap: ${toPixel(getProp('options.footer.gap'))};
 
@@ -388,28 +347,17 @@ export function chartFooterStyles(emotion, themeData, isStyleStatic) {
  * @returns {string} className
  */
 export function belowFooterStyles(emotion, themeData) {
-    const { css, getProp } = getThemeStyleHelpers(emotion, themeData);
+    const { css, getProp, typography } = getThemeStyleHelpers(emotion, themeData);
     return css`
+        ${typography(get(themeData, 'typography.belowFooter'))}
         background: ${getProp('style.belowFooter.background')};
         border-bottom: ${getProp('style.belowFooter.border.bottom')};
         border-left: ${getProp('style.belowFooter.border.left')};
         border-right: ${getProp('style.belowFooter.border.right')};
         border-top: ${getProp('style.belowFooter.border.top')};
-        color: ${getProp('typography.belowFooter.color')};
-        font-family: ${getProp('typography.belowFooter.typeface')};
-        font-size: ${toPixel(getProp('typography.belowFooter.fontSize'))};
-        font-stretch: ${getProp('typography.belowFooter.fontStretch')};
-        font-style: ${isTrue(getProp('typography.belowFooter.cursive')) ? 'italic' : 'normal'};
-        font-weight: ${getProp('typography.belowFooter.fontWeight')};
-        letter-spacing: ${toPixel(getProp('typography.belowFooter.letterSpacing'))};
-        line-height: ${lineHeight(getProp('typography.belowFooter.lineHeight'))};
         margin: ${getProp('style.belowFooter.margin')};
         padding: ${getProp('style.belowFooter.padding')};
         text-align: ${getProp('style.belowFooter.textAlign')};
-        text-decoration: ${isTrue(getProp('typography.belowFooter.underlined'))
-            ? 'underline'
-            : 'none'};
-        text-transform: ${getProp('typography.belowFooter.textTransform')};
     `;
 }
 
