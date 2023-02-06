@@ -215,6 +215,17 @@ module.exports = {
                                 title: `${title}`
                             }))
                         },
+                        {
+                            type: 'separator',
+                            order: 40
+                        },
+                        {
+                            url: 'https://academy.datawrapper.de/',
+                            order: 42,
+                            title: __('Academy'),
+                            svgIcon: 'graduation',
+                            openInNewTab: true
+                        },
                         ...(!isGuest
                             ? [
                                   {

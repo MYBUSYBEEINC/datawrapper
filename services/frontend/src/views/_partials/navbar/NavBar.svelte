@@ -254,6 +254,7 @@
                                 <a
                                     class="navbar-item has-text-weight-normal {subItem.class || ''}"
                                     href={subItem.url}
+                                    target={subItem.openInNewTab ? '_blank' : '_self'}
                                     on:click={event => onNavItemClick(event, subItem)}
                                     ><NavBarIcon item={subItem} />
                                     <span class="navbar-title"
