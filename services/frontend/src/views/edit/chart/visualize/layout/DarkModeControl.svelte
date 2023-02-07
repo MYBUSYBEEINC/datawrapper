@@ -33,7 +33,7 @@
             <p class="mb-2">{@html purifyHtml(__('layout / auto-dark / intro / body'))}</p>
             <img
                 class="ml-2 is-pulled-right"
-                src="/static/img/darkmodepreviewbtns.png"
+                src="/lib/static/img/darkmodepreviewbtns.png"
                 alt="dark mode preview buttons"
                 style="width: 50px;"
             />

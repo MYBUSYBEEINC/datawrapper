@@ -335,7 +335,7 @@
                     data-uid={uid && `${uid}-${mode.id}`}
                 >
                     <figure class="mode-icon">
-                        <img alt={mode.id} src="/static/img/colorblind-check/{mode.icon}" />
+                        <img alt={mode.id} src="/lib/static/img/colorblind-check/{mode.icon}" />
                         <figcaption class="mode-label">{mode.label}</figcaption>
                     </figure>
                     {#if warnings[mode.id]}
