@@ -99,11 +99,11 @@ const { getInfo } = require('@el3um4s/svelte-get-component-info');
         fs.copy(path.join(__dirname, '..', 'static'), path.join(outDir, 'lib/static')),
         fs.copy(chartCore.path.dist, path.join(outDir, 'lib/chart-core')),
         fs.copy(
-            path.join(__dirname, '../../php/www/static/vendor/font-awesome/'),
+            path.join(__dirname, '../static/vendor/font-awesome/'),
             path.join(outDir, 'lib/vendor/font-awesome')
         ),
         fs.copy(
-            path.join(__dirname, '../../php/www/static/vendor/iconicfont/'),
+            path.join(__dirname, '../static/vendor/iconicfont/'),
             path.join(outDir, 'lib/vendor/iconicfont')
         ),
         fs.copy(

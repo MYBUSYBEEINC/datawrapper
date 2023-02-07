@@ -86,7 +86,6 @@ class SvelteView {
             htmlClass = '',
             csrRoot = '/lib/csr/',
             libRoot = '/lib/',
-            vendorRoot = '/static/vendor/',
             analytics = {},
             disableMatomo = false
         } = {}) => {
@@ -117,7 +116,6 @@ class SvelteView {
 
             props.csrRoot = csrRoot;
             props.libRoot = libRoot;
-            props.vendorRoot = vendorRoot;
 
             const { css, html, head } = app.render(props);
 
@@ -132,7 +130,6 @@ class SvelteView {
                 HTML_CLASS: htmlClass,
                 CSR_ROOT: csrRoot,
                 LIB_ROOT: libRoot,
-                VENDOR_ROOT: vendorRoot,
                 ANALYTICS: {
                     uid: user.isGuest ? 'guest' : user.id,
                     ...analytics

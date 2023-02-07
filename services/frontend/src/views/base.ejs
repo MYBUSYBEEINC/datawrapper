@@ -7,10 +7,13 @@
         <meta name="theme-color" content="#333333" />
 
         <link rel="stylesheet" href="<%- LIB_ROOT %>static/datawrapper.css" />
-        <link rel="stylesheet" href="<%- VENDOR_ROOT %>font-awesome/css/font-awesome.min.css" />
         <link
             rel="stylesheet"
-            href="<%- VENDOR_ROOT %>iconicfont/css/iconmonstr-iconic-font.min.css"
+            href="<%- LIB_ROOT %>static/vendor/font-awesome/css/font-awesome.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="<%- LIB_ROOT %>static/vendor/iconicfont/css/iconmonstr-iconic-font.min.css"
         />
         <link rel="icon" type="image/png" href="<%- FAVICON %>" />
 
@@ -79,9 +82,8 @@
             requirejs.config({
                 paths: {
                     lib: '<%- LIB_ROOT %>csr',
-                    dayjs: '<%- VENDOR_ROOT %>dayjs/dayjs.min',
-                    jquery: '<%- VENDOR_ROOT %>jquery/jquery.min',
-                    cm: '<%- VENDOR_ROOT %>codemirror',
+                    dayjs: '<%- LIB_ROOT %>dayjs/dayjs.min',
+                    cm: '<%- LIB_ROOT %>codemirror',
                     Handsontable: '<%- LIB_ROOT %>static/js/hot/handsontable.full.min'
                 },
                 waitSeconds: 0

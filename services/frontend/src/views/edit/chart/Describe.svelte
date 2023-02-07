@@ -48,8 +48,8 @@
         css={[
             `/lib/static/css/svelte2/describe.css?sha=${$config.GITHEAD}`,
             '/lib/static/css/handsontable.min.css',
-            '/static/vendor/codemirror/lib/codemirror.css',
-            '/static/vendor/codemirror/addon/hint/show-hint.css'
+            '/lib/codemirror/lib/codemirror.css',
+            '/lib/codemirror/addon/hint/show-hint.css'
         ]}
         data={props}
         storeData={{

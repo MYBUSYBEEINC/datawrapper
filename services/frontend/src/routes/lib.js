@@ -110,6 +110,23 @@ module.exports = {
                 }
             },
             {
+                path: '/dayjs/{file*}',
+                method: 'GET',
+                config: {
+                    auth: false,
+                    validate: {
+                        params: Joi.object({
+                            file: FILE_SCHEMA
+                        })
+                    }
+                },
+                handler: {
+                    directory: {
+                        path: path.dirname(require.resolve('dayjs/package.json'))
+                    }
+                }
+            },
+            {
                 path: '/highlightjs-css/{file*}',
                 method: 'GET',
                 config: {

@@ -62,11 +62,11 @@
 
     onMount(async () => {
         await Promise.all([
-            loadCSS('/static/vendor/bootstrap/css/bootstrap.css'),
-            loadCSS('/static/vendor/bootstrap/css/bootstrap-responsive.css'),
-            loadCSS('/static/vendor/font-awesome/css/font-awesome.min.css'),
-            loadCSS('/static/vendor/iconicfont/css/iconmonstr-iconic-font.min.css'),
-            loadCSS('/static/css/datawrapper.css'),
+            loadCSS('/lib/static/css/bootstrap/bootstrap.css'),
+            loadCSS('/lib/static/css/bootstrap/bootstrap-responsive.css'),
+            loadCSS('/lib/static/vendor/font-awesome/css/font-awesome.min.css'),
+            loadCSS('/lib/static/vendor/iconicfont/css/iconmonstr-iconic-font.min.css'),
+            loadCSS('/lib/static/css/bootstrap/datawrapper.css'),
             loadCSS('/lib/static/css/bulma-polyfill.css'),
             loadScript(js),
             ...(Array.isArray(css) ? css.map(loadCSS) : [loadCSS(css)])
