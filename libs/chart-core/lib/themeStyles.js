@@ -34,7 +34,7 @@ export function chartStyles(emotion, themeData, isStyleStatic, isIframe) {
             ? ''
             : `
                 a:not(.link-style-ignore) {
-                    ${typography(get(themeData, 'typography.links'))}
+                    ${typography(get(themeData, 'typography.links'), { underlined: false })}
                     border-bottom: ${getProp('style.body.links.border.bottom')};
                     padding: ${getProp('style.body.links.padding')};
                 }

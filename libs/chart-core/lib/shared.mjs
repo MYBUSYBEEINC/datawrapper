@@ -172,7 +172,7 @@ const TYPOGRAPHY_PROPS = {
     },
     underlined: {
         prop: 'text-decoration',
-        tsf: val => (isTrue(val) ? 'underline' : 'normal')
+        tsf: val => (isTrue(val) ? 'underline' : 'none')
     },
     cursive: {
         prop: 'font-style',

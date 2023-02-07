@@ -24,8 +24,10 @@ test('default links', async t => {
     });
     t.is(await getElementStyle(page, '.description-block a', 'color'), 'rgb(51, 153, 204)');
     t.is(await getElementStyle(page, '.description-block a', 'border-bottom-width'), '0px');
+    t.is(await getElementStyle(page, '.description-block a', 'text-decoration-line'), 'none');
     t.is(await getElementStyle(page, '.notes-block a', 'color'), 'rgb(51, 153, 204)');
     t.is(await getElementStyle(page, '.notes-block a', 'border-bottom-width'), '0px');
+    t.is(await getElementStyle(page, '.notes-block a', 'text-decoration-line'), 'none');
 });
 
 test('custom link style', async t => {
