@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-import jschardet from '/static/vendor/jschardet/jschardet.min.js';
+import jschardet from '/lib/static/js/jschardet/jschardet.min.js';
 
 export default function (file, callback) {
     var reader = new FileReader();

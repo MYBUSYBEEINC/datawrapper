@@ -59,7 +59,7 @@ function build(appId, opts) {
                 Handsontable: 'HOT',
                 dayjs: 'dayjs',
                 'cm/lib/codemirror': 'CodeMirror',
-                '/static/vendor/jschardet/jschardet.min.js': 'jschardet',
+                '/lib/static/js/jschardet/jschardet.min.js': 'jschardet',
                 '/static/js/svelte/publish.js': 'Publish'
             }
         },
