@@ -1,8 +1,8 @@
 # datawrapper-crons
+
 A collection of tasks that our server performs regularly in the background
 
 ![](docs/crons.png)
-
 
 ### Installation
 
@@ -45,7 +45,7 @@ in `config.js`:
 module.exports = {
     frontend: {
         // domain name used to access charts
-        domain: 'app.staging.datawrapper.de',
+        domain: 'app.staging.datawrapper.dev',
         https: true,
         screenshots: {
             // bucket and path to store screenshots in
