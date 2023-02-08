@@ -3,7 +3,7 @@
     import get from '@datawrapper/shared/get.js';
     import SelectInput from '_partials/controls/SelectInput.svelte';
     import SwitchControl from '_partials/controls/SwitchControl.svelte';
-    import { getContext } from 'svelte';
+    import { getContext, tick } from 'svelte';
 
     const { chart, theme } = getContext('page/edit');
 
@@ -17,9 +17,15 @@
 
     $: logoOptions = logos.map(({ id, title }) => ({ value: id, label: title }));
 
+    const updateLogoId = async id => {
+        // Make sure we don't interfere with any Svelte2Wrapper state updates from the chart controls.
+        await tick();
+        $logoId = id;
+    };
+
     $: {
-        if (logos && logos.length && !logos.some(d => d.id === $logoId)) {
-            $logoId = logos[0].id;
+        if (logos?.length && logos[0].id !== $logoId && !logos.some(d => d.id === $logoId)) {
+            updateLogoId(logos[0].id);
         }
     }
 
