@@ -18,36 +18,6 @@ async function hasAccess(path, mode) {
         return false;
     }
 }
-/**
- * Returns true if `path` is a symlink.
- *
- * When the path doesn't exist, then this function returns false.
- */
-async function isSymbolicLink(path) {
-    try {
-        const stats = await promises_1.default.lstat(path);
-        return stats.isSymbolicLink();
-    }
-    catch (e) {
-        // ENOENT goes here
-        return false;
-    }
-}
-/**
- * Removes `path`.
- *
- * When the path doesn't exist, then this function does nothing.
- */
-async function safeUnlink(path) {
-    try {
-        await promises_1.default.unlink(path);
-    }
-    catch (e) {
-        console.error(`Failed to unlink ${path}. The path doesn't exist or the user has insufficient permissions.`);
-    }
-}
 exports.fsUtils = {
-    hasAccess,
-    isSymbolicLink,
-    safeUnlink
+    hasAccess
 };

@@ -2,11 +2,14 @@ const alias = require('@rollup/plugin-alias');
 const commonjs = require('@rollup/plugin-commonjs');
 const fastGlob = require('fast-glob');
 const json = require('@rollup/plugin-json');
+const fs = require('fs');
+const fsPromises = require('fs/promises');
 const replace = require('@rollup/plugin-replace');
 const svelte = require('rollup-plugin-svelte');
 const sveltePreprocess = require('svelte-preprocess');
 const { default: resolve } = require('@rollup/plugin-node-resolve');
 const { fetchAllPlugins, requireConfig } = require('@datawrapper/backend-utils');
+const { fsUtils } = require('@datawrapper/service-utils');
 const path = require('path');
 const terser = require('@rollup/plugin-terser');
 
@@ -14,6 +17,7 @@ const sourceDir = 'src/views';
 const outputDir = process.env.OUTPUT_DIR || 'build/views';
 
 const sourceDirFullPath = path.resolve(path.join(__dirname, sourceDir));
+const sourcePluginsDirFullPath = path.join(sourceDirFullPath, '_plugins');
 const pluginsDirFullPath = path.resolve(path.join(__dirname, '../../plugins'));
 
 const stripCode = require('rollup-plugin-strip-code');
@@ -100,35 +104,27 @@ function createViewInput({ views, mode, replacements = {}, pluginsInfo }) {
                         );
                         if (relativeToPluginsPath !== null) {
                             const pluginName = relativeToPluginsPath.split(path.sep)[0];
-                            if (pluginsInfo[pluginName]) {
-                                const viewsPath = pluginsInfo[pluginName].viewsPath;
-                                const relativeToPluginPath = relativeIfSubpath(
-                                    viewsPath,
-                                    facadeModuleId
-                                );
-                                if (relativeToPluginPath !== null) {
-                                    const viewMatch = relativeToPluginPath.match(viewRegexp);
-                                    if (viewMatch) {
-                                        return path.join(
-                                            '_plugins',
-                                            pluginName,
-                                            viewMatch.groups['path'] + '.svelte' + ext
-                                        );
-                                    }
-                                } else {
-                                    console.warn(
-                                        `Could not resolve facadeModuleId: ${facadeModuleId}`
+                            const viewsPath = pluginsInfo[pluginName].viewsPath;
+                            const relativeToPluginPath = relativeIfSubpath(
+                                viewsPath,
+                                facadeModuleId
+                            );
+                            if (relativeToPluginPath !== null) {
+                                const viewMatch = relativeToPluginPath.match(viewRegexp);
+                                if (viewMatch) {
+                                    return path.join(
+                                        '_plugins',
+                                        pluginName,
+                                        viewMatch.groups['path'] + '.svelte' + ext
                                     );
                                 }
                             } else {
-                                console.warn(
-                                    `Could not resolve facadeModuleId: ${facadeModuleId}, ` +
-                                        `because there is a symlink for plugin ${pluginName} but ` +
-                                        "the plugin doesn't appear in config.js"
+                                throw new Error(
+                                    `Could not resolve facadeModuleId: ${facadeModuleId}`
                                 );
                             }
                         } else {
-                            console.warn(`Could not resolve facadeModuleId: ${facadeModuleId}`);
+                            throw new Error(`Could not resolve facadeModuleId: ${facadeModuleId}`);
                         }
                     }
                 }
@@ -245,6 +241,28 @@ function createCustomElementInput({ customElement, mode }) {
 }
 
 async function main() {
+    const config = requireConfig();
+    const pluginsInfo = await fetchAllPlugins(config);
+
+    // Clean src/views/_plugins.
+    for (const file of await fsPromises.readdir(sourcePluginsDirFullPath)) {
+        if (file === '.gitkeep') {
+            continue;
+        }
+        const absolutePath = path.join(sourcePluginsDirFullPath, file);
+        await fsPromises.unlink(absolutePath);
+    }
+
+    // Update src/views/_plugins.
+    for (const [pluginName, { viewsPath }] of Object.entries(pluginsInfo)) {
+        if (await fsUtils.hasAccess(viewsPath, fs.constants.F_OK)) {
+            process.stderr.write(`Creating symlink to plugin ${pluginName}\n`);
+            const linkName = path.join(sourcePluginsDirFullPath, pluginName);
+            const linkTarget = path.relative(sourcePluginsDirFullPath, viewsPath);
+            await fsPromises.symlink(linkTarget, linkName);
+        }
+    }
+
     // Find all views by searching for *.view.svelte files.
     const views = (await fastGlob(path.join(sourceDir, '**/*.view.svelte')))
         .map(absolutePath =>
@@ -260,8 +278,6 @@ async function main() {
         );
 
     // Find all view components by reading plugin.json files.
-    const config = requireConfig();
-    const pluginsInfo = await fetchAllPlugins(config);
     const viewComponents = Object.values(pluginsInfo).flatMap(
         ({ manifest }) => manifest?.viewComponents ?? []
     );

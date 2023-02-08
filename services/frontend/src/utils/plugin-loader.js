@@ -1,9 +1,7 @@
-const fs = require('fs');
 const fsPromises = require('fs/promises');
 const { fetchAllPlugins } = require('@datawrapper/backend-utils');
-const { addLocalizationScope, fsUtils } = require('@datawrapper/service-utils');
+const { addLocalizationScope } = require('@datawrapper/service-utils');
 const { models } = require('@datawrapper/orm/db');
-const path = require('path');
 
 module.exports = {
     name: 'plugin-loader',
@@ -28,10 +26,7 @@ module.exports = {
             }
         }
 
-        for (const [
-            pluginName,
-            { getLocalesPaths, manifest, pluginConfig, viewsPath }
-        ] of pluginsInfo) {
+        for (const [pluginName, { getLocalesPaths, manifest, pluginConfig }] of pluginsInfo) {
             if (!(pluginName in loadedPlugins)) {
                 continue;
             }
@@ -52,20 +47,6 @@ module.exports = {
             };
 
             server.logger.info(`[Plugin] ${pluginName}@${version}`);
-
-            // symlink plugin views
-            if (await fsUtils.hasAccess(viewsPath, fs.constants.F_OK)) {
-                const linkDir = path.join(__dirname, '../views/_plugins');
-                const link = path.join(linkDir, name);
-                if (await fsUtils.isSymbolicLink(link)) {
-                    await fsUtils.safeUnlink(link);
-                }
-                const pluginViewsRel = path.relative(linkDir, viewsPath);
-                await fsPromises.symlink(pluginViewsRel, link);
-                server.logger.info(
-                    `[Plugin] ${name}: created symlink to ${viewsPath} from ${link}`
-                );
-            }
 
             // @todo: try to load locales
             try {
