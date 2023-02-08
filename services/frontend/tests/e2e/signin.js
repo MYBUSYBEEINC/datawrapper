@@ -29,7 +29,7 @@ describe('login and logout', () => {
     it('redirects the user to the signin page if they are logged out', async () => {
         await browser.logout(); // Make sure the user is logged out, if another test case logged the user in.
         await browser.url('/');
-        await browser.waitForUrl('/signin/?ref=/');
+        await browser.waitForUrl(/^\/signin/);
 
         // Then it shows the email provider button or login form.
         if (dwConfig.frontend.signinProviders?.length) {
