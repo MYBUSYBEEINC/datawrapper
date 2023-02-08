@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher, beforeUpdate, getContext } from 'svelte';
+    import { createEventDispatcher, beforeUpdate, getContext, tick } from 'svelte';
     import IconDisplay from '_partials/displays/IconDisplay.svelte';
     import debounce from 'lodash/debounce';
     import decodeHtml from '@datawrapper/shared/decodeHtml.js';
@@ -161,7 +161,11 @@
      *
      * @param item
      */
-    function handleSelect(item) {
+    async function handleSelect(item, index) {
+        if (index != null) {
+            selectedIndex = index;
+            await tick();
+        }
         value = item;
         searchQuery = item.label;
         searching = false;
@@ -354,12 +358,14 @@
                                 this={customItemRenderer}
                                 item={match}
                                 active={i === selectedIndex}
-                                on:select={event => handleSelect(event.detail)}
+                                on:activate={() => (selectedIndex = i)}
+                                on:select={event => handleSelect(event.detail, i)}
                             />
                         {:else}
                             <a
                                 href="#/{match.value}"
                                 on:click|preventDefault|stopPropagation={() => handleSelect(match)}
+                                on:mousedown={() => (selectedIndex = i)}
                                 class="dropdown-item"
                                 class:is-active={i === selectedIndex}
                             >

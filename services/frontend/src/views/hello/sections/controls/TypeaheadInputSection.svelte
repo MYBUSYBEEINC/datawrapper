@@ -22,6 +22,7 @@
     });
 
     async function customSearch(query) {
+        if (!query) return;
         // imagine some http request here
         await wait(1000 + Math.random() * 2000);
         // return the items that match the query
@@ -35,6 +36,7 @@
 
     let geocodingValue = null;
     async function geocoding(query) {
+        if (!query) return;
         const { results } = await httpReq.get(
             `/v3/utils/geocode?q=${encodeURIComponent(query)}&language=en-US`
         );
@@ -59,6 +61,7 @@
     ];
 
     async function tagSearch(query) {
+        if (!query) return;
         const newTag = {
             value: query.toLowerCase(),
             isNew: true,
