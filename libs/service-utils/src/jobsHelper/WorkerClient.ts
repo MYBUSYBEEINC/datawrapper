@@ -1,7 +1,8 @@
-import type { ConfigTypes, ExportChartTypes, WorkerTypes } from '@datawrapper/backend-utils';
+import type { Config, ExportChartTypes, WorkerTypes } from '@datawrapper/backend-utils';
 import type { BullmqJob } from '@datawrapper/backend-utils/dist/workerTypes';
 import type { DB } from '@datawrapper/orm';
 import type { QueueEvents } from 'bullmq';
+import mapValues from 'lodash/mapValues';
 import {
     ExportChartJobData,
     ExportFilesPublishOptions,
@@ -13,32 +14,12 @@ import {
 
 export type BullmqQueueEventsClass = typeof QueueEvents;
 
-type WorkerConfig = {
-    queues: ConfigTypes.WorkerQueuesConfig;
-    connection: {
-        host: string;
-        port: number;
-        password?: string;
-    };
-};
-
-export type ServerConfig = {
-    worker?: {
-        redis?: {
-            host: string;
-            port: string | number;
-            password?: string;
-        };
-        queues?: ConfigTypes.WorkerQueuesConfig;
-    };
-};
-
 /**
  * Get worker configuration from passed `config`.
  *
  * Throw an exception if the worker config is missing or invalid.
  */
-function getWorkerConfig(config: ServerConfig) {
+function getWorkerConfig(config: Config) {
     if (!config.worker?.redis?.host || !config.worker?.redis?.port || !config.worker?.queues) {
         throw new Error('Missing or invalid worker config');
     }
@@ -175,25 +156,28 @@ async function getPublishUploadOptions(
 }
 
 export class WorkerClient {
-    private readonly Queue: WorkerTypes.BullmqQueueClass;
-    private readonly QueueEvents: BullmqQueueEventsClass;
-    private readonly workerConfig: WorkerConfig;
     private readonly db: DB;
+    public readonly queues;
+    private readonly queuesEvents;
 
     constructor(
-        serverConfig: ServerConfig,
+        serverConfig: Config,
         Queue: WorkerTypes.BullmqQueueClass,
         QueueEvents: BullmqQueueEventsClass,
         db: DB
     ) {
-        this.Queue = Queue;
-        this.QueueEvents = QueueEvents;
-        this.workerConfig = getWorkerConfig(serverConfig);
+        const workerConfig = getWorkerConfig(serverConfig);
+        this.queues = mapValues(
+            workerConfig.queues,
+            (_queueParams, queueName) =>
+                new Queue(queueName, { connection: workerConfig.connection })
+        );
+        this.queuesEvents = mapValues(
+            workerConfig.queues,
+            (_queueParams, queueName) =>
+                new QueueEvents(queueName, { connection: workerConfig.connection })
+        );
         this.db = db;
-    }
-
-    get queues() {
-        return this.workerConfig.queues;
     }
 
     async scheduleJob<TName extends WorkerTypes.JobName>(
@@ -201,18 +185,17 @@ export class WorkerClient {
         jobType: TName,
         jobPayload: WorkerTypes.JobData<TName>
     ): JobCreationResult<WorkerTypes.JobResult<TName>> {
-        const { queues, connection } = this.workerConfig;
-        if (!queues[queueName]) {
+        const queue = this.queues[queueName];
+        const queueEvents = this.queuesEvents[queueName];
+        if (!queue || !queueEvents) {
             throw new Error('unsupported queue name');
         }
 
-        const queue = new this.Queue(queueName, { connection });
         const job = (await queue.add(jobType, jobPayload)) as BullmqJob<TName>;
         const creationDate = new Date();
 
         return {
             getResult: maxSecondsInQueue => {
-                const queueEvents = new this.QueueEvents(queueName, { connection });
                 return waitUntilFinished(job, queueEvents, creationDate, maxSecondsInQueue);
             }
         };
@@ -223,12 +206,12 @@ export class WorkerClient {
         jobType: TName,
         jobPayloads: WorkerTypes.JobData<TName>[]
     ): JobsCreationResult<WorkerTypes.JobResult<TName>> {
-        const { queues, connection } = this.workerConfig;
-        if (!queues[queueName]) {
+        const queue = this.queues[queueName];
+        const queueEvents = this.queuesEvents[queueName];
+        if (!queue || !queueEvents) {
             throw new Error('unsupported queue name');
         }
 
-        const queue = new this.Queue(queueName, { connection });
         const jobs = (await queue.addBulk(
             jobPayloads.map(data => ({ name: jobType, data }))
         )) as BullmqJob<TName>[];
@@ -236,7 +219,6 @@ export class WorkerClient {
 
         return {
             getResults: maxSecondsInQueue => {
-                const queueEvents = new this.QueueEvents(queueName, { connection });
                 return jobs.map(job =>
                     waitUntilFinished(job, queueEvents, creationDate, maxSecondsInQueue)
                 );
@@ -284,8 +266,8 @@ export class WorkerClient {
     }
 
     async getQueueHealth(queueName: string, jobsSampleSize: number) {
-        const { queues, connection } = this.workerConfig;
-        if (!queues[queueName]) {
+        const queue = this.queues[queueName];
+        if (!queue) {
             throw new Error('unsupported queue name');
         }
 
@@ -301,8 +283,6 @@ export class WorkerClient {
             };
             lastJobFinishedAgoMs?: number;
         } = { connected: false };
-
-        const queue = new this.Queue(queueName, { connection });
 
         // Check if the queue is paused and implicitly also if we can connect to the queue.
         try {

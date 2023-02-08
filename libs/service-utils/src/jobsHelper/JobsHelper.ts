@@ -1,15 +1,15 @@
-import type { WorkerTypes } from '@datawrapper/backend-utils';
+import type { Config, WorkerTypes } from '@datawrapper/backend-utils';
 import type { DB } from '@datawrapper/orm';
 import { ExportJobOptions, RenderNetworkClient } from './RenderNetworkClient';
 import type { ExportChartJobData, InvalidateCloudflareJobData } from './types';
-import { WorkerClient, BullmqQueueEventsClass, ServerConfig } from './WorkerClient';
+import { WorkerClient, BullmqQueueEventsClass } from './WorkerClient';
 
 export class JobsHelper {
     public readonly workerClient?: WorkerClient;
     private readonly renderNetworkClient: RenderNetworkClient;
 
     constructor(
-        config: ServerConfig,
+        config: Config,
         Queue: WorkerTypes.BullmqQueueClass,
         QueueEvents: BullmqQueueEventsClass,
         db: DB,

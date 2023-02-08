@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkerClient = void 0;
+const mapValues_1 = __importDefault(require("lodash/mapValues"));
 const types_1 = require("./types");
 /**
  * Get worker configuration from passed `config`.
@@ -125,45 +129,39 @@ async function getPublishUploadOptions(db, publishOptions) {
     }
 }
 class WorkerClient {
-    Queue;
-    QueueEvents;
-    workerConfig;
     db;
+    queues;
+    queuesEvents;
     constructor(serverConfig, Queue, QueueEvents, db) {
-        this.Queue = Queue;
-        this.QueueEvents = QueueEvents;
-        this.workerConfig = getWorkerConfig(serverConfig);
+        const workerConfig = getWorkerConfig(serverConfig);
+        this.queues = (0, mapValues_1.default)(workerConfig.queues, (_queueParams, queueName) => new Queue(queueName, { connection: workerConfig.connection }));
+        this.queuesEvents = (0, mapValues_1.default)(workerConfig.queues, (_queueParams, queueName) => new QueueEvents(queueName, { connection: workerConfig.connection }));
         this.db = db;
     }
-    get queues() {
-        return this.workerConfig.queues;
-    }
     async scheduleJob(queueName, jobType, jobPayload) {
-        const { queues, connection } = this.workerConfig;
-        if (!queues[queueName]) {
+        const queue = this.queues[queueName];
+        const queueEvents = this.queuesEvents[queueName];
+        if (!queue || !queueEvents) {
             throw new Error('unsupported queue name');
         }
-        const queue = new this.Queue(queueName, { connection });
         const job = (await queue.add(jobType, jobPayload));
         const creationDate = new Date();
         return {
             getResult: maxSecondsInQueue => {
-                const queueEvents = new this.QueueEvents(queueName, { connection });
                 return waitUntilFinished(job, queueEvents, creationDate, maxSecondsInQueue);
             }
         };
     }
     async scheduleJobs(queueName, jobType, jobPayloads) {
-        const { queues, connection } = this.workerConfig;
-        if (!queues[queueName]) {
+        const queue = this.queues[queueName];
+        const queueEvents = this.queuesEvents[queueName];
+        if (!queue || !queueEvents) {
             throw new Error('unsupported queue name');
         }
-        const queue = new this.Queue(queueName, { connection });
         const jobs = (await queue.addBulk(jobPayloads.map(data => ({ name: jobType, data }))));
         const creationDate = new Date();
         return {
             getResults: maxSecondsInQueue => {
-                const queueEvents = new this.QueueEvents(queueName, { connection });
                 return jobs.map(job => waitUntilFinished(job, queueEvents, creationDate, maxSecondsInQueue));
             }
         };
@@ -197,12 +195,11 @@ class WorkerClient {
         };
     }
     async getQueueHealth(queueName, jobsSampleSize) {
-        const { queues, connection } = this.workerConfig;
-        if (!queues[queueName]) {
+        const queue = this.queues[queueName];
+        if (!queue) {
             throw new Error('unsupported queue name');
         }
         const report = { connected: false };
-        const queue = new this.Queue(queueName, { connection });
         // Check if the queue is paused and implicitly also if we can connect to the queue.
         try {
             report.paused = await queue.isPaused();
