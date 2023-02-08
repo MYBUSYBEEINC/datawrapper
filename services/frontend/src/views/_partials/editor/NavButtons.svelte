@@ -19,7 +19,7 @@
     <div class="buttons {className ?? ''}">
         {#if showBack}
             <button
-                class="button"
+                class="button mb-0"
                 {disabled}
                 on:click={() => dispatch('back')}
                 data-uid="{stepId ?? 'nav'}-back-button"
@@ -30,7 +30,7 @@
         {/if}
         {#if showProceed}
             <button
-                class="button is-primary"
+                class="button is-primary mb-0"
                 {disabled}
                 on:click={() => dispatch('proceed')}
                 data-uid="{stepId ?? 'nav'}-proceed-button"
