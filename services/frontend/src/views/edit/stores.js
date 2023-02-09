@@ -567,8 +567,8 @@ export function initChartStore(initialValue) {
                 map(chart => get(chart, key)),
                 distinctUntilChanged(isEqual),
                 debounceTime(debounce),
-                tap(value => (previousValue = value)),
-                tap(newVal => handler(newVal, previousValue))
+                tap(newVal => handler(newVal, previousValue)),
+                tap(value => (previousValue = value))
             )
             .subscribe();
         return () => sub.unsubscribe();
