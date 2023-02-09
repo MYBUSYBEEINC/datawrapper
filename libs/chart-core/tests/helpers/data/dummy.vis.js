@@ -8,7 +8,7 @@ dw.visualization.register('dummy', function () {
         render(el) {
             const themeData = this.theme();
             const outerWidth = this.size()[0];
-            el.innerHTML = `<div class="vis-canvas" style="background:#dddddd; width:${outerWidth}px; padding:3em 5em; font-size:30px;text-align:center;color:#bbb;">
+            el.innerHTML = `<div class="vis-canvas" style="box-sizing: border-box; background:#dddddd; width:${outerWidth}px; padding:3em 5em; font-size:30px;text-align:center;color:#bbb;">
                 Visualization<br>Placeholder
                 <div class="rotate-limit">${themeData.colors?.mode?.rotateLimit ?? 0}</div>
                 <span class="label legend-text">First label</span>

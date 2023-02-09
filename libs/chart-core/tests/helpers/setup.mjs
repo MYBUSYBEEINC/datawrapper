@@ -83,7 +83,7 @@ export async function createPageWebComponent(browser, viewportOpts = {}) {
     const page = await browser.newPage();
     await page.setViewport({
         width: 600,
-        height: 500,
+        height: 1000,
         deviceScaleFactor: 1,
         ...viewportOpts
     });
@@ -495,16 +495,19 @@ export async function takeTestScreenshot(t, path) {
     await mkdir(path, { recursive: true });
     const width = await t.context.page.evaluate(() => window.innerWidth);
 
-    const height = t.context.webComponent
-        ? (await t.context.page.$eval('#wc-container', d => {
-              return Math.ceil(d.getBoundingClientRect().height);
-          })) + 15
-        : (await t.context.page.$eval('.dw-chart-styles', d => {
-              let h = 0;
-              for (const el of d.children) h += el.clientHeight || 0;
-              return h;
-          })) + 10;
-    await t.context.page.setViewport({ deviceScaleFactor: 3, width, height });
+    if (!t.context.webComponent) {
+        const height =
+            (await t.context.page.$eval('.dw-chart-styles', d => {
+                let h = 0;
+                for (const el of d.children)
+                    h += (el.clientHeight || 0) + (el.clientHeight ? 10 : 0);
+                return h;
+            })) + 10;
+        await t.context.page.setViewport({ deviceScaleFactor: 3, width, height });
+    } else {
+        const { width, height } = await t.context.page.viewport();
+        await t.context.page.setViewport({ deviceScaleFactor: 3, width, height });
+    }
     await t.context.page.screenshot({
         path: join(path, `${slugify(t.title.split('hook for')[1])}.png`)
     });

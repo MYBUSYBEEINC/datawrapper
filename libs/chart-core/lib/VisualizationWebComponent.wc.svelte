@@ -127,16 +127,17 @@
     }
 
     let containerWidth;
+    let containerHeight;
 
     function onResize(entry) {
-        const newWidth = entry.contentRect.width;
-        containerWidth = newWidth;
+        containerWidth = entry.contentRect.width;
+        if (entry.contentRect.height) containerHeight = entry.contentRect.height;
     }
 </script>
 
 <div bind:this={styleHolder} />
 
-<div use:resize={debounce(onResize, 200)} class="web-component-body">
+<div use:resize={debounce(onResize, 200)} class="web-component-body" style="position:relative">
     {#if stylesLoaded && dependenciesLoaded}
         <div class="chart dw-chart vis-{chart.type}" class:dir-rtl={textDirection === 'rtl'}>
             <Visualization
@@ -162,6 +163,7 @@
                 {renderFlags}
                 {textDirection}
                 {containerWidth}
+                {containerHeight}
             />
         </div>
     {/if}

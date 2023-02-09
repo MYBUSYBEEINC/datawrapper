@@ -173,6 +173,11 @@ export function chartStyles(emotion, themeData, isStyleStatic, isIframe) {
             /* d3-maps & d3-scatter-plot tooltips */
             color: ${getProp('style.chart.tooltip.text.color', '#333333')};
         }
+
+        text.watermark {
+            opacity: ${getProp('options.watermark.opacity')};
+            ${typography(omit(get(themeData, 'options.watermark.typography', {}), 'fontSize'))}
+        }
     `;
 }
 

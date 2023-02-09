@@ -65,8 +65,7 @@ test('dont load web fonts alread loaded in page', async t => {
    }`
     });
 
-    await setTimeout(1500);
-    t.is(await page.evaluate(() => document.fonts.check('16px Another')), true);
+    t.is(await waitUntilPageEvaluate(page, () => document.fonts.check('16px Another')), true);
 
     await renderDummy(t, {
         webComponent: true,
@@ -120,8 +119,7 @@ test('load multi-family web font if not all families are loaded in page', async 
    }`
     });
 
-    await setTimeout(1500);
-    t.is(await page.evaluate(() => document.fonts.check('16px Another')), true);
+    t.is(await waitUntilPageEvaluate(page, () => document.fonts.check('16px Another')), true);
 
     await renderDummy(t, {
         webComponent: true,
@@ -148,3 +146,11 @@ test('load multi-family web font if not all families are loaded in page', async 
 
     t.not(await getElementInnerHtml(page, 'style#datawrapper-test'), '');
 });
+
+async function waitUntilPageEvaluate(page, method, timeout = 10000) {
+    if (timeout <= 0) throw new Error('timeout');
+    const res = await page.evaluate(method);
+    if (res) return res;
+    await setTimeout(50);
+    return waitUntilPageEvaluate(page, method, timeout - 50);
+}

@@ -21,6 +21,7 @@
     import HorizontalRule from './blocks/HorizontalRule.svelte';
     import svgRule from './blocks/svgRule.svelte';
     import migrate from './migrate';
+    import debounce from 'lodash/debounce.js';
     import {
         aboveFooterStyles,
         belowFooterStyles,
@@ -50,9 +51,10 @@
     import chroma from 'chroma-js';
 
     const outerWidth = writable(400);
+    const outerHeight = writable(400);
     const themeData = writable({});
 
-    setContext('stores', { outerWidth, themeData });
+    setContext('stores', { outerWidth, outerHeight, themeData });
 
     export let chart;
     export let visualization = {};
@@ -73,6 +75,7 @@
     export let externalDataUrl;
     export let outerContainer;
     export let containerWidth;
+    export let containerHeight;
 
     // static style means user can't interact (e.g. in a png version)
 
@@ -93,6 +96,8 @@
 
     // .dw-chart-body
     let target, dwChart, vis;
+    let container;
+
     let postEvent = () => {};
 
     const datasetName = `dataset.${get(chart.metadata, 'data.json') ? 'json' : 'csv'}`;
@@ -334,7 +339,8 @@
         dwChart,
         vis,
         caption,
-        logoId
+        logoId,
+        textDirection
     };
 
     function byPriority(a, b) {
@@ -665,6 +671,10 @@ Please make sure you called __(key) with a key of type "string".
 
         isIframe && initResizeHandler(target);
 
+        // need to measure container height manually if not in web component
+        // (this is needed by the watermark block)
+        if (isIframe) $outerHeight = outerContainer.clientHeight;
+
         /**
          * updateDarkModeState is called when we detect a change in color-schema media preference.
          * It calls `vis.darkMode()` which will then trigger `onDarkModeChange()`
@@ -739,39 +749,45 @@ Please make sure you called __(key) with a key of type "string".
             (isDark ? cssDark : cssLight).removeAttribute('media');
         }
 
-        async function resizeVis(newWidth) {
-            $outerWidth = newWidth;
+        async function resizeVis() {
             await updateChartThemeData();
             dwChart.vis().fire('resize');
             dwChart.render(outerContainer);
         }
 
-        function initResizeHandler(container) {
-            let reloadTimer;
+        const resizeVisDebounced = debounce(resizeVis, 200);
 
-            function resize() {
-                clearTimeout(reloadTimer);
-                reloadTimer = setTimeout(async function () {
-                    await resizeVis(outerContainer.clientWidth);
-                }, 200);
-            }
+        /**
+         * initialize the window resize event handler in iframe embeds
+         * @param container
+         */
+        function initResizeHandler(container) {
+            const isFixedHeight = dwChart.getHeightMode() === 'fixed';
 
             let currentWidth = width(container);
-            const resizeFixed = () => {
-                const w = width(container);
-                if (currentWidth !== w) {
-                    currentWidth = w;
-                    resize();
+
+            window.addEventListener('resize', () => {
+                // update $outerWidth and $outerHeight stores right away
+                // it's ok to use window.innerHeight because this is only used in iframe embeds
+                $outerWidth = width(outerContainer);
+                $outerHeight = window.innerHeight;
+
+                if (isFixedHeight) {
+                    // in fixed height charts we only trigger re-render if the width
+                    // has changed, effectively ignoring height-only resize events
+                    const w = width(container);
+                    if (currentWidth !== w) {
+                        currentWidth = w;
+                        resizeVisDebounced();
+                    }
+                } else {
+                    // in fit height charts we need to re-render on every resize event
+                    resizeVisDebounced();
                 }
-            };
-
-            const fixedHeight = dwChart.getHeightMode() === 'fixed';
-            const resizeHandler = fixedHeight ? resizeFixed : resize;
-
-            window.addEventListener('resize', resizeHandler);
+            });
         }
 
-        return { dwChart, resizeVis };
+        return { dwChart, resizeVisDebounced };
     }
 
     // watch for height changes - still needed?
@@ -786,13 +802,19 @@ Please make sure you called __(key) with a key of type "string".
         }
     });
 
-    let resizeFunc;
-    $: if (resizeFunc && !isIframe) resizeFunc(containerWidth);
+    let onResize;
+
+    // update $outerWidth and $outerHeight dimensions when web component resizes
+    $: if (!isIframe) $outerWidth = containerWidth;
+    $: if (!isIframe) $outerHeight = containerHeight;
+    // re-render vis when container width changes
+    $: if (onResize && !isIframe) onResize(containerWidth);
 
     onMount(async () => {
-        const { dwChart, resizeVis } = await run();
-        // expose resize method to parent component
-        resizeFunc = resizeVis;
+        const { dwChart, resizeVisDebounced } = await run();
+        // expose resize method to component-level so we can call it in a
+        // reactive statement to re-render when the web component resizes
+        onResize = resizeVisDebounced;
 
         outerContainer.classList.toggle('dir-rtl', textDirection === 'rtl');
         if (isIframe) {
@@ -910,10 +932,6 @@ Please make sure you called __(key) with a key of type "string".
     :global(body.in-editor),
     :global(.web-component-body.in-editor) {
         padding-bottom: 10px;
-    }
-
-    .dw-chart-styles {
-        height: 100%;
     }
 
     :global(.chart.dir-rtl) {
@@ -1133,6 +1151,9 @@ Please make sure you called __(key) with a key of type "string".
 
     .dw-after-body {
         position: absolute;
+        left: 0;
+        top: 0;
+        height: 0 !important;
     }
 
     :global(svg rect) {
@@ -1157,6 +1178,7 @@ Please make sure you called __(key) with a key of type "string".
 </style>
 
 <div
+    bind:this={container}
     class:static={isStyleStatic}
     class="dw-chart-styles {emotion
         ? chartStyles(emotion, $themeData, isStyleStatic, isIframe)
@@ -1291,7 +1313,7 @@ Please make sure you called __(key) with a key of type "string".
         />
     {/if}
 
-    <div class="dw-after-body">
+    <div class="dw-after-body" style="position:absolute; height:0">
         {#each regions.afterBody as block}
             <svelte:component this={block.component} props={block.props} />
         {/each}

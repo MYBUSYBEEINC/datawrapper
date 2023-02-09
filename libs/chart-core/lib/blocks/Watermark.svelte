@@ -1,59 +1,59 @@
 <script>
     import estimateTextWidth from '@datawrapper/shared/estimateTextWidth.js';
+    import { getContext } from 'svelte';
+
+    const { outerWidth, outerHeight } = getContext('stores');
 
     export let props;
-    const { get, purifyHtml } = props;
+    const { get, purifyHtml, textDirection } = props;
     $: ({ chart, themeData } = props);
 
-    $: monospace = get(themeData, 'options.watermark.monospace', false);
     $: field = get(themeData, 'options.watermark.custom-field');
+    $: rotate = get(themeData, 'options.watermark.rotate', true);
+    $: themeFontSize = get(themeData, 'options.watermark.typography.fontSize');
+
     $: text = get(themeData, 'options.watermark')
         ? field
             ? get(chart, `metadata.custom.${field}`, '')
             : get(themeData, 'options.watermark.text', 'CONFIDENTIAL')
         : false;
 
-    let width;
-    let height;
+    $: width = $outerWidth;
+    $: height = $outerHeight;
 
-    $: angle = -Math.atan(height / width);
+    $: angle = rotate ? -Math.atan(height / width) * (textDirection === 'rtl' ? -1 : 1) : 0;
     $: angleDeg = (angle * 180) / Math.PI;
 
-    $: diagonal = Math.sqrt(width * width + height * height);
+    $: diagonal = rotate ? Math.sqrt(width * width + height * height) : width;
 
-    // estimateTextWidth works reasonable well for normal fonts
-    // set themeData.options.watermark.monospace to true if you
-    // have a monospace font
-    $: estWidth = monospace ? text.length * 20 : estimateTextWidth(text, 20);
-    $: fontSize = `${Math.round(20 * ((diagonal * 0.75) / estWidth))}px`;
+    $: estWidth = estimateTextWidth(text, 20);
+    $: fontSize = themeFontSize
+        ? `${themeFontSize}px`
+        : `${Math.round(20 * ((diagonal * 0.75) / estWidth))}px`;
 </script>
 
 <style>
-    div {
-        position: fixed;
+    .watermark {
         opacity: 0.182;
         font-weight: 700;
-        font-size: 0;
-        white-space: nowrap;
-        left: -100px;
-        top: 0px;
-        right: -100px;
-        line-height: 100vh;
-        bottom: 0;
-        text-align: center;
         pointer-events: none;
-        transform-origin: middle center;
+        text-anchor: middle;
+        fill: currentColor;
+        transform-box: fill-box;
+        transform-origin: center;
     }
 </style>
 
-<svelte:window bind:innerWidth={width} bind:innerHeight={height} />
-
-<div
-    class="watermark noscript"
-    style="transform:rotate({angle}rad); font-size: {fontSize}"
-    data-rotate={angleDeg}
->
-    <span>
-        {@html purifyHtml(text)}
-    </span>
-</div>
+{#if height}
+    <svg {width} {height}>
+        <text
+            class="watermark"
+            dominant-baseline="central"
+            style="font-size: {fontSize}"
+            transform="rotate({angleDeg})"
+            data-rotate={angleDeg}
+            x={width * 0.5}
+            y={height * 0.5}>{purifyHtml(text, '')}</text
+        >
+    </svg>
+{/if}
