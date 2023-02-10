@@ -84,7 +84,7 @@ function getS3DatawrapperUploadOptions(
         {
             type: 's3-datawrapper',
             dirPath: s3.dirPath,
-            uploadConfig: {
+            uploadParams: {
                 ACL: s3.acl,
                 Bucket: s3.bucket
             }
@@ -114,7 +114,7 @@ async function getPublishUploadOptions(
                 {
                     type: 'gcs-custom',
                     bucket: config.bucket,
-                    gcsConfig: {
+                    gcsParams: {
                         credentials: {
                             client_email: config.client_email,
                             private_key: config.private_key
@@ -130,13 +130,13 @@ async function getPublishUploadOptions(
             return [
                 {
                     type: 's3-custom',
-                    s3Config: {
+                    s3Params: {
                         accessKeyId: config.accesskey,
                         endpoint: config.endpoint,
                         region: config.region,
                         secretAccessKey: config.secretkey
                     },
-                    uploadConfig: {
+                    uploadParams: {
                         ACL: config.acl || 'public-read',
                         Bucket: config.bucket,
                         CacheControl: config.cacheControl
@@ -146,10 +146,10 @@ async function getPublishUploadOptions(
             ];
         }
         default:
-            // From type checking standpoint, `publishTarget` is `never` in this branch
-            // (because we exhausted all other possibilities)
-            // so we need to cast it to any to be able to print an informative error message
-            // in case `publishTarget.provider` holds any incorrect string.
+            // From type checking standpoint, `publishTarget` is `never` in this branch (because we
+            // exhausted all other possibilities) so we need to cast it to any to be able to print
+            // an informative error message in case `publishTarget.provider` holds any incorrect
+            // string.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             throw new Error(`Unknown publish provider ${(publishTarget as any).provider}!`);
     }
