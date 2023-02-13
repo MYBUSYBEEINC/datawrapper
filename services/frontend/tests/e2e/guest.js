@@ -1,9 +1,9 @@
-const { uid } = require('uid');
-
 describe('guest', () => {
     let chartId;
+    let nanoid;
 
     before(async () => {
+        ({ nanoid } = await browser.requireDeps('nanoid'));
         await browser.logIP();
     });
 
@@ -89,7 +89,7 @@ Ukraine conflict between Russia and Western Countries;2;30;2;52;14`
         // Create account to publish
         const $emailInput = await $(">>>[data-uid='guest-email'] input");
         await $emailInput.waitForDisplayed();
-        const newUserEmail = `e2e-test+${uid(4)}@datawrapper.de`;
+        const newUserEmail = `e2e-test+${nanoid(4)}@datawrapper.de`;
         await $emailInput.setValue(newUserEmail);
         const $createAccountButton = await $(">>>[data-uid='guest-email'] button");
         await $createAccountButton.waitForDisplayed();
@@ -110,7 +110,7 @@ Ukraine conflict between Russia and Western Countries;2;30;2;52;14`
         // Enter new password
         const $passwordInput = await $('#set-pwd');
         await $passwordInput.waitForDisplayed();
-        const newPassword = uid(8);
+        const newPassword = nanoid(8);
         await $passwordInput.setValue(newPassword);
         const $resetPasswordButton = await $("[data-uid='set-password-button']");
         await $resetPasswordButton.waitForDisplayed();

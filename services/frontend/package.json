@@ -89,7 +89,6 @@
         "svelte": "^3.52.0",
         "svelte-preprocess": "^4.10.4",
         "tempfile": "^3.0.0",
-        "uid": "^2.0.1",
         "underscore": "^1.12.0"
     },
     "devDependencies": {
