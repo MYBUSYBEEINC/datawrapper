@@ -1207,6 +1207,48 @@ test('PATCH /charts/{id} overwrites malformed recently_edited user data', async 
     });
 });
 
+test('PATCH /charts/{id} returns error 400 when trying to set invalid language', async t => {
+    await withUser(t.context.server, {}, async ({ token, user }) => {
+        await withChart(
+            {
+                author_id: user.id
+            },
+            async chart => {
+                const resEmpty = await t.context.server.inject({
+                    method: 'PUT',
+                    url: `/v3/charts/${chart.id}`,
+                    headers: {
+                        authorization: `Bearer ${token}`
+                    },
+                    payload: {
+                        language: null
+                    }
+                });
+
+                t.is(resEmpty.statusCode, 400);
+                t.is(resEmpty.result.type, 'validation-error');
+
+                const resInvalid = await t.context.server.inject({
+                    method: 'PUT',
+                    url: `/v3/charts/${chart.id}`,
+                    headers: {
+                        authorization: `Bearer ${token}`
+                    },
+                    payload: {
+                        language: 'spam'
+                    }
+                });
+
+                t.is(resInvalid.statusCode, 400);
+                t.is(resInvalid.result.type, 'validation-error');
+
+                await chart.reload();
+                t.is(chart.language, 'en-US');
+            }
+        );
+    });
+});
+
 test('PHP GET /charts/{id} returns chart', async t => {
     let userObj = {};
     let chart = {};

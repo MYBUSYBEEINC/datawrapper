@@ -20,6 +20,7 @@ export async function prepareChart(
     additionalData: Partial<ChartDataValues> = {}
 ): Promise<PreparedChart> {
     const {
+        language,
         user,
         in_folder: folderId,
         ...dataValues
@@ -33,7 +34,9 @@ export async function prepareChart(
     return {
         ...camelizeTopLevelKeys(additionalData),
         publicId,
-        language: 'en-US',
+        // We have charts in the db with empty language, so we convert it to the default here, so
+        // that API response validation doesn't fail.
+        language: language || 'en-US',
         theme: 'datawrapper',
         ...camelizeTopLevelKeys(dataValues),
         folderId,

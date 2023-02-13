@@ -3,15 +3,17 @@ const assign = require('assign-deep');
 const { Chart, Folder, UserTeam } = require('@datawrapper/orm/db');
 const {
     BASE_URL,
+    createCharts,
+    createFolders,
+    createTeam,
     createTeamWithUser,
     createUser,
     destroy,
-    setup,
-    createTeam,
-    createCharts,
-    createFolders,
+    genNonExistentFolderId,
     genRandomChartId,
-    genNonExistentFolderId
+    setup,
+    withChart,
+    withTeamWithUser
 } = require('../../../test/helpers/setup');
 const { randomInt } = require('crypto');
 const fetch = require('node-fetch');
@@ -1734,6 +1736,36 @@ test('PATCH /charts moves multiple charts to a different folder of the same team
             Object.values(otherUserObj)
         );
     }
+});
+
+test('PATCH /charts moves a chart with empty language', async t => {
+    await withTeamWithUser(t.context.server, {}, async ({ team, token, user }) => {
+        await withChart(
+            {
+                author_id: user.id,
+                language: ''
+            },
+            async chart => {
+                const res = await t.context.server.inject({
+                    method: 'PATCH',
+                    url: '/v3/charts',
+                    headers: {
+                        ...t.context.headers,
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    payload: {
+                        ids: [chart.id],
+                        patch: {
+                            folderId: null,
+                            teamId: team.id
+                        }
+                    }
+                });
+                t.is(res.statusCode, 200);
+            }
+        );
+    });
 });
 
 test('GET /charts?expand=true returns charts containing extra information', async t => {

@@ -95,6 +95,9 @@ module.exports = {
                 .description(
                     'Type of the chart ([Reference](https://developer.datawrapper.de/v3.0/docs/chart-types))'
                 ),
+            language: Joi.string()
+                .regex(/^[a-z]{2}([_-][A-Z]{2})?$/)
+                .description('Visualization locale (e.g. en-US)'),
             lastEditStep: Joi.number()
                 .integer()
                 .example(1)

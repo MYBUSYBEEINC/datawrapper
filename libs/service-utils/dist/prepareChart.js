@@ -19,13 +19,15 @@ const camelizeTopLevelKeys_1 = require("./camelizeTopLevelKeys");
  * @returns {Object}
  */
 async function prepareChart(chart, additionalData = {}) {
-    const { user, in_folder: folderId, ...dataValues } = chart.dataValues;
+    const { language, user, in_folder: folderId, ...dataValues } = chart.dataValues;
     const publicId = typeof chart.getPublicId === 'function' ? await chart.getPublicId() : undefined;
     const additionalMetadata = additionalData.metadata || {};
     return {
         ...(0, camelizeTopLevelKeys_1.camelizeTopLevelKeys)(additionalData),
         publicId,
-        language: 'en-US',
+        // We have charts in the db with empty language, so we convert it to the default here, so
+        // that API response validation doesn't fail.
+        language: language || 'en-US',
         theme: 'datawrapper',
         ...(0, camelizeTopLevelKeys_1.camelizeTopLevelKeys)(dataValues),
         folderId,
