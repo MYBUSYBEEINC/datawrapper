@@ -2,7 +2,7 @@
     {
         "id": "how-the-iphone-shaped-apple",
         "title": "How the iPhone shaped Apple",
-        "type": { "key": "d3-lines / title", "scope": "d3-lines" },
+        "type": { "key": "d3-lines / title", "scope": "vis-d3-lines" },
         "presets": {
             "type": "d3-lines",
             "metadata.describe.source-name": "Apple",
@@ -14,7 +14,7 @@
     },
     {
         "id": "co2-emissions",
-        "type": { "key": "d3-area / title", "scope": "d3-lines" },
+        "type": { "key": "d3-area / title", "scope": "vis-d3-lines" },
         "presets": {
             "type": "d3-area",
             "metadata.describe.intro": "Global CO2 emissions from fossil-fuel burning, cement manufacture, and gas flaring, in million metric tonnes, 1850-2014",
@@ -62,7 +62,7 @@
     {
         "id": "electric-cars",
         "title": "Electric cars 2018",
-        "type": { "key": "table", "scope": "tables" },
+        "type": { "key": "table", "scope": "vis-tables" },
         "presets": {
             "type": "tables",
             "metadata.data.transpose": false,
@@ -109,7 +109,7 @@
     {
         "id": "artmuseums",
         "title": "The most visited art museums 2018",
-        "type": { "key": "table", "scope": "tables" },
+        "type": { "key": "table", "scope": "vis-tables" },
         "presets": {
             "type": "tables",
             "metadata.data.transpose": false,
@@ -129,7 +129,7 @@
     {
         "id": "wikimedia",
         "title": "Wikimedia projects & their launch dates (Markdown)",
-        "type": { "key": "table", "scope": "tables" },
+        "type": { "key": "table", "scope": "vis-tables" },
         "presets": {
             "type": "tables",
             "metadata.data.transpose": false,
