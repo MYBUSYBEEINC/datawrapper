@@ -74,7 +74,12 @@
         </div>
     </div>
 
-    <button class="button is-primary" on:click={submit} disabled={submitting || !passwordOk}>
+    <button
+        class="button is-primary"
+        on:click={submit}
+        disabled={submitting || !passwordOk}
+        data-uid="set-password-button"
+    >
         {@html purifyHtml(buttonText)}
     </button>
 </div>

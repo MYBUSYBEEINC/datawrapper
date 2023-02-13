@@ -1,7 +1,18 @@
 const { requireConfig } = require('@datawrapper/backend-utils');
 const { SQ } = require('@datawrapper/orm');
 const { Op } = SQ;
-const { User, Chart, AccessToken } = require('@datawrapper/orm/db');
+const {
+    User,
+    Chart,
+    AccessToken,
+    Action,
+    Session,
+    Folder,
+    UserData,
+    UserPluginCache,
+    UserProduct,
+    UserTeam
+} = require('@datawrapper/orm/db');
 const got = require('got');
 const {
     api: apiConfig,
@@ -21,6 +32,8 @@ const API_DOMAIN =
     apiConfig.domain +
     '/v3/';
 const E2E_MAIL = 'e2e-test@datawrapper.de';
+const E2E_TEMP_MAIL_LIKE = 'e2e-test+%@datawrapper.de';
+const E2E_TEMP_MAIL_REGEX = /^e2e-test\+.+@datawrapper\.de$/;
 const GRACE_TIME = 1000;
 const MIN_AGE_MINUTES = 30;
 
@@ -90,18 +103,28 @@ if (fileParams) {
     jobLogger.info('Not configured to remove file screenshots.');
 }
 
-const getTestUserID = async mail => {
-    const testUser = await User.findOne({
-        attributes: ['id'],
+const USER_ATTRIBUTES = ['id', 'email', 'role'];
+const getUserWithMailLike = async mail => {
+    return await User.findOne({
+        attributes: USER_ATTRIBUTES,
         where: {
             email: mail
         }
     });
-
-    return testUser?.id;
 };
 
-const getTestUserCharts = async uid => {
+const getUsersWithMailLike = async mailLike => {
+    return await User.findAll({
+        attributes: USER_ATTRIBUTES,
+        where: {
+            email: {
+                [Op.like]: mailLike
+            }
+        }
+    });
+};
+
+const getChartIdsOfUser = async uid => {
     //TIMESTAMPDIFF(MINUTE, ageColumn, NOW());
     const chartAgeMinute = () =>
         SQ.fn('TIMESTAMPDIFF', SQ.literal('MINUTE'), SQ.col('created_at'), SQ.fn('NOW'));
@@ -116,14 +139,25 @@ const getTestUserCharts = async uid => {
     return charts.map(chart => chart.id);
 };
 
-const getAPIToken = async uid => {
-    const token = await AccessToken.findOne({
+const getOrCreateAPIToken = async uid => {
+    let token = await AccessToken.findOne({
         attributes: ['token'],
         where: {
             user_id: uid,
             data: { comment: 'default' }
         }
     });
+
+    if (!token) {
+        token = await AccessToken.newToken({
+            type: 'api-token',
+            user_id: uid,
+            data: {
+                scopes: ['chart:write'],
+                comment: 'default'
+            }
+        });
+    }
 
     return token?.token;
 };
@@ -231,22 +265,25 @@ const deleteFileScreenshots = async (id, path, hash) => {
     }
 };
 
-module.exports = async () => {
-    const testUserID = await getTestUserID(E2E_MAIL);
-
-    if (!testUserID) {
+const deleteChartsOfUser = async testUser => {
+    if (!testUser) {
         jobLogger.info('The test user could not be identified. Nothing has been done.');
         return;
     }
+    if (!testUser.isActivated()) {
+        jobLogger.info('Unable to clean up charts for inactivated user');
+        return;
+    }
 
-    const APIToken = await getAPIToken(testUserID);
+    jobLogger.info(`Deleting charts of user ${testUser.id}`);
+    const APIToken = await getOrCreateAPIToken(testUser.id);
 
     if (!APIToken) {
         jobLogger.info('Unable to retrieve the API token. Can not use the API like that.');
         return;
     }
 
-    const testChartIDs = await getTestUserCharts(testUserID);
+    const testChartIDs = await getChartIdsOfUser(testUser.id);
     jobLogger.info(`Found ${testChartIDs.length} charts to remove.`);
 
     await setChartsDeleted(testChartIDs);
@@ -261,7 +298,7 @@ module.exports = async () => {
             await unPublish(testChartID, APIToken);
         }
 
-        // if the ID is gone now something weird (manual intervention?) happend
+        // if the chart is gone now something weird (manual intervention?) happend
         // don't do anything at all
         if (chart === null) {
             jobLogger.info(`${testChartID}: Chart has already been removed during cleanup phase.`);
@@ -286,4 +323,55 @@ module.exports = async () => {
 
         await sleep(GRACE_TIME);
     }
+};
+
+const activateUsers = async users => {
+    for (const user of users) {
+        if (user.isActivated()) continue;
+        if (!user.email.match(E2E_TEMP_MAIL_REGEX)) {
+            throw new Error(
+                `Cannot activate a user that is not a temporary test user (${user.email})`
+            );
+        }
+
+        jobLogger.info(`Activating test user ${user.id}`);
+        user.role = 'editor';
+        await user.save();
+    }
+};
+
+const deleteUser = async user => {
+    if (!user.email.match(E2E_TEMP_MAIL_REGEX)) {
+        throw new Error(`Cannot delete a user that is not a temporary test user (${user.email})`);
+    }
+    await AccessToken.destroy({ where: { user_id: user.id }, force: true });
+    await Action.destroy({ where: { user_id: user.id }, force: true });
+    await Session.destroy({ where: { user_id: user.id }, force: true });
+    await Folder.destroy({ where: { user_id: user.id } });
+    await UserData.destroy({ where: { user_id: user.id }, force: true });
+    await UserPluginCache.destroy({ where: { user_id: user.id }, force: true });
+    await UserProduct.destroy({ where: { user_id: user.id }, force: true });
+    await UserTeam.destroy({ where: { user_id: user.id }, force: true });
+    try {
+        await user.destroy({ force: true });
+        jobLogger.info(`Removed user ${user.id}.`);
+    } catch (e) {
+        if (e instanceof SQ.ForeignKeyConstraintError) {
+            // likely because some charts of the user could not be deleted
+            // charts are only deleted if they have been created more than 30 minutes ago
+            jobLogger.warn(`Failed to remove user ${user.id}: ${e.message}`);
+        } else {
+            jobLogger.warn(`Failed to remove user ${user.id}: ${e.message ?? e}`);
+        }
+    }
+};
+
+module.exports = async () => {
+    const testUser = await getUserWithMailLike(E2E_MAIL);
+    await deleteChartsOfUser(testUser);
+
+    const testTempUsers = await getUsersWithMailLike(E2E_TEMP_MAIL_LIKE);
+    await activateUsers(testTempUsers);
+    await Promise.all(testTempUsers.map(user => deleteChartsOfUser(user)));
+    await Promise.all(testTempUsers.map(user => deleteUser(user)));
 };

@@ -28,7 +28,7 @@
             });
             setTimeout(() => {
                 if (chart) {
-                    window.location.href = `/chart/${chart}/edit`;
+                    window.location.href = `/chart/${chart}/publish`;
                 } else {
                     window.location.href = '/';
                 }

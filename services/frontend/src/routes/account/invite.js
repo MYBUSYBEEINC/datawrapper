@@ -10,6 +10,7 @@ module.exports = {
             method: 'GET',
             path: '/{token}',
             options: {
+                auth: 'guest',
                 validate: {
                     params: Joi.object({
                         token: Joi.string()
