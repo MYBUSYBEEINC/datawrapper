@@ -305,6 +305,9 @@ module.exports = async function createChartWebsite(
         webComponentJS + `\n\nwindow.datawrapper.render(${JSON.stringify(publishData)});`;
     /* write "embed.js" for embedding as web component*/
     await fs.writeFile(path.join(outDir, 'embed.js'), webComponent, { encoding: 'utf-8' });
+    await fs.writeFile(path.join(outDir, 'embed.json'), JSON.stringify(publishData), {
+        encoding: 'utf-8'
+    });
 
     const fileMap = [
         ...dependencies.map(path => {
@@ -325,6 +328,7 @@ module.exports = async function createChartWebsite(
         { path: path.join('lib/vis', cssFileDark), hashed: true },
         { path: 'index.html', hashed: false },
         { path: 'embed.js', hashed: false },
+        { path: 'embed.json', hashed: false },
         { path: dataFile, hashed: false }
     ];
 

@@ -8,6 +8,8 @@
     import { resize } from 'svelte-resize-observer-action';
     import debounce from 'lodash/debounce.js';
     import some from 'lodash/some.js';
+    import { parseFlagsFromElement } from './shared.mjs';
+    import { getChartIdFromUrl, getEmbedJsonUrl } from './dw/utils/index.mjs';
 
     const DEPENDENCY_STATE = {
         loading: 'loading',
@@ -133,11 +135,57 @@
         containerWidth = entry.contentRect.width;
         if (entry.contentRect.height) containerHeight = entry.contentRect.height;
     }
+
+    let wcBody;
+
+    async function fixLinks() {
+        // fix for links with target="_self"
+        for (const link of wcBody.querySelectorAll('a[target=_self]')) {
+            const chartId = getChartIdFromUrl(link.href);
+
+            if (
+                chartId &&
+                outerContainer.nextSibling &&
+                outerContainer.nextSibling.nodeName.toLowerCase() === 'script'
+            ) {
+                const script = outerContainer.nextSibling;
+                const { url: embedJSONUrl, pathPrefix } = getEmbedJsonUrl(script.src, chartId);
+
+                if (!window.datawrapper.chartData[chartId]) {
+                    window.datawrapper.chartData[chartId] = (async function () {
+                        const res = await fetch(embedJSONUrl, { mode: 'cors' });
+                        const body = await res.json();
+                        return body;
+                    })();
+                }
+
+                link.addEventListener('click', async event => {
+                    const data = await window.datawrapper.chartData[chartId];
+                    // remove existing chart markup
+                    // @todo: this does not remove event handlers, so a better way would
+                    // be to have some sort of controlled self-destruction
+                    outerContainer.innerHTML = '';
+                    window.datawrapper.render(data, {
+                        target: outerContainer,
+                        origin: `${pathPrefix}${chartId}`,
+                        flags: parseFlagsFromElement(link)
+                    });
+                    event.preventDefault();
+                    return false;
+                });
+            }
+        }
+    }
 </script>
 
 <div bind:this={styleHolder} />
 
-<div use:resize={debounce(onResize, 200)} class="web-component-body" style="position:relative">
+<div
+    bind:this={wcBody}
+    use:resize={debounce(onResize, 200)}
+    class="web-component-body"
+    style="position:relative"
+>
     {#if stylesLoaded && dependenciesLoaded}
         <div class="chart dw-chart vis-{chart.type}" class:dir-rtl={textDirection === 'rtl'}>
             <Visualization
@@ -164,6 +212,7 @@
                 {textDirection}
                 {containerWidth}
                 {containerHeight}
+                on:rendered={fixLinks}
             />
         </div>
     {/if}

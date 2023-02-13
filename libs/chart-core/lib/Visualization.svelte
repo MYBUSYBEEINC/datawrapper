@@ -1,6 +1,6 @@
 <script>
     /* globals dw */
-    import { onMount, tick, afterUpdate, setContext } from 'svelte';
+    import { onMount, tick, afterUpdate, setContext, createEventDispatcher } from 'svelte';
     import { writable } from 'svelte/store';
     import BlocksRegion from './BlocksRegion.svelte';
     import Menu from './Menu.svelte';
@@ -53,6 +53,8 @@
     const outerWidth = writable(400);
     const outerHeight = writable(400);
     const themeData = writable({});
+
+    const dispatch = createEventDispatcher();
 
     setContext('stores', { outerWidth, outerHeight, themeData });
 
@@ -674,6 +676,8 @@ Please make sure you called __(key) with a key of type "string".
         // need to measure container height manually if not in web component
         // (this is needed by the watermark block)
         if (isIframe) $outerHeight = outerContainer.clientHeight;
+
+        dispatch('rendered');
 
         /**
          * updateDarkModeState is called when we detect a change in color-schema media preference.

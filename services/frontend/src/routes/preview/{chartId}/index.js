@@ -146,5 +146,6 @@ module.exports = {
         });
 
         await server.register(require('./embed.js.js'));
+        await server.register(require('./embed.json.js'));
     }
 };

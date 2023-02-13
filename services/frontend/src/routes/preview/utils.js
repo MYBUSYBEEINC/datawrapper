@@ -3,54 +3,60 @@ const Boom = require('@hapi/boom');
 const createEmotion = require('@emotion/css/create-instance').default;
 const createEmotionServer = require('@emotion/server/create-instance').default;
 const { JSDOM } = require('jsdom');
+const { Team } = require('@datawrapper/orm/db');
 const chartCore = require('@datawrapper/chart-core');
+const { loadVendorLocale, loadLocaleConfig } = require('@datawrapper/service-utils');
+const Joi = require('joi');
+const { fakeBoolean, id: logoId } = require('@datawrapper/schemas/themeData/shared');
+
+async function getChart(server, request) {
+    const api = server.methods.createAPI(request);
+    const { query, params } = request;
+    const { chartId } = params;
+
+    const queryString = Object.entries({
+        published: query.published,
+        chartExportToken: query.chartExportToken,
+        ott: query.ott,
+        theme: query.theme,
+        transparent: query.transparent
+    })
+        .filter(([, value]) => Boolean(value))
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+
+    let props;
+
+    try {
+        props = await api(`/charts/${chartId}/publish/data?${queryString}`);
+    } catch (ex) {
+        throw Boom.notFound();
+    }
+
+    // also load dark mode theme & styles
+    const themeDark = {};
+    const themeId = props.chart.theme;
+
+    if (!server.app.visualizations.has(props.chart.type)) {
+        throw Boom.badRequest('Invalid visualization type');
+    }
+
+    const darkThemePromises = [
+        `/themes/${themeId}?extend=true&dark=true`,
+        `/visualizations/${props.chart.type}/styles.css?theme=${themeId}&dark=true`
+    ].map((url, i) =>
+        api(url, { json: i === 0 }).then(res => {
+            themeDark[i === 0 ? 'json' : 'css'] = res;
+        })
+    );
+
+    await Promise.all(darkThemePromises);
+
+    return { props, themeDark };
+}
 
 module.exports = {
-    async getChart(server, request) {
-        const api = server.methods.createAPI(request);
-        const { query, params } = request;
-        const { chartId } = params;
-
-        const queryString = Object.entries({
-            published: query.published,
-            chartExportToken: query.chartExportToken,
-            ott: query.ott,
-            theme: query.theme,
-            transparent: query.transparent
-        })
-            .filter(([, value]) => Boolean(value))
-            .map(([key, value]) => `${key}=${value}`)
-            .join('&');
-
-        let props;
-
-        try {
-            props = await api(`/charts/${chartId}/publish/data?${queryString}`);
-        } catch (ex) {
-            throw Boom.notFound();
-        }
-
-        // also load dark mode theme & styles
-        const themeDark = {};
-        const themeId = props.chart.theme;
-
-        if (!server.app.visualizations.has(props.chart.type)) {
-            throw Boom.badRequest('Invalid visualization type');
-        }
-
-        const darkThemePromises = [
-            `/themes/${themeId}?extend=true&dark=true`,
-            `/visualizations/${props.chart.type}/styles.css?theme=${themeId}&dark=true`
-        ].map((url, i) =>
-            api(url, { json: i === 0 }).then(res => {
-                themeDark[i === 0 ? 'json' : 'css'] = res;
-            })
-        );
-
-        await Promise.all(darkThemePromises);
-
-        return { props, themeDark };
-    },
+    getChart,
     initCaches(server) {
         const config = server.methods.config();
 
@@ -131,5 +137,89 @@ module.exports = {
         const { extractCritical } = createEmotionServer(emotion.cache);
         const { css } = extractCritical(html);
         return { html, head, css };
+    },
+    async getEmbedProps(server, request) {
+        const res = await getChart(server, request);
+        const config = server.methods.config();
+        const frontendBase = `${config.frontend.https ? 'https' : 'http'}://${
+            config.frontend.domain
+        }`;
+        const { props } = res;
+        const { themeDark } = res;
+
+        const chartLocale = props.chart.language || 'en-US';
+        const team = await Team.findByPk(props.chart.organizationId);
+
+        const themeAutoDark = get(props.theme.data, 'options.darkMode.auto', 'user');
+        const chartAutoDark =
+            themeAutoDark === 'user'
+                ? get(props.chart, 'metadata.publish.autoDarkMode', false)
+                : themeAutoDark;
+
+        const localeConfig = await loadLocaleConfig(chartLocale);
+
+        return Object.assign(props, {
+            isIframe: false,
+            isPreview: true,
+            isStyleDark: request.query.dark,
+            chartAutoDark,
+            themeDataDark: themeDark.json.data,
+            themeDataLight: props.theme.data,
+            themeCSSDark: themeDark.css,
+            polyfillUri: '/lib/polyfills',
+            themeFonts: Object.fromEntries(
+                Object.entries(props.theme.assets).filter(([, asset]) => asset.type === 'font'),
+                props.theme.data
+            ),
+            locales: {
+                dayjs: await loadVendorLocale('dayjs', chartLocale, team),
+                numeral: await loadVendorLocale('numeral', chartLocale, team)
+            },
+            textDirection: localeConfig.textDirection || 'ltr',
+            teamPublicSettings: team ? team.getPublicSettings() : {},
+            ...(request.query.dark ? { theme: themeDark.json } : {}),
+            assets: props.assets.reduce((acc, item) => {
+                const { value } = item;
+                acc[item.name] = { value };
+                return acc;
+            }, {}),
+            frontendDomain: config.frontend.domain,
+            dependencies: [
+                `${frontendBase}/lib/chart-core/dw-2.0.min.js`,
+                ...props.visualization.libraries.map(lib => `${frontendBase}${lib.uri}`),
+                `${frontendBase}/lib/plugins/${props.visualization.__plugin}/static/${props.visualization.id}.js`
+            ],
+            blocks: props.blocks.map(block => {
+                block.source.js = `${frontendBase}${block.source.js}`;
+                block.source.css = `${frontendBase}${block.source.css}`;
+                return block;
+            })
+        });
+    },
+    validateEmbedRequest: {
+        params: Joi.object({
+            chartId: Joi.string()
+                .alphanum()
+                .length(5)
+                .required()
+                .description('5 character long chart ID.')
+        }),
+        query: Joi.object({
+            theme: Joi.string().optional(),
+            chartExportToken: Joi.string().optional(),
+            ott: Joi.string().optional(),
+            search: Joi.string().optional(),
+            published: fakeBoolean(),
+            static: fakeBoolean(),
+            plain: fakeBoolean(),
+            fitchart: fakeBoolean(),
+            fitheight: fakeBoolean(),
+            svgonly: fakeBoolean(),
+            map2svg: fakeBoolean(),
+            transparent: fakeBoolean(),
+            logo: Joi.string().optional().valid('auto', 'on', 'off').default('auto'),
+            logoId: logoId().optional(),
+            dark: Joi.boolean().default(false).allow('auto')
+        })
     }
 };
