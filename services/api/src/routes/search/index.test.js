@@ -613,8 +613,8 @@ test('GET /search/charts orders results by type and createdAt', async t => {
         },
         {
             id: genRandomChartId(),
-            title: `${prefix} visualization-column-charts`,
-            type: 'visualization-column-charts',
+            title: `${prefix} vis-d3-columns`,
+            type: 'vis-d3-columns',
             last_modified_at: new Date(),
             created_at: new Date('2022-03-29T11:00:00.000Z'),
             deleted: false
@@ -632,7 +632,7 @@ test('GET /search/charts orders results by type and createdAt', async t => {
         t.deepEqual(
             resDesc.result.list.map(chart => chart.title),
             [
-                `${prefix} visualization-column-charts`,
+                `${prefix} vis-d3-columns`,
                 `${prefix} locator-maps newer`,
                 `${prefix} locator-maps older`,
                 `${prefix} d3-bars`
@@ -652,7 +652,7 @@ test('GET /search/charts orders results by type and createdAt', async t => {
                 `${prefix} d3-bars`,
                 `${prefix} locator-maps newer`,
                 `${prefix} locator-maps older`,
-                `${prefix} visualization-column-charts`
+                `${prefix} vis-d3-columns`
             ]
         );
     } finally {
