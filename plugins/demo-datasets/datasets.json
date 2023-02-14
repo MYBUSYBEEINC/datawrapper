@@ -79,7 +79,7 @@
     },
     {
         "id": "income-health",
-        "type": { "key": "scatter plot", "scope": "d3-scatter-plot" },
+        "type": { "key": "scatter plot", "scope": "vis-d3-scatter-plot" },
         "presets": {
             "type": "d3-scatter-plot",
             "metadata.visualize.auto-labels": true,
