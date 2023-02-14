@@ -16,8 +16,6 @@ import AlertDisplayView from './AlertDisplayView.html';
 import AlertDisplayDocs from '../AlertDisplay.md';
 import AnnotationEditorView from './AnnotationEditorView.html';
 import AnnotationEditorDocs from '../AnnotationEditor.md';
-import ChartDescriptionView from './ChartDescriptionView.html';
-import ChartDescriptionDocs from '../editor/ChartDescription.md';
 import CheckboxControlView from './CheckboxControlView.html';
 import CheckboxControlDocs from '../CheckboxControl.md';
 import ColorControlView from './ColorControlView.html';
@@ -141,10 +139,6 @@ addStory('AlertDisplay', AlertDisplayDocs, () => ({
 
 addStory('AnnotationEditor', AnnotationEditorDocs, () => ({
     Component: AnnotationEditorView
-}));
-
-addStory('ChartDescription', ChartDescriptionDocs, () => ({
-    Component: ChartDescriptionView
 }));
 
 addStory('CheckboxControl', CheckboxControlDocs, () => ({
