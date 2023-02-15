@@ -213,6 +213,7 @@
             () => !loading && contentWindow && contentWindow.__dw && contentWindow.__dw.vis,
             { timeout: 60000 }
         );
+        if (contentWindow.__dw.vis.__rendered) return true;
         return contentWindow.__dw.vis.rendered();
     }
 
