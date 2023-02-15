@@ -558,7 +558,20 @@ async function patchChartsHandler(request) {
     });
     const res = [];
     for (const chart of updated) {
-        res.push(await prepareChart(chart));
+        const preparedChart = await prepareChart(chart);
+
+        // TODO Remove this logging once we figure out what unexpected values of publishedAt some of
+        // our charts have. See https://datawrapper.sentry.io/issues/3893809681/
+        const { publishedAt } = preparedChart;
+        const validationRes = Joi.date().allow(null).validate(publishedAt);
+        if (validationRes.error) {
+            request.log(
+                ['sentry'],
+                new Error(`Invalid publishedAt of chart ${chart.id}: "${chart.published_at}"`)
+            );
+        }
+
+        res.push(preparedChart);
     }
     return res;
 }
