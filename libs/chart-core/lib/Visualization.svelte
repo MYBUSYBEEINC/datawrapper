@@ -656,9 +656,15 @@ Please make sure you called __(key) with a key of type "string".
         if (window.parent === window) {
             console.time('Chart rendered in'); // eslint-disable-line no-console
         }
-        dwChart.render(outerContainer);
+        const rendered = dwChart.render(outerContainer);
         if (window.parent === window) {
-            console.timeEnd('Chart rendered in'); // eslint-disable-line no-console
+            rendered
+                .then(() => {
+                    console.timeEnd('Chart rendered in'); // eslint-disable-line no-console
+                })
+                .catch(err => {
+                    console.error(err);
+                });
         }
 
         // await necessary reload triggers

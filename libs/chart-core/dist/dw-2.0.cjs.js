@@ -6405,7 +6405,7 @@ var utils = /*#__PURE__*/Object.freeze({
 });
 
 /*
- * simple event callbacks, mimicing the $.Callbacks API
+ * simple event callbacks, mimicking the $.Callbacks API
  */
 
 function events () {
@@ -6920,6 +6920,12 @@ function chart (attributes) {
             return flags;
         },
 
+        /**
+         * renders the chart into the provided container element
+         *
+         * @param {DOMElement} outerContainer
+         * @returns {Promise} resolves when the chart is rendered
+         */
         render(outerContainer) {
             if (!visualization || !theme || !dataset) {
                 throw new Error('cannot render the chart!');
@@ -6964,7 +6970,7 @@ function chart (attributes) {
 
             visualization.reset(container);
             visualization.size(w, h);
-            visualization.__init();
+            visualization.__beforeRender();
 
             visualization.render(container);
 
@@ -7028,6 +7034,7 @@ function chart (attributes) {
                     window.datawrapperHeightCallback(desiredHeight);
                 }
             }
+            return visualization.rendered();
         },
 
         getHeightMode() {
@@ -7369,12 +7376,21 @@ function filterDatasetColumns (chart, dataset) {
 const base = function () {}.prototype;
 
 extend(base, {
-    // called before rendering
-    __init() {
-        this.__renderedDfd = new Promise(resolve => {
-            this.__renderedResolve = resolve;
-        });
+    __renderEvents: { resolve: events(), reject: events() },
+    // visualizations can override these timeouts when it makes sense
+    __rejectRenderedAfter: 5000,
+    __resolveRenderedAfter: 300,
+
+    __beforeRender() {
+        if (this.__rejectTimeout) clearTimeout(this.__rejectTimeout);
+        this.__rejectTimeout = setTimeout(() => {
+            // if the visualization didn't complete rendering within 5s
+            // we want to reject the rendered() Promise
+            this.__renderEvents.reject.fire(`timeout after ${this.__rejectRenderedAfter}ms`);
+        }, this.__rejectRenderedAfter);
+        this.renderingComplete = debounce(this.__renderingComplete, this.__resolveRenderedAfter);
         this.__rendered = false;
+        // reset internal properties
         this.__colors = {};
         this.__callbacks = {};
 
@@ -7551,21 +7567,30 @@ extend(base, {
 
     clear() {},
 
-    renderingComplete() {
+    __renderingComplete() {
+        this.__renderEvents.resolve.fire();
         if (window.parent && window.parent.postMessage) {
             setTimeout(function () {
                 window.parent.postMessage('datawrapper:vis:rendered', '*');
             }, 200);
         }
-        this.__renderedResolve();
+        clearTimeout(this.__rejectTimeout);
         this.__rendered = true;
         this.postRendering();
     },
 
     postRendering() {},
 
+    /**
+     * Use this to wait until a visualization has finished rendering
+     *
+     * @returns {Promise} resolves when the rendering is completed
+     */
     rendered() {
-        return this.__renderedDfd;
+        return new Promise((resolve, reject) => {
+            this.__renderEvents.resolve.add(resolve);
+            this.__renderEvents.reject.add(reject);
+        });
     },
 
     /*
@@ -7612,7 +7637,7 @@ extend(base, {
      * set or get dark mode state of vis
      */
     darkMode(dm) {
-        // can't initialize in __init because that sets it back to false on each render
+        // can't initialize in __beforeRender because that sets it back to false on each render
         if (this.__darkMode === undefined) this.__darkMode = false;
         if (!arguments.length) return this.__darkMode;
         if (!this.__onDarkModeChange) return;
