@@ -10742,6 +10742,28 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
   margin-bottom: 0;
 }
 
+.tag:not(body) {
+  border: 1px solid transparent;
+}
+.tag:not(body).is-primary.is-light {
+  border-color: #c2e8f4;
+}
+.tag:not(body).is-link.is-light {
+  border-color: #c2e8f4;
+}
+.tag:not(body).is-info.is-light {
+  border-color: #c4d9f2;
+}
+.tag:not(body).is-success.is-light {
+  border-color: #c6f1da;
+}
+.tag:not(body).is-warning.is-light {
+  border-color: #ffefb8;
+}
+.tag:not(body).is-danger.is-light {
+  border-color: #f0c6d3;
+}
+
 /*
  * CUSTOMIZE BULMA UTILS
  */

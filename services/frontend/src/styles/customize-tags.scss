@@ -1,0 +1,18 @@
+// Tag
+.tag:not(body) {
+  border: 1px solid transparent;
+  @each $name, $pair in $tag-colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+    &.is-#{$name} {
+      // If a light and dark colors are provided
+      @if length($pair) > 3 {
+        $color-light: nth($pair, 3);
+        $color-dark: nth($pair, 4);
+        &.is-light {
+          border-color: darken($color-light, 10%);
+        }
+      }
+    }
+  }
+}

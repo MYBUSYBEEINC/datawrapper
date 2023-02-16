@@ -85,6 +85,22 @@
 
     <hr />
 
+    <h4 class="subtitle is-4">Tags</h4>
+    <div class="tags">
+        <div class="tag">Default</div>
+
+        <div class="tag is-info">Info</div>
+        <div class="tag is-success">Success</div>
+        <div class="tag is-warning">Warning</div>
+        <div class="tag is-danger">Danger</div>
+
+        <div class="tag is-light is-info">Info</div>
+        <div class="tag is-light is-success">Success</div>
+        <div class="tag is-light is-warning">Warning</div>
+        <div class="tag is-light is-danger">Danger</div>
+    </div>
+
+    <hr />
     <h4 class="subtitle is-4">Breadcrumb</h4>
     <nav class="breadcrumb" aria-label="breadcrumbs">
         <ul>
