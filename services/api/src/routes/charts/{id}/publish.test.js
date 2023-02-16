@@ -615,3 +615,24 @@ test('GET /charts/{id}/publish/status/0 returns progress based on the actions ta
         await destroy(chart);
     }
 });
+
+test('GET /charts/{id}/publish/data returns the next publish version when published=true', async t => {
+    const { publicChart } = t.context;
+    // get info of published chart, since `publicChart` is the chart before
+    // it was published
+    const { result: publishedChart } = await t.context.server.inject({
+        method: 'GET',
+        url: `/v3/charts/${publicChart.id}`,
+        auth: t.context.auth,
+        headers: t.context.headers
+    });
+
+    const res = await t.context.server.inject({
+        method: 'GET',
+        url: `/v3/charts/${publicChart.id}/publish/data?publish=true`,
+        auth: t.context.auth,
+        headers: t.context.headers
+    });
+    t.is(res.statusCode, 200);
+    t.is(res.result.chart.publicVersion, publishedChart.publicVersion + 1);
+});

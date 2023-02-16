@@ -88,12 +88,18 @@ module.exports = async function getEmbedCodes({
     }
 
     function getTemplate(template) {
+        const chartUrl = publicUrl || chart.public_url;
+        const urlRegex = new RegExp(`(.*/${chart.id}/)\\d+/?`);
+        const chartUrlUnversioned = urlRegex.test(chartUrl)
+            ? chartUrl.match(urlRegex)[1]
+            : chartUrl;
         return {
             template,
             code: template
                 .replace(/%chart_id%/g, chart.id)
                 .replace(/%chart_public_version%/g, publicVersion || chart.public_version)
-                .replace(/%chart_url%/g, publicUrl || chart.public_url)
+                .replace(/%chart_url%/g, chartUrl)
+                .replace(/%chart_url_without_version%/g, chartUrlUnversioned)
                 .replace(
                     /%chart_url_without_protocol%/g,
                     chart.public_url ? (publicUrl || chart.public_url).replace('https:', '') : ''
@@ -107,6 +113,10 @@ module.exports = async function getEmbedCodes({
                 .replace(/%custom_(.*?)%/g, (match, key) => {
                     return clean(get(chart, `metadata.custom.${key}`, ''));
                 })
+                .replace(
+                    /%aria_description%/,
+                    clean(get(chart, 'metadata.describe.aria-description', ''))
+                )
         };
     }
 };

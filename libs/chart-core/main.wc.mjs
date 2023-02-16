@@ -20,9 +20,7 @@ if (!window.datawrapper) {
             // get the source script element
             // eslint-disable-next-line
             data.script = document.currentScript;
-            data.origin =
-                opts.origin ||
-                (data.script.getAttribute('src') || '').split('/').slice(0, -1).join('/');
+            data.origin = opts.origin || (data.chart.publicUrl || '').replace(/\/$/, '');
 
             // store render data for later use
             window.datawrapper.chartData[data.chart.id] = Promise.resolve(data);

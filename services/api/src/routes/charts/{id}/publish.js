@@ -508,6 +508,8 @@ async function publishData(request) {
                 embedCodes[`embed-method-${embed.id}`] = embed.code;
             });
             set(data.chart, 'metadata.publish.embed-codes', embedCodes);
+            set(data.chart, 'publicUrl', publicUrl);
+            set(data.chart, 'publicVersion', chart.public_version + 1);
             data.nextPublicUrl = publicUrl;
         }
     }

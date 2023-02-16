@@ -7376,19 +7376,24 @@ function filterDatasetColumns (chart, dataset) {
 const base = function () {}.prototype;
 
 extend(base, {
-    __renderEvents: { resolve: events(), reject: events() },
     // visualizations can override these timeouts when it makes sense
     __rejectRenderedAfter: 5000,
     __resolveRenderedAfter: 300,
+
+    setup() {
+        this.__renderEvents = { resolve: events(), reject: events() };
+        this.renderingComplete = debounce(this.__renderingComplete, this.__resolveRenderedAfter);
+    },
 
     __beforeRender() {
         if (this.__rejectTimeout) clearTimeout(this.__rejectTimeout);
         this.__rejectTimeout = setTimeout(() => {
             // if the visualization didn't complete rendering within 5s
             // we want to reject the rendered() Promise
-            this.__renderEvents.reject.fire(`timeout after ${this.__rejectRenderedAfter}ms`);
+            this.__renderEvents.reject.fire(
+                new Error(`timeout after ${this.__rejectRenderedAfter}ms`)
+            );
         }, this.__rejectRenderedAfter);
-        this.renderingComplete = debounce(this.__renderingComplete, this.__resolveRenderedAfter);
         this.__rendered = false;
         // reset internal properties
         this.__colors = {};
@@ -7723,6 +7728,8 @@ function visualization(id, target) {
     if (target) {
         vis.target(target);
     }
+
+    vis.setup();
 
     return vis;
 }
