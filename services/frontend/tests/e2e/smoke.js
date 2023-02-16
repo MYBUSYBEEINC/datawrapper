@@ -68,6 +68,17 @@ Ukraine conflict between Russia and Western Countries;2;30;2;52;14`
         const $visualizePreviewBars = await $('.dw-chart.vis-d3-bars-stacked');
         await $visualizePreviewBars.waitForDisplayed(); // Check the chart type in the iframe.
         await browser.switchToParentFrame();
+        const $visualizeRefineTab = await $('[data-uid="tab-refine"]');
+        await $visualizeRefineTab.click(); // switch to refine tab
+
+        // Make an edit in the refine tab
+        const $showTotals = await $('>>>[data-uid="switch-show-totals"] label');
+        await $showTotals.waitForDisplayed();
+        await $showTotals.click();
+        await browser.switchToFrameById('iframe-vis');
+        const $totalLabel = await $('.bc-bar-total');
+        await $totalLabel.waitForDisplayed();
+        await browser.switchToParentFrame();
         const $visualizeAnnotateTab = await $('a[href="#annotate"]');
         await expect($visualizeAnnotateTab).toBeDisplayed();
         await $visualizeAnnotateTab.click(); // Switch to the Annotate tab.
