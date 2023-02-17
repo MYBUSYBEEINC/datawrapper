@@ -381,8 +381,21 @@ async function publishData(request) {
     const data = { chart: await prepareChart(readonlyChart, additionalData) };
 
     // the vis
-    data.visualization = server.app.visualizations.get(chart.type);
-    if (!data.visualization) {
+    const visProperties = [
+        'id',
+        'ariaLabel',
+        'script',
+        'axes',
+        'dependencies',
+        'height',
+        'libraries',
+        'namespace',
+        'supportsFitHeight',
+        'title',
+        '__plugin'
+    ];
+    data.visualization = pick(server.app.visualizations.get(chart.type), visProperties);
+    if (!data.visualization.id) {
         return Boom.badRequest('Invalid chart type');
     }
     const themeId = query.theme || chart.theme;
