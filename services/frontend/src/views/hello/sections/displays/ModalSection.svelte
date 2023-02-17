@@ -3,7 +3,7 @@
     import CodeHighlight from '../../CodeHighlight.svelte';
     import { getContext } from 'svelte';
 
-    const { showConfirmationModal } = getContext('layout/main');
+    const { showConfirmationModal } = getContext('main');
 
     let open = false;
     let open2 = false;

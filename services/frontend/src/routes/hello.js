@@ -24,7 +24,7 @@ module.exports = {
                     );
                     const icons = (await readdir(iconPath)).map(file => file.replace('.svg', ''));
 
-                    // pick a random chart
+                    // pick a random published chart
                     const chart = await Chart.findOne({
                         where: {
                             deleted: 0,
@@ -34,7 +34,7 @@ module.exports = {
                         },
                         order: [['created_at', 'DESC']]
                     });
-                    const theme = await Theme.findByPk(chart.theme);
+                    const theme = chart && (await Theme.findByPk(chart.theme));
 
                     const componentInfos = Object.fromEntries(
                         (
@@ -56,8 +56,8 @@ module.exports = {
                             icons,
                             magicNumber: 42,
                             componentInfos,
-                            chart: chart.toJSON(),
-                            theme: theme.toJSON()
+                            chart: chart && chart.toJSON(),
+                            theme: theme && theme.toJSON()
                         }
                     });
                 }

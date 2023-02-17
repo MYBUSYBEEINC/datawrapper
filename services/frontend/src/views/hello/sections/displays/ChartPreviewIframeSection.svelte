@@ -26,16 +26,20 @@
     ];
 
     function onChange() {
-        preview.set({
-            border: padding,
-            width,
-            height,
-            scale,
-            src: `/preview/${$chart.id}?${header === 'plain' ? 'plain=1' : ''}`
-        });
+        if (chart) {
+            preview.set({
+                border: padding,
+                width,
+                height,
+                scale,
+                src: `/preview/${$chart.id}?${header === 'plain' ? 'plain=1' : ''}`
+            });
+        }
     }
     function onReset() {
-        preview.reset();
+        if (preview) {
+            preview.reset();
+        }
     }
 </script>
 
@@ -43,7 +47,11 @@
     <h3 id="preview" class="title is-3">ChartIframePreviewDisplay</h3>
     <div class="columns">
         <div class="column is-two-thirds">
-            <ChartPreviewIframeDisplay bind:this={preview} chart={$chart} {theme} />
+            {#if chart}
+                <ChartPreviewIframeDisplay bind:this={preview} chart={$chart} {theme} />
+            {:else}
+                <p>No published chart found.</p>
+            {/if}
         </div>
 
         <div class="column">

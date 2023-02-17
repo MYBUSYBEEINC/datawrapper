@@ -14,7 +14,7 @@
     export let theme;
     export let __;
 
-    const chartStore = readable(chart);
+    const chartStore = chart && readable(chart);
 
     export let icons;
     let contentRef;
