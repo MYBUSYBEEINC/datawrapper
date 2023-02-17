@@ -146,10 +146,6 @@
         }
     };
 
-    dwChart.observeDeep = (key, handler) => {
-        storeSubscriptions.add(chart.observeKey(key, handler));
-    };
-
     dwChart.serialize = () => {
         return cloneDeep($chart);
     };
