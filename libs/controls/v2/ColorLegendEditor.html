@@ -1,12 +1,23 @@
 <SwitchControl label="{__('controls / legend / switch')}" bind:value="value.enabled" {uid}>
     <div class="mt-1"></div>
-    <TextControl
-        {labelWidth}
-        placeholder="Your title here"
-        bind:value="value.title"
-        label="{__('controls / legend / caption')}"
-        textDirection="{$textDirection}"
-    />
+
+    <ControlGroup {labelWidth} label="{__('controls / legend / caption')}" valign="top">
+        <div style="margin-top: -3px">
+            <CheckboxControl
+                label="{__('controls / legend / size-legend-show-title')}"
+                bind:value="value.showTitle"
+            />
+        </div>
+
+        <TextControl
+            labelWidth="0"
+            placeholder="{defaultTitle}"
+            bind:value="titleInternal"
+            textDirection="{$textDirection}"
+            disabled="{!value.showTitle}"
+        />
+    </ControlGroup>
+
     <!-- label settings are different for number and text columns -->
     {#if valueAxisColumnType === 'number'}
     <!-- also different for discrete and continuous scales -->
@@ -126,10 +137,6 @@
             options="{allowPositionInside ? positionOptions : positionOptions.filter(o => !o.inside)}"
         />
 
-        <HelpDisplay>
-            <div>{@html __('controls / legend / offset / help')}</div>
-        </HelpDisplay>
-
         {#if allowOrientation}
         <RadioControl
             {labelWidth}
@@ -155,6 +162,9 @@
         {/if}
         <!-- allow settting an offset for legends  -->
         {#if allowOffset}
+        <HelpDisplay>
+            <div>{@html __('controls / legend / offset / help')}</div>
+        </HelpDisplay>
         <ControlGroup
             {labelWidth}
             disabled="{outsideLegend}"
@@ -218,6 +228,7 @@
     import smartRound from '@datawrapper/shared/smartRound.js';
     import { range, uniq } from 'underscore';
     import chroma from 'chroma-js';
+    import purifyHtml from '@datawrapper/shared/purifyHtml.js';
 
     function numberToChar(i) {
         return (
@@ -253,6 +264,9 @@
                 isDiverging: false,
                 labelWidth: '100px',
                 value: {},
+                defaultTitle: '',
+                titleInternal: null,
+                initialTitle: null,
                 hideItems: [],
                 customLabels: range(100).map(
                     i => `${__('controls / legend / def-group')} ${numberToChar(i)}`
@@ -527,6 +541,29 @@
             if (changed.labelsContinuous && current.mode === 'continuous') {
                 current.value.labels = current.labelsContinuous;
                 this.set({ value: current.value });
+            }
+
+            // work out if default title should be used
+            if (current.value.showTitle && current.titleInternal) {
+                current.value.title = current.titleInternal || current.defaultTitle;
+            } else if (current.value.showTitle) {
+                current.value.title = current.defaultTitle;
+            } else {
+                current.value.title = null;
+            }
+
+            // purify user input
+            if (current.value.title) {
+                current.value.title = purifyHtml(current.value.title);
+            }
+
+            this.set({ value: current.value });
+
+            // set title from parent
+            if (changed.initialTitle && changed.value) {
+                this.set({
+                    titleInternal: current.initialTitle
+                });
             }
         }
     };

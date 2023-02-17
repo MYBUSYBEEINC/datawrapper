@@ -42,12 +42,15 @@ const initialData = () => ({
     shape: 'symbolCircle'
 });
 
-test('Render simple SizeLegendEditor', t => {
+test('Render simple SizeLegendEditor', async t => {
     const comp = new SizeLegendEditor({
         target: t.context.target[0],
         store: t.context.chart,
         data: initialData()
     });
+
+    // open advanced options
+    t.context.target.find('.more-options-toggle button')[0].click();
 
     t.truthy(t.context.target.find('div[data-uid=legend-values-custom] input'));
     const input = t.context.target.find('div[data-uid=legend-values-custom] input');
@@ -62,6 +65,9 @@ test('Clearing and re-entering custom value input', async t => {
         store: t.context.chart,
         data: initialData()
     });
+
+    // open advanced options
+    t.context.target.find('.more-options-toggle button')[0].click();
 
     t.deepEqual(comp.get().legendValuesCustom, '1,10,100');
     t.deepEqual(comp.get().value.legendValuesCustom, [1, 10, 100]);
@@ -84,6 +90,9 @@ test('Switching from custom values to auto', async t => {
         store: t.context.chart,
         data: initialData()
     });
+
+    // open advanced options
+    t.context.target.find('.more-options-toggle button')[0].click();
 
     const inputs = t.context.target.find('div[data-uid=legend-values-toggle] input');
     inputs.eq(0).trigger('click');

@@ -1218,5 +1218,10 @@
   "controls / legend / size-legend-label-position-left": "",
   "controls / legend / offset-note": "",
   "controls / legend / top-center": "",
-  "controls / legend / bottom-center": ""
+  "controls / legend / bottom-center": "",
+  "teams / defaults / web-component": "Embed with script",
+  "publish / embed / web-component": "<b>Neu</b>: Einbetten mit Script",
+  "publish / embed / web-component / help": "<p><strong style=\"color:var(--color-dw-turquoise-dark)\">Neue Beta-Funktion:</strong> Bestens geeignet für die Einbettung von Visualisierungen in moderne Web-Seiten. Kompatibel mit 95% der Browser.</p>\n<p class=\"has-text-grey\">Verwendet JavaScript und Webkomponenten. Weitere Informationen <a href=\"https://blog.datawrapper.de/web-component-embedding\" target=\"_blank\">findest Du in diesem Blogbeitrag</a></p>",
+  "publish / embed / responsive / help": "<p>Zum Einbetten von Visualisierungen in Webseiten ohne Web Component-Unterstützung.<br />\nKompatibel mit 99% der Browser.</p>\n<p class=\"has-text-grey\">Verwendet Javascript und Iframes.</p>",
+  "publish / embed / iframe / help": "<p> Zum Einbetten von Visualisierungen in Wordpress oder andere Systeme ohne Webkomponenten oder JavaScript-Unterstützung. </p>\n <p class=\"has-text-grey\"> Verwendet reine Iframes. </p>"
 }

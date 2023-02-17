@@ -29,24 +29,6 @@
         />
         {/if}
 
-        <hr />
-
-        <RadioControl
-            bind:value="value.legendValues"
-            {labelWidth}
-            label="{__('controls / legend / size-legend-values')}"
-            options="{legendValuesOptions}"
-            uid="legend-values-toggle"
-        />
-
-        {#if value.legendValues === 'custom'}
-        <TextControl
-            label="{__('controls / legend / size-legend-custom-values')}"
-            placeholder="1,3,10"
-            uid="legend-values-custom"
-            bind:value="legendValuesCustom"
-        />
-        {/if}
         <CustomFormatControl
             bind:value="value.labelFormat"
             auto
@@ -56,80 +38,106 @@
             {labelWidth}
         />
 
-        <hr />
-
-        {#if allowPositionInside}
-        <SelectControl
+        <ControlGroup
             {labelWidth}
-            bind:value="value.position"
-            label="{__('controls / legend / size-legend-position')}"
-            options="{positionOptions}"
-        />
-        {:else}
-        <RadioControl
-            bind:value="value.position"
-            {labelWidth}
-            label="{__('controls / legend / size-legend-position')}"
-            options="{positionOptions.filter(o => !o.inside)}"
-        />
-
-        {/if}
-
-        <!-- allow settting an offset for legends  -->
-
-        {#if !outsideLegend}
-        <ControlGroup {labelWidth} label="{__('controls / legend / offset')}">
-            <div class="flex">
-                <label>
-                    <NumberInput
-                        bind:value="value.legendOffsetX"
-                        slider="{false}"
-                        min="{0}"
-                        max="{50}"
-                        unit="%"
-                        disabled="{offsetDisabled}"
-                    />
-                    <span>{__('controls / legend / offset / h')}</span>
-                </label>
-                <label>
-                    <NumberInput
-                        bind:value="value.legendOffsetY"
-                        slider="{false}"
-                        min="{0}"
-                        max="{50}"
-                        unit="%"
-                        disabled="{offsetDisabled}"
-                    />
-                    <span>{__('controls / legend / offset / v')}</span>
-                </label>
-            </div>
-        </ControlGroup>
-        {/if}
-
-        <!-- show offset help  -->
-        {#if !outsideLegend && offsetDisabled}
-        <p class="mini-help">{@html __('controls / legend / offset-note')}</p>
-        {/if}
-        <!-- end -->
-
-        <!-- show mobile positioning help  -->
-        {#if !outsideLegend}
-        <p class="mini-help">{@html __('controls / legend / mobile-note')}</p>
-        {/if}
-        <!-- end: if allowPosition -->
-
-        <SwitchControl
-            label="{__('controls / legend / size-legend-show-title')}"
-            bind:value="value.showTitle"
-            {uid}
+            label="{__('controls / legend / size-legend-title')}"
+            valign="top"
         >
+            <div style="margin-top: -3px">
+                <CheckboxControl
+                    label="{__('controls / legend / size-legend-show-title')}"
+                    bind:value="value.showTitle"
+                />
+            </div>
+
             <TextControl
-                {labelWidth}
+                labelWidth="0"
                 placeholder="{defaultTitle || 'Legend title here'}"
                 bind:value="title"
-                label="{__('controls / legend / size-legend-title')}"
                 textDirection="{$textDirection}"
+                disabled="{!value.showTitle}"
             />
+        </ControlGroup>
+
+        <MoreOptionsGroup>
+            <RadioControl
+                bind:value="value.legendValues"
+                {labelWidth}
+                label="{__('controls / legend / size-legend-values')}"
+                options="{legendValuesOptions}"
+                uid="legend-values-toggle"
+            />
+
+            <hr />
+
+            {#if value.legendValues === 'custom'}
+            <TextControl
+                label="{__('controls / legend / size-legend-custom-values')}"
+                placeholder="1,3,10"
+                uid="legend-values-custom"
+                bind:value="legendValuesCustom"
+            />
+            {/if} {#if allowPositionInside}
+            <SelectControl
+                {labelWidth}
+                bind:value="value.position"
+                label="{__('controls / legend / size-legend-position')}"
+                options="{positionOptions}"
+            />
+            {:else}
+            <RadioControl
+                bind:value="value.position"
+                {labelWidth}
+                label="{__('controls / legend / size-legend-position')}"
+                options="{positionOptions.filter(o => !o.inside)}"
+            />
+            {/if}
+
+            <!-- allow settting an offset for legends  -->
+
+            {#if !outsideLegend}
+            <ControlGroup {labelWidth} label="{__('controls / legend / offset')}">
+                <div class="flex">
+                    <label>
+                        <NumberInput
+                            bind:value="value.legendOffsetX"
+                            slider="{false}"
+                            min="{0}"
+                            max="{50}"
+                            unit="%"
+                            disabled="{offsetDisabled}"
+                        />
+                        <span>{__('controls / legend / offset / h')}</span>
+                    </label>
+                    <label>
+                        <NumberInput
+                            bind:value="value.legendOffsetY"
+                            slider="{false}"
+                            min="{0}"
+                            max="{50}"
+                            unit="%"
+                            disabled="{offsetDisabled}"
+                        />
+                        <span>{__('controls / legend / offset / v')}</span>
+                    </label>
+                </div>
+            </ControlGroup>
+            {/if}
+
+            <!-- show offset help  -->
+            {#if !outsideLegend && offsetDisabled}
+            <p class="mini-help">{@html __('controls / legend / offset-note')}</p>
+            {/if}
+            <!-- end -->
+
+            <!-- show mobile positioning help  -->
+            {#if !outsideLegend}
+            <p class="mini-help">{@html __('controls / legend / mobile-note')}</p>
+            {/if}
+            <!-- end: if allowPosition -->
+
+            <hr />
+
             <SelectControl
                 {labelWidth}
                 bind:value="value.titlePosition"
@@ -147,7 +155,7 @@
                 step="5"
                 slider="{true}"
             />
-        </SwitchControl>
+        </MoreOptionsGroup>
     </SwitchControl>
     {#if !value.enabled}
     <p class="mini-help">{__('controls / legend / size-legend-disabled-message')}</p>
@@ -164,6 +172,8 @@
     import NumberControl from './NumberControl.html';
     import CustomFormatControl from './CustomFormatControl.html';
     import SelectButtonsControl from './SelectButtonsControl.html';
+    import MoreOptionsGroup from './MoreOptionsGroup.html';
+    import CheckboxControl from './CheckboxControl.html';
     import { __ } from '@datawrapper/shared/l10n.js';
     import purifyHtml from '@datawrapper/shared/purifyHtml.js';
 
@@ -177,7 +187,9 @@
             SwitchControl,
             NumberControl,
             CustomFormatControl,
-            SelectButtonsControl
+            SelectButtonsControl,
+            MoreOptionsGroup,
+            CheckboxControl
         },
         data() {
             return {

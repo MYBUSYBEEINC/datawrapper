@@ -1218,5 +1218,10 @@
   "controls / legend / size-legend-label-position-left": "",
   "controls / legend / offset-note": "",
   "controls / legend / top-center": "",
-  "controls / legend / bottom-center": ""
+  "controls / legend / bottom-center": "",
+  "teams / defaults / web-component": "",
+  "publish / embed / web-component": "",
+  "publish / embed / web-component / help": "",
+  "publish / embed / responsive / help": "",
+  "publish / embed / iframe / help": ""
 }
