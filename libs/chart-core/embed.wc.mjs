@@ -12,7 +12,8 @@ if (!window.datawrapper) {
             // get the source script element
             // eslint-disable-next-line
             data.script = document.currentScript;
-            const origin = opts.origin || (data.chart.publicUrl || '').replace(/\/$/, '');
+            const origin = (data.origin =
+                opts.origin || (data.chart.publicUrl || '').replace(/\/$/, ''));
 
             // store render data for later use
             window.datawrapper.chartData[data.chart.id] = Promise.resolve(data);
@@ -27,6 +28,21 @@ if (!window.datawrapper) {
             }
             // @todo: support automatic dark mode initialization
             const renderFlags = opts.flags || parseFlagsFromElement(data.script);
+
+            if (!('customElements' in window)) {
+                // no web component support, so inject iframe as fallback
+                const iframe = document.createElement('iframe');
+                iframe.src = data.script.getAttribute('src').replace('/embed.js', '');
+                iframe.setAttribute('title', data.chart.title);
+                iframe.setAttribute('scrolling', 'no');
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('style', 'width: 0; min-width: 100% !important; border: none;');
+                iframe.setAttribute('height', data.chart.metadata.publish['embed-height']);
+                iframe.setAttribute('data-external', 1);
+                target.appendChild(iframe);
+                return;
+            }
+
             const props = {
                 target,
                 props: {
@@ -42,6 +58,7 @@ if (!window.datawrapper) {
                 },
                 hydrate: false
             };
+
             const loadDependency = async script => {
                 if (!dependencyPromises[script]) {
                     dependencyPromises[script] = loadScript(
