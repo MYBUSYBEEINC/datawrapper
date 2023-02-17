@@ -123,7 +123,9 @@ module.exports = async function createChartWebsite(
     // render again to extract emotion css for dark mode
     const { css: emotionCSSDark } = renderChart({ ...publishData, isStyleDark: true });
 
-    let dependencies = ['dw-2.0.min.js'].map(file => path.join(chartCore.path.dist, file));
+    let dependencies = ['dw-2.0.min.js', 'web-component.js'].map(file =>
+        path.join(chartCore.path.dist, file)
+    );
 
     /* Create a temporary directory */
     const outDir = await fs.mkdtemp(path.resolve(os.tmpdir(), `dw-chart-${chart.id}-`));
@@ -296,7 +298,7 @@ module.exports = async function createChartWebsite(
     );
 
     const webComponentJS = await fs.readFile(
-        path.join(chartCore.path.dist, 'web-component.js'),
+        path.join(chartCore.path.dist, 'embed.wc.js'),
         'utf-8'
     );
     publishData.styles = css;

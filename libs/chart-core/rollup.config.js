@@ -56,7 +56,42 @@ function onwarn(warning, warn) {
 
 module.exports = [
     {
-        // Svelte Visualization Component as web component
+        // embed.js wrapper for web components
+        input: path.resolve(__dirname, 'embed.wc.mjs'),
+        plugins: [
+            replace({
+                values: {
+                    'process.env.NODE_ENV': JSON.stringify('production') // for @emotion/css
+                },
+                preventAssignment: true
+            }),
+            nodeResolve({
+                browser: true
+            }),
+            commonjs(),
+            production &&
+                babel({
+                    ...babelConfig,
+                    presets: [
+                        [
+                            '@babel/env',
+                            // needs to at least not throw syntax errors in IE
+                            { targets: ['> 1%'], corejs: 3, useBuiltIns: 'entry' }
+                        ]
+                    ],
+                    plugins: ['babel-plugin-transform-async-to-promises']
+                }),
+            production && terser()
+        ],
+        onwarn,
+        output: {
+            format: 'iife',
+            entryFileNames: 'embed.wc.js',
+            ...output
+        }
+    },
+    {
+        // Svelte Visualization Component for web component
         input: path.resolve(__dirname, 'main.wc.mjs'),
         plugins: [
             // Why are there two svelte calls here?
@@ -123,7 +158,7 @@ module.exports = [
         }
     },
     {
-        // Client side Svelte Visualization Component
+        // Client side Svelte Visualization Component for iframes
         input: path.resolve(__dirname, 'main.iframe.mjs'),
         plugins: [
             svelte({

@@ -64,6 +64,7 @@
     export let theme = {};
     export let themeDataDark = {};
     export let themeDataLight = {};
+    export let themeFonts = {};
     export let locales = {};
     export let textDirection = 'ltr';
     export let translations;
@@ -668,7 +669,7 @@ Please make sure you called __(key) with a key of type "string".
         }
 
         // await necessary reload triggers
-        observeFonts(theme.fonts, theme.data.typography)
+        observeFonts(themeFonts, themeDataLight.typography)
             .then(() => dwChart.render(outerContainer))
             .catch(() => dwChart.render(outerContainer));
 

@@ -13,7 +13,7 @@
     ],
     "scripts": {
         "format": "cd ../.. && scripts/format libs/chart-core",
-        "build": "rollup -c",
+        "build": "rm -Rf dist/* && rollup -c",
         "dev": "rollup -cw",
         "lint": "cd ../.. && scripts/lint libs/chart-core",
         "prepublishOnly": "npm run build",

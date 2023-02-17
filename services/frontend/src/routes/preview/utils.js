@@ -171,6 +171,13 @@ module.exports = {
                 Object.entries(props.theme.assets).filter(([, asset]) => asset.type === 'font'),
                 props.theme.data
             ),
+            theme: {
+                id: props.theme.id,
+                title: props.theme.title,
+                // we can safely omit theme.data, theme.fonts and theme.assets here
+                // since we're already including them as top level props
+                _computed: props.theme._computed
+            },
             locales: {
                 dayjs: await loadVendorLocale('dayjs', chartLocale, team),
                 numeral: await loadVendorLocale('numeral', chartLocale, team)
@@ -178,14 +185,11 @@ module.exports = {
             textDirection: localeConfig.textDirection || 'ltr',
             teamPublicSettings: team ? team.getPublicSettings() : {},
             ...(request.query.dark ? { theme: themeDark.json } : {}),
-            assets: props.assets.reduce((acc, item) => {
-                const { value } = item;
-                acc[item.name] = { value };
-                return acc;
-            }, {}),
+            assets: Object.fromEntries(props.assets.map(({ name, value }) => [name, { value }])),
             frontendDomain: config.frontend.domain,
             dependencies: [
                 `${frontendBase}/lib/chart-core/dw-2.0.min.js`,
+                `${frontendBase}/lib/chart-core/web-component.js`,
                 ...props.visualization.libraries.map(lib => `${frontendBase}${lib.uri}`),
                 `${frontendBase}/lib/plugins/${props.visualization.__plugin}/static/${props.visualization.id}.js`
             ],

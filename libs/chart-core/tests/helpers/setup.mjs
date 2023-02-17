@@ -17,7 +17,7 @@ import createEmotion from '@emotion/css/create-instance';
 import createEmotionServer from '@emotion/server/create-instance';
 import { setTimeout } from 'timers/promises';
 import { convertToDarkMode, getBackgroundColors } from '../../lib/darkMode.mjs';
-import { parseFlagsFromObject } from '../../lib/shared.mjs';
+import { parseFlagsFromObject } from '../../lib/shared/parseFlags.mjs';
 
 const schemas = new Schemas();
 
@@ -300,6 +300,7 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
         frontendDomain: frontendBase,
         dependencies: [
             `${frontendBase}/lib/chart-core/dw-2.0.min.js`,
+            `${frontendBase}/lib/chart-core/web-component.js`,
             ...(props.visMeta.libraries ?? []).map(lib => `${frontendBase}${lib.uri}`),
             `${frontendBase}/lib/plugins/${props.visMeta.__plugin}/static/${props.visMeta.id}.js`
         ],
@@ -312,7 +313,7 @@ export async function renderAsWebComponent(page, props, delay = 1000) {
 
     const logs = traceLogs(page);
 
-    const webComponentJS = await readFile(join(pathToChartCore, 'dist/web-component.js'), 'utf-8');
+    const webComponentJS = await readFile(join(pathToChartCore, 'dist/embed.wc.js'), 'utf-8');
     const embedJS = `${webComponentJS} \n\nwindow.datawrapper.render(${JSON.stringify(state)});`;
 
     // inject embedjs script
@@ -568,10 +569,8 @@ async function interceptRequest(interceptedRequest) {
         //  interceptedRequest.abort();
         const path = interceptedRequest.url().substring(22);
         let content = '';
-        if (path === 'lib/chart-core/dw-2.0.min.js') {
-            content = await readFile(join(pathToChartCore, 'dist/dw-2.0.min.js'), 'utf-8');
-        } else if (path === 'lib/chart-core/dw-2.0.min.js.map') {
-            content = await readFile(join(pathToChartCore, 'dist/dw-2.0.min.js.map'), 'utf-8');
+        if (path.startsWith('lib/chart-core/')) {
+            content = await readFile(join(pathToChartCore, 'dist', path.substr(15)), 'utf-8');
         } else if (path === 'lib/plugins/dummy/static/dummy.js') {
             content = await readFile(
                 join(pathToChartCore, 'tests/helpers/data/dummy.vis.js'),

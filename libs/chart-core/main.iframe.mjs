@@ -1,6 +1,6 @@
 import VisualizationIframe from './lib/VisualizationIframe.svelte';
 import createEmotion from '@emotion/css/create-instance';
-import { parseFlagsFromURL } from './lib/shared.mjs';
+import { parseFlagsFromURL } from './lib/shared/parseFlags.mjs';
 
 function render() {
     const target = document.getElementById('__svelte-dw');

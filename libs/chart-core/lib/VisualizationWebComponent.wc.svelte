@@ -2,21 +2,15 @@
 
 <script>
     import createEmotion from '@emotion/css/create-instance';
-    import Visualization from './Visualization.svelte';
-    import { loadScript } from '@datawrapper/shared/fetch.js';
+
     import { createFontEntries } from './styles/create-font-entries.js';
     import { resize } from 'svelte-resize-observer-action';
     import debounce from 'lodash/debounce.js';
     import some from 'lodash/some.js';
-    import { parseFlagsFromElement } from './shared.mjs';
-    import { getChartIdFromUrl, getEmbedJsonUrl } from './dw/utils/index.mjs';
+    import { parseFlagsFromElement } from './shared/parseFlags.mjs';
+    import { getChartIdFromUrl, getEmbedJsonUrl } from './shared/urls.mjs';
+    import Visualization from './Visualization.svelte';
 
-    const DEPENDENCY_STATE = {
-        loading: 'loading',
-        finished: 'finished'
-    };
-    export let dependencyStates = {};
-    export let dependencies = [];
     export let data = '';
     export let chart = {};
     export let visualization = {};
@@ -40,7 +34,6 @@
     export let renderFlags = {}; // allow passing render flags directly
 
     let stylesLoaded = false;
-    let dependenciesLoaded = false;
     let styleHolder;
     let emotion;
 
@@ -101,32 +94,6 @@
             }
         }
     }
-    async function loadDependency(script) {
-        if (!dependencyStates[script]) {
-            dependencyStates[script] = DEPENDENCY_STATE.loading;
-            await loadScript(script.indexOf('http') === 0 ? script : `${origin}/${script}`);
-            dependencyStates[script] = DEPENDENCY_STATE.finished;
-        }
-        if (dependencyStates[script] === DEPENDENCY_STATE.finished) {
-            window.datawrapper.dependencyCompleted();
-        }
-    }
-
-    window.datawrapper.onDependencyCompleted(function () {
-        for (const script of dependencies) {
-            if (dependencyStates[script] !== DEPENDENCY_STATE.finished) {
-                if (!dependencyStates[script]) {
-                    loadDependency(script);
-                }
-                return;
-            }
-        }
-        dependenciesLoaded = true;
-    });
-
-    $: {
-        if (dependencies.length) loadDependency(dependencies[0]);
-    }
 
     let containerWidth;
     let containerHeight;
@@ -186,13 +153,14 @@
     class="web-component-body"
     style="position:relative"
 >
-    {#if stylesLoaded && dependenciesLoaded}
+    {#if stylesLoaded}
         <div class="chart dw-chart vis-{chart.type}" class:dir-rtl={textDirection === 'rtl'}>
             <Visualization
                 {data}
                 {chart}
                 {visualization}
                 {theme}
+                {themeFonts}
                 {themeDataDark}
                 {themeDataLight}
                 {locales}

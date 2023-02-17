@@ -64,6 +64,7 @@
     {visualization}
     {teamPublicSettings}
     {theme}
+    themeFonts={theme.fonts}
     {themeDataDark}
     {themeDataLight}
     {locales}

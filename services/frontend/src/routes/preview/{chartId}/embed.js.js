@@ -18,7 +18,7 @@ module.exports = {
             handler: async (request, h) => {
                 const props = await getEmbedProps(server, request);
                 const webComponentJS = await fs.readFile(
-                    path.join(chartCore.path.dist, 'web-component.js'),
+                    path.join(chartCore.path.dist, 'embed.wc.js'),
                     'utf-8'
                 );
                 return h
