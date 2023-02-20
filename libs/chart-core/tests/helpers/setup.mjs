@@ -597,3 +597,11 @@ export async function setViewportAndWait(page, viewport) {
     await page.setViewport(viewport);
     await setTimeout(600);
 }
+
+export async function waitUntilPageEvaluate(page, func, timeout = 10000) {
+    if (timeout <= 0) throw new Error('timeout');
+    const res = await page.evaluate(func);
+    if (res) return res;
+    await setTimeout(50);
+    return waitUntilPageEvaluate(page, func, timeout - 50);
+}

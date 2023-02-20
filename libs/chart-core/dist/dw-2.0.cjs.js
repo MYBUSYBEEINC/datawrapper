@@ -14,6 +14,7 @@ var objectDiff = require('@datawrapper/shared/objectDiff.js');
 var PostEvent = require('@datawrapper/shared/postEvent.js');
 var columnNameToVariable = require('@datawrapper/shared/columnNameToVariable.js');
 var numeral = require('numeral');
+var chroma = require('chroma-js');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -31,6 +32,7 @@ var objectDiff__default = /*#__PURE__*/_interopDefaultLegacy(objectDiff);
 var PostEvent__default = /*#__PURE__*/_interopDefaultLegacy(PostEvent);
 var columnNameToVariable__default = /*#__PURE__*/_interopDefaultLegacy(columnNameToVariable);
 var numeral__default = /*#__PURE__*/_interopDefaultLegacy(numeral);
+var chroma__default = /*#__PURE__*/_interopDefaultLegacy(chroma);
 
 function guessDelimiterFromLocale(numeral) {
     try {
@@ -7717,7 +7719,8 @@ visualization.has = function (id) {
 };
 
 visualization.libraries = {
-    numeral: numeral__default["default"]
+    numeral: numeral__default["default"],
+    chroma: chroma__default["default"]
 };
 
 visualization.base = base;
