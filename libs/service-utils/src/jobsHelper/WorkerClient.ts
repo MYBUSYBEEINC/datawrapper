@@ -1,7 +1,12 @@
-import type { Config, ExportChartTypes, WorkerTypes } from '@datawrapper/backend-utils';
+import type {
+    Config,
+    ConfigTypes,
+    ExportChartTypes,
+    WorkerTypes
+} from '@datawrapper/backend-utils';
 import type { BullmqJob } from '@datawrapper/backend-utils/dist/workerTypes';
 import type { DB } from '@datawrapper/orm';
-import type { QueueEvents } from 'bullmq';
+import type { ConnectionOptions, QueueEvents } from 'bullmq';
 import mapValues from 'lodash/mapValues';
 import {
     ExportChartJobData,
@@ -19,13 +24,17 @@ export type BullmqQueueEventsClass = typeof QueueEvents;
  *
  * Throw an exception if the worker config is missing or invalid.
  */
-function getWorkerConfig(config: Config) {
+function getWorkerConfig(config: Config): {
+    connection: ConnectionOptions;
+    queues: ConfigTypes.WorkerQueuesConfig;
+} {
     if (!config.worker?.redis?.host || !config.worker?.redis?.port || !config.worker?.queues) {
         throw new Error('Missing or invalid worker config');
     }
     return {
         queues: config.worker.queues,
         connection: {
+            autoResubscribe: true,
             host: config.worker.redis.host,
             port: +config.worker.redis.port,
             ...(config.worker.redis.password && { password: config.worker.redis.password })
