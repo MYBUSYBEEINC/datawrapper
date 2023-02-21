@@ -249,6 +249,10 @@ module.exports = async function createChartWebsite(
     publishData.published = true;
     publishData.chartAutoDark = autoDark;
 
+    const iframeDependencies = dependencies
+        .filter(file => !file.includes('/web-component.'))
+        .map(file => getAssetLink(`../../${file}`));
+
     /**
      * Render the visualizations entry: "index.html"
      */
@@ -263,7 +267,7 @@ module.exports = async function createChartWebsite(
         CORE_SCRIPT: getAssetLink(`../../lib/${coreScript}`),
         CSS: getAssetLink(`../../lib/vis/${cssFile}`),
         CSS_DARK: getAssetLink(`../../lib/vis/${cssFileDark}`),
-        SCRIPTS: dependencies.map(file => getAssetLink(`../../${file}`)),
+        SCRIPTS: iframeDependencies,
         CHART_CLASS: [
             `vis-height-${get(publishData.visualization, 'height', 'fit')}`,
             `theme-${get(publishData.theme, 'id')}`,
