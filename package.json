@@ -10,7 +10,7 @@
         "format": "scripts/format",
         "lint": "scripts/lint",
         "test": "cd utils/e2e-tests && npm test -- $@",
-        "test:vis": "(cd libs/chart-core && npm test) && (cd plugins/d3-bars && npm test) && (cd plugins/vis-d3-lines && npm test) && (cd plugins/vis-d3-maps && npm test) && (cd plugins/vis-d3-pies && npm test) && (cd plugins/vis-d3-scatter-plot && npm test) && (cd plugins/locator-maps && npm test) && (cd plugins/vis-tables && npm test) && (cd plugins/vis-d3-columns && npm test) && (cd plugins/vis-election-donut && npm test)",
+        "test:vis": "(cd libs/chart-core && npm test) && (cd plugins/vis-d3-bars && npm test) && (cd plugins/vis-d3-lines && npm test) && (cd plugins/vis-d3-maps && npm test) && (cd plugins/vis-d3-pies && npm test) && (cd plugins/vis-d3-scatter-plot && npm test) && (cd plugins/locator-maps && npm test) && (cd plugins/vis-tables && npm test) && (cd plugins/vis-d3-columns && npm test) && (cd plugins/vis-election-donut && npm test)",
         "test:ci": "cd utils/e2e-tests && npm run test:ci -- $@",
         "sync": "datawrapper-orm-sync",
         "api": "datawrapper-api",

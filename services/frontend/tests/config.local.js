@@ -31,7 +31,7 @@ module.exports = {
         openCage: 'fake-opencage-key'
     },
     plugins: {
-        'd3-bars': {}
+        'vis-d3-bars': {}
     },
     orm: {
         db: {
