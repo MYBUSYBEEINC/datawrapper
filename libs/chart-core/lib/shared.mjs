@@ -157,7 +157,8 @@ export function getThemeStyleHelpers(emotion, themeData) {
         getObjProp,
         typography,
         css: (...args) => emotion.css(cssTemplate(...args)),
-        cssTemplate
+        cssTemplate,
+        UNDEFINED_STYLE
     };
 }
 
