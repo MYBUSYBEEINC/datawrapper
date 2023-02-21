@@ -25,6 +25,7 @@ module.exports = {
         const config = server.methods.config();
         const defaultTheme = get(config, 'general.defaults.theme', 'default');
         const { styleCache, themeCache } = getCaches(server);
+        const { events, event } = server.app;
 
         // GET /v3/themes/{id}
         server.route({
@@ -69,14 +70,15 @@ module.exports = {
             },
             async handler(request) {
                 const { params, payload } = request;
-                const { events, event } = request.server.app;
                 const theme = await Theme.findByPk(params.id);
                 if (!theme) return Boom.notFound();
+
+                const UPDATE_KEYS = ['title', 'extend', 'data', 'assets', 'less'];
 
                 const data = {};
 
                 // copy white-listed attributes from payload
-                ['title', 'extend', 'data', 'assets', 'less'].forEach(key => {
+                UPDATE_KEYS.forEach(key => {
                     if (payload[key] !== undefined) data[key] = payload[key];
                 });
 
@@ -102,9 +104,10 @@ module.exports = {
                     styleCache,
                     visualizations: server.app.visualizations
                 });
-                events.emit(event.THEME_SAVE, {
+
+                await events.emit(event.THEME_SAVE, {
                     theme,
-                    updated: { less: !!data.less, data: !!data.data }
+                    updated: Object.fromEntries(UPDATE_KEYS.map(key => [key, key in data]))
                 });
 
                 return theme.toJSON();
@@ -127,6 +130,7 @@ module.exports = {
                 }
             },
             async handler(request, h) {
+                const { events, event } = request.server.app;
                 const { params, query } = request;
                 const theme = await Theme.findByPk(params.id, {
                     include: [User, Team]
@@ -171,6 +175,9 @@ module.exports = {
                     styleCache,
                     visualizations: server.app.visualizations
                 });
+
+                await events.emit(event.THEME_DELETED, { id: params.id });
+
                 return h
                     .response({
                         removedForTeams: removedForTeams[0] || 0,

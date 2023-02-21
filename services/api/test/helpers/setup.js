@@ -64,7 +64,7 @@ async function setup(options) {
     await server.initialize();
 
     // Register fake d3-bars type.
-    server.methods.registerVisualization('d3-bars', [
+    server.methods.registerVisualization('vis-d3-bars', [
         {
             id: 'd3-bars',
             dependencies: {},
