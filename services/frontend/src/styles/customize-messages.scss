@@ -1,0 +1,57 @@
+.message {
+    .message-body {
+        border-width: 1px 1px 1px 4px;
+    }
+    .message-header + .message-body {
+        border-width: 0px 1px 1px 1px;
+    }
+    &.is-deletable {
+        .message-body {
+            position: relative;
+            padding-right: 2.5em;
+            & > .delete {
+                position: absolute;
+                right: 0.5rem;
+                top: 0.5rem;
+            }
+        }
+        .message-header + .message-body {
+            padding: $message-body-padding;
+        }
+    }
+  @each $name, $components in $message-colors {
+    $color: nth($components, 1);
+    $color-invert: nth($components, 2);
+    $color-light: null;
+    $color-dark: null;
+
+    @if length($components) >= 3 {
+      $color-light: nth($components, 3);
+      @if length($components) >= 4 {
+        $color-dark: nth($components, 4);
+      }
+      @else {
+        $color-luminance: colorLuminance($color);
+        $darken-percentage: $color-luminance * 70%;
+        $desaturate-percentage: $color-luminance * 30%;
+        $color-dark: desaturate(darken($color, $darken-percentage), $desaturate-percentage);
+      }
+    }
+    @else {
+      $color-lightning: max((100% - lightness($color)) - 2%, 0%);
+      $color-light: lighten($color, $color-lightning);
+    }
+
+    &.is-#{$name} {
+        $subtle-border-color: rgba(0, 0, 0, .05);
+
+      .message-body {
+        border-color: $subtle-border-color $subtle-border-color $subtle-border-color $color;
+      }
+      .message-header + .message-body {
+          border-color: $subtle-border-color;
+          border-width: 0px 1px 1px 1px;
+      }
+    }
+  }
+}

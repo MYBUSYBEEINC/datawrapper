@@ -17,24 +17,6 @@
 }
 
 // COMPONENTS
-// Message
-.message {
-    &.is-deletable {
-        .message-body {
-            position: relative;
-            padding-right: 2.5em;
-            & > .delete {
-                position: absolute;
-                right: 0.5rem;
-                top: 0.5rem;
-            }
-        }
-        .message-header + .message-body {
-            padding: $message-body-padding;
-        }
-    }
-    box-shadow: $shadow-border;
-}
 
 .modal {
     position: fixed;
