@@ -577,14 +577,17 @@ Please make sure you called __(key) with a key of type "string".
 
         dwChart.emotion = emotion;
 
+        // if we're in the preview (i.e. iframe in the editor or exporter),
+        // we want to access external data via our server so that we don't run into
+        // CORS issues in case app.datawrapper.de has not been allowed as origin.
+        const externalData = !isPreview && chart.externalData;
+
         // register chart assets
         const assetPromises = [];
-
         for (const [name, { url, value, load = true }] of Object.entries(assets)) {
             const isDataset = name === datasetName;
-            const useLiveData = chart.externalData;
 
-            if (!isDataset || !useLiveData) {
+            if (!isDataset || !externalData) {
                 if (url) {
                     if (load) {
                         const assetName = name;
@@ -614,7 +617,7 @@ Please make sure you called __(key) with a key of type "string".
         vis.textDirection = textDirection;
 
         // load chart data and assets
-        await dwChart.load(dwChart.asset(datasetName) || '', chart.externalData);
+        await dwChart.load(dwChart.asset(datasetName) || '', externalData);
         dwChart.locales = locales;
         dwChart.vis(vis);
 
