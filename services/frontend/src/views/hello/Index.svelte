@@ -95,6 +95,13 @@
                     view: sections.ChartPreviewIframeSection,
                     components: ['_partials/displays/ChartPreviewIframeDisplay.svelte'],
                     props: { chart: chartStore, theme, __ }
+                },
+                {
+                    url: '#toggable-group',
+                    title: 'ToggableGroup',
+                    view: sections.ToggableGroupSection,
+                    components: ['_partials/displays/ToggableGroup.svelte'],
+                    props: { __ }
                 }
             ]
         },

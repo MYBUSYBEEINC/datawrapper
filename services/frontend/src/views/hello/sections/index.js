@@ -31,5 +31,6 @@ export { default as MessageSection } from './displays/MessageSection.svelte';
 export { default as ModalSection } from './displays/ModalSection.svelte';
 export { default as SaveButtonSection } from './displays/SaveButtonSection.svelte';
 export { default as LinkSection } from './displays/LinkSection.svelte';
+export { default as ToggableGroupSection } from './displays/ToggableGroupSection.svelte';
 // editor
 export { default as ToolbarSection } from './editor/ToolbarSection.svelte';
