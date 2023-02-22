@@ -10727,10 +10727,12 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
 }
 
 .message .message-body {
+  border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #e5e5e5;
   border-width: 1px 1px 1px 4px;
 }
 .message .message-header + .message-body {
   border-width: 0px 1px 1px 1px;
+  border-color: rgba(0, 0, 0, 0.05);
 }
 .message.is-deletable .message-body {
   position: relative;
@@ -10749,70 +10751,60 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
 }
 .message.is-white .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-black .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #111111;
 }
 .message.is-black .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-light .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #f0f0f0;
 }
 .message.is-light .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-dark .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #858585;
 }
 .message.is-dark .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-primary .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #1d81a2;
 }
 .message.is-primary .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-link .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #1d81a2;
 }
 .message.is-link .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-info .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #4688d7;
 }
 .message.is-info .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-success .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #3ed081;
 }
 .message.is-success .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-warning .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #ffcf27;
 }
 .message.is-warning .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 .message.is-danger .message-body {
   border-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05) #cf4870;
 }
 .message.is-danger .message-header + .message-body {
   border-color: rgba(0, 0, 0, 0.05);
-  border-width: 0px 1px 1px 1px;
 }
 
 .tag:not(body) {
