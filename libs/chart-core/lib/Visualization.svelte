@@ -657,11 +657,11 @@ Please make sure you called __(key) with a key of type "string".
         }
 
         // render chart
-        if (window.parent === window) {
+        if (window.parent === window && isPreview) {
             console.time('Chart rendered in'); // eslint-disable-line no-console
         }
         const rendered = dwChart.render(outerContainer);
-        if (window.parent === window) {
+        if (window.parent === window && isPreview) {
             rendered
                 .then(() => {
                     console.timeEnd('Chart rendered in'); // eslint-disable-line no-console
