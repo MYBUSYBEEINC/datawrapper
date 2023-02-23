@@ -1,6 +1,6 @@
 import test from 'ava';
 import { before, beforeEach, after, afterEach, renderDummy } from '../helpers/utils.mjs';
-import { getElementStyle } from '../helpers/setup.mjs';
+import { getElementStyle, getElementInnerText } from '../helpers/setup.mjs';
 
 test.before(before);
 test.beforeEach(beforeEach);
@@ -250,4 +250,56 @@ test('below footer typography', async t => {
     t.is(await getElementStyle(page, '.dw-below-footer', 'text-decoration-line'), 'underline');
     t.is(await getElementStyle(page, '.dw-below-footer', 'text-transform'), 'uppercase');
     t.is(await getElementStyle(page, '.dw-below-footer', 'color'), 'rgb(153, 153, 153)');
+});
+
+test('plain footer does not show in normal mode', async t => {
+    const { page } = t.context;
+    await renderDummy(t, {
+        chart: {
+            metadata: {
+                annotate: {
+                    notes: 'I am a note'
+                }
+            }
+        },
+        themeData: { options: { blocks: { notes: { region: 'plainFooter' } } } },
+        flags: { plain: false }
+    });
+    t.is(await page.$('.footer-block.notes-block'), null);
+});
+
+test('plain footer does shows up in plain mode', async t => {
+    const { page } = t.context;
+    await renderDummy(t, {
+        chart: {
+            metadata: {
+                annotate: {
+                    notes: 'I am a note'
+                }
+            }
+        },
+        themeData: { options: { blocks: { notes: { region: 'plainFooter' } } } },
+        flags: { plain: true }
+    });
+    t.is(await getElementInnerText(page, '.footer-block.notes-block'), 'I am a note');
+});
+
+test('footer styles apply to plain footer, too', async t => {
+    const { page } = t.context;
+    await renderDummy(t, {
+        chart: {
+            metadata: {
+                annotate: {
+                    notes: 'I am a note'
+                }
+            }
+        },
+        themeData: {
+            typography: { footer: { typeface: 'Arial' } },
+            options: { blocks: { notes: { region: 'plainFooter' } } }
+        },
+        flags: { plain: true }
+    });
+    t.is(await getElementInnerText(page, '.footer-block.notes-block'), 'I am a note');
+    t.is(await getElementStyle(page, '.footer-block.notes-block', 'fontFamily'), 'Arial');
 });

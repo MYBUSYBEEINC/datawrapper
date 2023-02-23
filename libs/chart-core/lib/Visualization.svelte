@@ -3,6 +3,7 @@
     import { onMount, tick, afterUpdate, setContext, createEventDispatcher } from 'svelte';
     import { writable } from 'svelte/store';
     import BlocksRegion from './BlocksRegion.svelte';
+    import FooterInlineBlocksRegion from './FooterInlineBlocksRegion.svelte';
     import Menu from './Menu.svelte';
     import Headline from './blocks/Headline.svelte';
     import HeadlineStyles from './blocks/Headline.styles.js';
@@ -456,6 +457,11 @@
             chart,
             themeData: $themeData,
             isStyleStatic
+        }),
+        plainFooter: getBlocks(allBlocks, 'plainFooter', {
+            chart,
+            themeData: $themeData,
+            flags: renderFlags
         }),
         footerLeft: getBlocks(allBlocks, 'footerLeft', {
             chart,
@@ -919,14 +925,14 @@ Please make sure you called __(key) with a key of type "string".
         };
     }
 
-    $: contentBelowChart =
-        !isStylePlain &&
-        (regions.aboveFooter.length ||
-            regions.footerLeft.length ||
-            regions.footerCenter.length ||
-            regions.footerRight.length ||
-            regions.belowFooter.length ||
-            regions.afterBody.length);
+    $: contentBelowChart = isStylePlain
+        ? regions.plainFooter.length
+        : regions.aboveFooter.length ||
+          regions.footerLeft.length ||
+          regions.footerCenter.length ||
+          regions.footerRight.length ||
+          regions.belowFooter.length ||
+          regions.afterBody.length;
 
     $: footerRegionLayout = {
         Left: get($themeData, 'options.footer.left.layout', 'inline'),
@@ -1082,63 +1088,6 @@ Please make sure you called __(key) with a key of type "string".
     .dw-chart-footer {
         display: flex;
         justify-content: space-between;
-
-        .footer-block {
-            display: inline;
-
-            &.hidden {
-                display: none;
-            }
-
-            a[href=''] {
-                pointer-events: none;
-                text-decoration: none;
-                padding: 0;
-                border-bottom: 0;
-            }
-        }
-
-        .layout-inline > .footer-block {
-            display: inline;
-        }
-        .layout-flex-row,
-        .layout-flex-column {
-            display: flex;
-        }
-        .layout-flex-row {
-            flex-direction: row;
-        }
-        .layout-flex-column {
-            flex-direction: column;
-        }
-
-        /** flex-column alignments **/
-        .footer-center.layout-flex-column {
-            align-items: center;
-        }
-        .footer-right.layout-flex-column {
-            align-items: flex-end;
-        }
-        /**  block alignments **/
-        .footer-center.layout-inline {
-            text-align: center;
-        }
-        .footer-right.layout-inline {
-            text-align: right;
-        }
-
-        .separator {
-            display: inline-block;
-            font-style: initial;
-
-            &:before {
-                display: inline-block;
-            }
-        }
-
-        .footer-right {
-            text-align: right;
-        }
     }
 
     :global(.dw-above-footer),
@@ -1286,36 +1235,11 @@ Please make sure you called __(key) with a key of type "string".
                 : ''}"
         >
             {#each ['Left', 'Center', 'Right'] as orientation}
-                <div
-                    class="footer-{orientation.toLowerCase()}  layout-{footerRegionLayout[
-                        orientation
-                    ]}"
-                >
-                    {#each regions['footer' + orientation] as block, i}
-                        {#if i && footerRegionLayout[orientation] === 'inline'}
-                            <span class="separator separator-before-{block.id}" />
-                        {/if}
-                        <span
-                            class="footer-block {block.id}-block {emotion && block.styles
-                                ? block.styles(emotion, $themeData)
-                                : ''}"
-                        >
-                            {#if block.prepend}
-                                <span class="prepend">
-                                    {@html clean(block.prepend)}
-                                </span>
-                            {/if}
-                            <span class="block-inner">
-                                <svelte:component this={block.component} props={block.props} />
-                            </span>
-                            {#if block.append}
-                                <span class="append">
-                                    {@html clean(block.append)}
-                                </span>
-                            {/if}
-                        </span>
-                    {/each}
-                </div>
+                <FooterInlineBlocksRegion
+                    alignment={orientation.toLowerCase()}
+                    blocks={regions['footer' + orientation]}
+                    layout={footerRegionLayout[orientation]}
+                />
             {/each}
         </div>
 
@@ -1325,6 +1249,19 @@ Please make sure you called __(key) with a key of type "string".
             {emotion}
             styles={belowFooterStyles}
         />
+    {:else if regions.plainFooter.length}
+        <div
+            id="footer"
+            class="dw-chart-footer {emotion
+                ? chartFooterStyles(emotion, $themeData, isStyleStatic)
+                : ''}"
+        >
+            <FooterInlineBlocksRegion
+                alignment="left"
+                blocks={regions.plainFooter}
+                layout={footerRegionLayout.Left}
+            />
+        </div>
     {/if}
 
     <div class="dw-after-body" style="position:absolute; height:0">

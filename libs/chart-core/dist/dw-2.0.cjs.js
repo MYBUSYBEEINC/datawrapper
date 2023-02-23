@@ -86,7 +86,7 @@ var delimited$1 = {
 };
 
 // Current version.
-var VERSION = '1.13.4';
+var VERSION = '1.13.6';
 
 // Establish the root object, `window` (`self`) in the browser, `global`
 // on the server, or `this` in some virtual machines. We use `self`
