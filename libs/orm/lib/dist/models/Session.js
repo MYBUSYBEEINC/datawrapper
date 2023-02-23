@@ -22,12 +22,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const wrap_1 = require("../utils/wrap");
 const exported = (0, wrap_1.createExports)('session')();
 exports.default = exported;
 const sequelize_1 = __importStar(require("sequelize"));
-const phpSerialize_1 = require("../utils/phpSerialize");
+const unserializeSession_1 = __importDefault(require("../utils/unserializeSession"));
 class Session extends sequelize_1.Model {
 }
 (0, wrap_1.setInitializer)(exported, ({ initOptions }) => {
@@ -50,10 +53,13 @@ class Session extends sequelize_1.Model {
             get() {
                 const d = this.getDataValue('data');
                 if (d) {
+                    // TODO: for now we still want to take session data that was serialized
+                    //  using PHP into account. As soon as no more PHP-serialized session data
+                    //  exists, we can replace this call with `JSON.parse(d as any)` and delete
+                    //  the function `unserializeSession`.
                     // Sequelize v6 types do not support model field and DB field having different types https://github.com/sequelize/sequelize/issues/13522
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const data = (0, phpSerialize_1.unserializeSession)(d);
-                    return data;
+                    return (0, unserializeSession_1.default)(d);
                 }
                 return {};
             },
@@ -61,7 +67,7 @@ class Session extends sequelize_1.Model {
                 // WARNING, this will destroy parts of our sessions
                 // Sequelize v6 types do not support model field and DB field having different types https://github.com/sequelize/sequelize/issues/13522
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.setDataValue('data', (0, phpSerialize_1.serializeSession)(data));
+                this.setDataValue('data', JSON.stringify(data));
             }
         }
     }, {

@@ -1,1 +1,1 @@
-This folder contains a copy of some apps from `services/php/src` which we needed to adopt for use in the new frontend.
+This folder contains apps written in Svelte 2 which we embed in the new frontend using the [`Svelte2Wrapper`](../views/_partials/svelte2/Svelte2Wrapper.svelte) component.

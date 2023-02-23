@@ -10,7 +10,6 @@
 
 <script>
     import clone from '@datawrapper/shared/clone.js';
-    import arrayToObject from '@datawrapper/shared/arrayToObject.js';
     import get from '@datawrapper/shared/get.js';
 
     import ControlGroup from './ControlGroup.html';
@@ -84,9 +83,7 @@
             if (previous && changed.selected && current.selected && current.isInitialized) {
                 const { axis, selected } = this.get();
                 const { metadata } = this.store.get();
-                // arrayToObject is a workaround for a quirk in the PHP app that causes empty objects
-                // to be returned as arrays. TODO: Delete this once we've fixed the issue
-                const axes = arrayToObject(clone(metadata.axes)) || {};
+                const axes = clone(metadata.axes) || {};
                 if (selected === '-') delete axes[axis];
                 else axes[axis] = selected;
                 this.store.setMetadata('axes', axes);

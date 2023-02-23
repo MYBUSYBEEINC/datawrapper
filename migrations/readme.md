@@ -23,7 +23,6 @@ We're storing the current version per scope in the `schema` relation. After a mi
 
 ### How and when are these migrations run?
 
-There are two places in our codebase where these migrations are run:
+The script [`scripts/sync-db.js`](../scripts/sync-db.js) can be used to run database migrations (e.g. in CI).
 
-1. The legacy way of running migrations is [`services/php/scripts/sync-db.php`](https://github.com/datawrapper/code/blob/main/services/php/scripts/sync-db.php). This script is run every time the `php` Docker container starts (see [entrypoint](https://github.com/datawrapper/code/blob/01b8551a4508841c4e14a74277f994b93b5769fc/services/php/docker/entrypoint.sh#L27-L28))
-2. For situations where we need to sync a DB without using PHP (e.g. in CI workflows) we have ported the above script to Node under [`scripts/sync-db.js`](https://github.com/datawrapper/code/blob/main/scripts/sync-db.js)
+When starting the local Docker setup using `make dev`, a Docker container `mysql-sync` is started which runs the migration script automatically.

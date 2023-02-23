@@ -33,7 +33,6 @@ const number = <number>0;
 const string = <string>'';
 const boolean = <boolean>false;
 
-/* make sure to keep in sync with services/php/lib/core/build/classes/datawrapper/Organization.php */
 const defaultSettings = {
     folders: optional('expanded', 'collapsed' as const, null),
     default: optional({

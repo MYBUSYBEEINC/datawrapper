@@ -4,8 +4,6 @@ AlertDisplay is useful for showing messages to users. There are currently 4 type
 
 Per default AlertDisplay is not visible, has a close button and has no margin (exept `margin-bottom:20px` from Bootstrap CSS).
 
-For **class** use the classes from the [spacing-helper documentation](https://github.com/datawrapper/code/blob/main/services/php/assets/styles/datawrapper/common/spacing-helper.less).
-
 ```html
 <AlertDisplay
     type="{info|success|warning|error}"

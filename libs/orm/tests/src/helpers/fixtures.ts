@@ -6,16 +6,19 @@ import type {
     ExportJobModel,
     PluginModel,
     ProductModel,
+    SessionModel,
     SQ,
     TeamModel,
     ThemeModel,
-    UserModel
+    UserModel,
+    SessionData
 } from '@datawrapper/orm-lib';
 import {
     Chart,
     ExportJob,
     Plugin,
     Product,
+    Session,
     Team,
     TeamProduct,
     Theme,
@@ -125,6 +128,21 @@ export function createJob({
         status: 'queued',
         priority: 0,
         tasks: [{ action: 'sleep', params: { delay: 500 } }]
+    });
+}
+
+export function createSession({
+    data,
+    user_id
+}: {
+    data: SessionData;
+    user_id: number | null;
+}): Promise<SessionModel> {
+    return Session.create({
+        id: `${randomInt(2 ** 16)}`,
+        persistent: true,
+        user_id,
+        data
     });
 }
 

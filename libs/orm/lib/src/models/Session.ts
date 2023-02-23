@@ -4,20 +4,22 @@ export default exported;
 export type SessionModel = InstanceType<typeof Session>;
 
 import SQ, { InferAttributes, InferCreationAttributes, Model } from 'sequelize';
-import { serializeSession, unserializeSession } from '../utils/phpSerialize';
+import unserializeSession from '../utils/unserializeSession';
+
+export type SessionData = {
+    'dw-lang'?: string | null;
+    'dw-user-id': number | null;
+    'dw-user-organization'?: string | null;
+    persistent: boolean;
+    last_action_time: number;
+    type?: string;
+};
 
 class Session extends Model<InferAttributes<Session>, InferCreationAttributes<Session>> {
     declare id: string;
     declare user_id: number | null;
     declare persistent: boolean;
-    declare data: {
-        'dw-lang'?: string | null;
-        'dw-user-id': number | null;
-        'dw-user-organization'?: string | null;
-        persistent: boolean;
-        last_action_time: number;
-        type?: string;
-    };
+    declare data: SessionData;
 }
 
 setInitializer(exported, ({ initOptions }) => {
@@ -44,10 +46,13 @@ setInitializer(exported, ({ initOptions }) => {
                 get() {
                     const d = this.getDataValue('data');
                     if (d) {
+                        // TODO: for now we still want to take session data that was serialized
+                        //  using PHP into account. As soon as no more PHP-serialized session data
+                        //  exists, we can replace this call with `JSON.parse(d as any)` and delete
+                        //  the function `unserializeSession`.
                         // Sequelize v6 types do not support model field and DB field having different types https://github.com/sequelize/sequelize/issues/13522
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const data = unserializeSession(d as any);
-                        return data;
+                        return unserializeSession(d as any);
                     }
                     return {};
                 },
@@ -55,7 +60,7 @@ setInitializer(exported, ({ initOptions }) => {
                     // WARNING, this will destroy parts of our sessions
                     // Sequelize v6 types do not support model field and DB field having different types https://github.com/sequelize/sequelize/issues/13522
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    this.setDataValue('data', serializeSession(data) as any);
+                    this.setDataValue('data', JSON.stringify(data) as any);
                 }
             }
         },

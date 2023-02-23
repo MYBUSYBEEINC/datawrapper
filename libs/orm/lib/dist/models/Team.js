@@ -43,7 +43,6 @@ const optional = (defaultValue, ..._rest) => defaultValue;
 const number = 0;
 const string = '';
 const boolean = false;
-/* make sure to keep in sync with services/php/lib/core/build/classes/datawrapper/Organization.php */
 const defaultSettings = {
     folders: optional('expanded', 'collapsed', null),
     default: optional({
