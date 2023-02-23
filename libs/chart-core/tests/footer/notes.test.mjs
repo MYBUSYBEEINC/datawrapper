@@ -113,3 +113,66 @@ test('notes prepend', async t => {
     });
     t.is(await getElementInnerText(page, '.notes-block'), 'Notes: Here are some notes');
 });
+
+test('notes styles when in region footerLeft', async t => {
+    const { page } = t.context;
+
+    await renderDummy(t, {
+        chart: {
+            metadata: {
+                annotate: {
+                    notes: 'Here are <u>some</u> notes'
+                }
+            }
+        },
+        themeData: {
+            options: {
+                blocks: {
+                    notes: {
+                        region: 'footerLeft'
+                    }
+                }
+            },
+            typography: {
+                notes: {
+                    color: '#ff0000',
+                    typeface: 'Arial',
+                    fontSize: 13,
+                    cursive: 1,
+                    lineHeight: 20,
+                    fontWeight: 300,
+                    fontStretch: 'condensed',
+                    letterSpacing: 1,
+                    underlined: true,
+                    textTransform: 'uppercase'
+                }
+            },
+            style: {
+                notes: {
+                    padding: '10px',
+                    margin: '5px 0 10px',
+                    textAlign: 'center'
+                }
+            }
+        }
+    });
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'padding'), '10px');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'margin'), '5px 0px 10px');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'text-align'), 'center');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'color'), 'rgb(255, 0, 0)');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'font-family'), 'Arial');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'font-size'), '13px');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'font-style'), 'italic');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'line-height'), '20px');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'font-weight'), '300');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'font-stretch'), '75%');
+    t.is(await getElementStyle(page, '.dw-chart-footer .notes-block', 'letter-spacing'), '1px');
+    t.is(
+        await getElementStyle(page, '.dw-chart-footer .notes-block', 'text-decoration-line'),
+        'underline'
+    );
+    t.is(
+        await getElementStyle(page, '.dw-chart-footer .notes-block', 'text-transform'),
+        'uppercase'
+    );
+});

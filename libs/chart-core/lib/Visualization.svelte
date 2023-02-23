@@ -1239,6 +1239,7 @@ Please make sure you called __(key) with a key of type "string".
                     alignment={orientation.toLowerCase()}
                     blocks={regions['footer' + orientation]}
                     layout={footerRegionLayout[orientation]}
+                    {emotion}
                 />
             {/each}
         </div>
@@ -1260,6 +1261,7 @@ Please make sure you called __(key) with a key of type "string".
                 alignment="left"
                 blocks={regions.plainFooter}
                 layout={footerRegionLayout.Left}
+                {emotion}
             />
         </div>
     {/if}

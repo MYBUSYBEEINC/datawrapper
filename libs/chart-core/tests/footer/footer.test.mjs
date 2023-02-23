@@ -289,17 +289,39 @@ test('footer styles apply to plain footer, too', async t => {
     await renderDummy(t, {
         chart: {
             metadata: {
+                describe: {
+                    byline: 'A journalist'
+                },
                 annotate: {
                     notes: 'I am a note'
                 }
             }
         },
         themeData: {
-            typography: { footer: { typeface: 'Arial' } },
-            options: { blocks: { notes: { region: 'plainFooter' } } }
+            typography: {
+                footer: { typeface: 'Arial', color: '#ff0000' },
+                notes: { typeface: "'Roboto Condensed'", color: '#00ff00' }
+            },
+            options: {
+                blocks: {
+                    notes: { region: 'plainFooter' },
+                    byline: { region: 'plainFooter' }
+                }
+            }
         },
         flags: { plain: true }
     });
-    t.is(await getElementInnerText(page, '.footer-block.notes-block'), 'I am a note');
-    t.is(await getElementStyle(page, '.footer-block.notes-block', 'fontFamily'), 'Arial');
+    t.is(await getElementStyle(page, '.footer-block.byline-block', 'fontFamily'), 'Arial');
+    t.is(await getElementStyle(page, '.footer-block.byline-block', 'color'), 'rgb(255, 0, 0)');
+    t.is(
+        await getElementInnerText(page, '.footer-block.byline-block .byline-content'),
+        'A journalist'
+    );
+
+    t.is(await getElementInnerText(page, '.footer-block.notes-block .block-inner'), 'I am a note');
+    t.is(
+        await getElementStyle(page, '.footer-block.notes-block', 'fontFamily'),
+        '"Roboto Condensed"'
+    );
+    t.is(await getElementStyle(page, '.footer-block.notes-block', 'color'), 'rgb(0, 255, 0)');
 });
