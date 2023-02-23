@@ -33,10 +33,12 @@
 </script>
 
 <style>
+    .watermark-container {
+        pointer-events: none;
+    }
     .watermark {
         opacity: 0.182;
         font-weight: 700;
-        pointer-events: none;
         text-anchor: middle;
         fill: currentColor;
         transform-box: fill-box;
@@ -45,7 +47,7 @@
 </style>
 
 {#if height}
-    <svg {width} {height}>
+    <svg {width} {height} class="watermark-container">
         <text
             class="watermark"
             dominant-baseline="central"
