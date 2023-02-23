@@ -64,19 +64,19 @@ describe('GET /edit/{chartId}/markers', function () {
                 {
                     id: 'step1',
                     view: 'edit/chart/upload',
-                    title: ['steps - markers', 'locator-maps'],
+                    title: ['steps - markers', 'vis-locator-maps'],
                     forceReload: true
                 },
                 {
                     id: 'step2',
                     view: 'edit/chart/upload',
-                    title: ['steps - design', 'locator-maps'],
+                    title: ['steps - design', 'vis-locator-maps'],
                     forceReload: true
                 },
                 {
                     id: 'step3',
                     view: 'edit/chart/upload',
-                    title: ['steps - annotate', 'locator-maps'],
+                    title: ['steps - annotate', 'vis-locator-maps'],
                     forceReload: true
                 }
             ]
