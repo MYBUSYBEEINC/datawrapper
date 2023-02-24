@@ -1,6 +1,6 @@
 (function() {
     // numeral.js locale configuration
-    // locale : norwegian (bokmål)
+    // locale : norwegian (nynorsk)
 
     return {
         delimiters: {
@@ -9,9 +9,9 @@
         },
         abbreviations: {
             thousand: 'k',
-            million: 'mill',
-            billion: 'mrd',
-            trillion: 'bill'
+            million: 'm',
+            billion: 'b',
+            trillion: 't'
         },
         ordinal: function() {
             return '.';
