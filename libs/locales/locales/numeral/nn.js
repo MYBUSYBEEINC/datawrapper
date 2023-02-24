@@ -9,11 +9,11 @@
         },
         abbreviations: {
             thousand: 'k',
-            million: 'm',
-            billion: 'b',
-            trillion: 't'
+            million: 'mill',
+            billion: 'mrd',
+            trillion: 'bill'
         },
-        ordinal: function(number) {
+        ordinal: function() {
             return '.';
         },
         currency: {
