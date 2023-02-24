@@ -17,9 +17,12 @@
         "lodash": "^4.17.20"
     },
     "devDependencies": {
+        "@datawrapper/orm": "file:../../libs/orm",
         "ava": "^4.0.0",
         "node-fetch": "^2.6.6",
-        "nyc": "^15.1.0"
+        "nyc": "^15.1.0",
+        "stream-to-promise": "^3.0.0",
+        "tmp": "^0.2.1"
     },
     "ava": {
         "files": [

@@ -355,6 +355,10 @@ function getChart(id) {
     return Chart.findByPk(id);
 }
 
+function getFolder(id) {
+    return Folder.findByPk(id);
+}
+
 function getTheme(id) {
     return Theme.findByPk(id);
 }
@@ -531,6 +535,7 @@ module.exports = {
     genRandomFolderId,
     getChart,
     getCredentials,
+    getFolder,
     getProduct,
     getProductPlugin,
     getPublicChart,

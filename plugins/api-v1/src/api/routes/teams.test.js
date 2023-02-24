@@ -1,7 +1,6 @@
 const test = require('ava');
 
 const {
-    BASE_URL,
     V1_BASE_URL,
     createTeamWithUser,
     createUser,
@@ -12,8 +11,6 @@ const {
     addUserToTeam
 } = require('../../../../../services/api/test/helpers/setup.js');
 
-const fetch = require('node-fetch');
-
 test.before(async t => {
     t.context.server = await setup();
     t.context.headers = {
@@ -23,7 +20,7 @@ test.before(async t => {
     };
 });
 
-async function testV1GetTeamCharts(t, teamsPath = 'teams') {
+test('V1 GET /teams/{id}/charts returns charts of a team', async t => {
     let teamObj = {};
     let otherTeam;
     let charts = [];
@@ -48,16 +45,15 @@ async function testV1GetTeamCharts(t, teamsPath = 'teams') {
                 organization_id: otherTeam.id
             }
         ]);
-        const res = await t.context.server.inject({
+        const { statusCode, result: json } = await t.context.server.inject({
             method: 'GET',
-            url: `${V1_BASE_URL}/${teamsPath}/${teamObj.team.id}/charts`,
+            url: `${V1_BASE_URL}/teams/${teamObj.team.id}/charts`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${teamObj.token}`
             }
         });
-        t.is(res.statusCode, 200);
-        const json = await res.result;
+        t.is(statusCode, 200);
         t.is(json.status, 'ok');
         t.is(json.data.total, 1);
         t.is(json.data.charts.length, 1);
@@ -67,17 +63,9 @@ async function testV1GetTeamCharts(t, teamsPath = 'teams') {
     } finally {
         await destroy(charts, otherTeam, Object.values(teamObj));
     }
-}
+});
 
-test('V1 GET /teams/{id}/charts returns charts of a team', testV1GetTeamCharts, 'teams');
-
-test.skip(
-    'V1 GET /organizations/{id}/charts returns charts of a team',
-    testV1GetTeamCharts,
-    'organizations'
-); // skipped because /organizations route is defined by nginx and not by the api-v1 plugin
-
-async function testV1GetTeamChartsMinLastEditStep(t, teamsPath = 'teams') {
+test('V1 GET /teams/{id}/charts returns only charts with data', async t => {
     let teamObj = {};
     let otherTeam;
     let charts = [];
@@ -102,14 +90,15 @@ async function testV1GetTeamChartsMinLastEditStep(t, teamsPath = 'teams') {
                 organization_id: teamObj.team.id
             }
         ]);
-        const res = await fetch(`${BASE_URL}/${teamsPath}/${teamObj.team.id}/charts`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/${teamObj.team.id}/charts`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${teamObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'ok');
         t.is(json.data.total, 1);
         t.is(json.data.charts.length, 1);
@@ -119,21 +108,9 @@ async function testV1GetTeamChartsMinLastEditStep(t, teamsPath = 'teams') {
     } finally {
         await destroy(charts, otherTeam, Object.values(teamObj));
     }
-}
+});
 
-test(
-    'PHP GET /teams/{id}/charts returns only charts with data',
-    testV1GetTeamChartsMinLastEditStep,
-    'teams'
-);
-
-test(
-    'PHP GET /organizations/{id}/charts returns only charts with data',
-    testV1GetTeamChartsMinLastEditStep,
-    'organizations'
-);
-
-async function testV1GetTeamChartsAsAdmin(t, teamsPath) {
+test('V1 GET /teams/{id}/charts returns charts of a team for admin users', async t => {
     let team;
     let otherTeam;
     let charts = [];
@@ -160,14 +137,15 @@ async function testV1GetTeamChartsAsAdmin(t, teamsPath) {
                 organization_id: otherTeam.id
             }
         ]);
-        const res = await fetch(`${BASE_URL}/${teamsPath}/${team.id}/charts`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/${team.id}/charts`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${adminObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'ok');
         t.is(json.data.total, 1);
         t.is(json.data.charts.length, 1);
@@ -177,35 +155,24 @@ async function testV1GetTeamChartsAsAdmin(t, teamsPath) {
     } finally {
         await destroy(charts, otherTeam, team, Object.values(adminObj));
     }
-}
+});
 
-test(
-    'PHP GET /teams/{id}/charts returns charts of a team for admin users',
-    testV1GetTeamChartsAsAdmin,
-    'teams'
-);
-
-test(
-    'PHP GET /organizations/{id}/charts returns charts of a team for admin users',
-    testV1GetTeamChartsAsAdmin,
-    'organizations'
-);
-
-async function testV1GetTeamChartsWithInsufficientScope(t, teamsPath, scopes) {
+async function testV1GetTeamChartsWithInsufficientScope(t, scopes) {
     let userObj = {};
     let team;
     try {
         team = await createTeam();
         userObj = await createUser(t.context.server, { scopes });
         await addUserToTeam(userObj.user, team);
-        const res = await fetch(`${BASE_URL}/${teamsPath}/${team.id}/charts`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/${team.id}/charts`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${userObj.token}`
             }
         });
-        t.is(res.status, 403);
-        const json = await res.json();
+        t.is(statusCode, 403);
         t.is(json.status, 'error');
         t.is(json.code, 'access-denied');
         t.is(json.message, 'Insufficient scope');
@@ -215,98 +182,60 @@ async function testV1GetTeamChartsWithInsufficientScope(t, teamsPath, scopes) {
 }
 
 test(
-    'PHP GET /teams/{id}/charts returns error if user does not have scope team:read',
+    'V1 GET /teams/{id}/charts returns error if user does not have scope team:read',
     testV1GetTeamChartsWithInsufficientScope,
-    'teams',
     ['chart:read']
 );
 
 test(
-    'PHP GET /teams/{id}/charts returns error if user does not have scope chart:read',
+    'V1 GET /teams/{id}/charts returns error if user does not have scope chart:read',
     testV1GetTeamChartsWithInsufficientScope,
-    'teams',
     ['team:read']
 );
 
-test(
-    'PHP GET /organizations/{id}/charts returns error if user does not have scope team:read',
-    testV1GetTeamChartsWithInsufficientScope,
-    'organizations',
-    ['chart:read']
-);
-
-test(
-    'PHP GET /organizations/{id}/charts returns error if user does not have scope chart:read',
-    testV1GetTeamChartsWithInsufficientScope,
-    'organizations',
-    ['team:read']
-);
-
-async function testV1GetTeamChartsAsNonTeamMember(t, teamsPath = 'teams') {
+test('V1 GET /teams/{id}/charts returns error if non-admin user is not part of the team', async t => {
     let userObj = {};
     let team;
     try {
         team = await createTeam();
         userObj = await createUser(t.context.server, { scopes: ['chart:read', 'team:read'] });
-        const res = await fetch(`${BASE_URL}/${teamsPath}/${team.id}/charts`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/${team.id}/charts`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${userObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'error');
         t.is(json.code, 'access-denied');
     } finally {
         await destroy(team, Object.values(userObj));
     }
-}
+});
 
-test(
-    'PHP GET /teams/{id}/charts returns error if non-admin user is not part of the team',
-    testV1GetTeamChartsAsNonTeamMember,
-    'teams'
-);
-
-test(
-    'PHP GET /organizations/{id}/charts returns error if non-admin user is not part of the team',
-    testV1GetTeamChartsAsNonTeamMember,
-    'organizations'
-);
-
-async function testV1GetTeamChartsOfNonExistentTeam(t, teamsPath) {
+test('V1 GET /teams/{id}/charts returns error if the team does not exist', async t => {
     let userObj = {};
     try {
         userObj = await createUser(t.context.server, { scopes: ['chart:read', 'team:read'] });
-        const res = await fetch(`${BASE_URL}/${teamsPath}/spam/charts`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/spam/charts`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${userObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'error');
-        t.is(json.code, 'access-denied'); // PHP returned 'unknown-organization'
+        t.is(json.code, 'access-denied');
     } finally {
         await destroy(Object.values(userObj));
     }
-}
+});
 
-test(
-    'PHP GET /teams/{id}/charts returns error if the team does not exist',
-    testV1GetTeamChartsOfNonExistentTeam,
-    'teams'
-);
-
-test(
-    'PHP GET /organizations/{id}/charts returns error if the team does not exist',
-    testV1GetTeamChartsOfNonExistentTeam,
-    'organizations'
-);
-
-async function testV1GetTeamChartsPaginated(t, teamsPath = 'teams', page, expectedNoOfCharts) {
+async function testV1GetTeamChartsPaginated(t, page, expectedNoOfCharts) {
     let teamObj = {};
     let otherTeam;
     let charts = [];
@@ -314,7 +243,7 @@ async function testV1GetTeamChartsPaginated(t, teamsPath = 'teams', page, expect
         teamObj = await createTeamWithUser(t.context.server, { role: 'member' });
         otherTeam = await createTeam();
         charts = await createCharts(
-            // create 50 charts --> page size in PHP is 48
+            // create 50 charts --> page size in V1 is 48
             Array.from(Array(50).keys()).map(key => ({
                 title: `Chart ${key}`,
                 theme: 'theme1',
@@ -324,14 +253,15 @@ async function testV1GetTeamChartsPaginated(t, teamsPath = 'teams', page, expect
                 organization_id: teamObj.team.id
             }))
         );
-        const res = await fetch(`${BASE_URL}/${teamsPath}/${teamObj.team.id}/charts?page=${page}`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/${teamObj.team.id}/charts?page=${page}`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${teamObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'ok');
         t.is(json.data.total, charts.length);
         t.is(json.data.charts.length, expectedNoOfCharts);
@@ -343,38 +273,20 @@ async function testV1GetTeamChartsPaginated(t, teamsPath = 'teams', page, expect
 }
 
 test(
-    'PHP GET /teams/{id}/charts returns charts of a team correctly paginated (page 1)',
+    'V1 GET /teams/{id}/charts returns charts of a team correctly paginated (page 1)',
     testV1GetTeamChartsPaginated,
-    'teams',
     0,
     48
 );
 
 test(
-    'PHP GET /teams/{id}/charts returns charts of a team correctly paginated (page 2)',
+    'V1 GET /teams/{id}/charts returns charts of a team correctly paginated (page 2)',
     testV1GetTeamChartsPaginated,
-    'teams',
     1,
     2
 );
 
-test(
-    'PHP GET /organizations/{id}/charts returns charts of a team correctly paginated (page 1)',
-    testV1GetTeamChartsPaginated,
-    'organizations',
-    0,
-    48
-);
-
-test(
-    'PHP GET /organizations/{id}/charts returns charts of a team correctly paginated (page 2)',
-    testV1GetTeamChartsPaginated,
-    'organizations',
-    1,
-    2
-);
-
-async function testV1GetTeamChartsWithSearchParam(t, teamsPath = 'teams') {
+test('V1 GET /teams/{id}/charts?search=X searches in team charts', async t => {
     let teamObj = {};
     let charts = [];
     try {
@@ -397,14 +309,15 @@ async function testV1GetTeamChartsWithSearchParam(t, teamsPath = 'teams') {
                 organization_id: teamObj.team.id
             }
         ]);
-        const res = await fetch(`${BASE_URL}/${teamsPath}/${teamObj.team.id}/charts?search=foo`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/${teamObj.team.id}/charts?search=foo`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${teamObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'ok');
         t.is(json.data.total, 1);
         t.is(json.data.charts.length, 1);
@@ -414,21 +327,9 @@ async function testV1GetTeamChartsWithSearchParam(t, teamsPath = 'teams') {
     } finally {
         await destroy(charts, Object.values(teamObj));
     }
-}
+});
 
-test(
-    'PHP GET /teams/{id}/charts?search=X searches in team charts',
-    testV1GetTeamChartsWithSearchParam,
-    'teams'
-);
-
-test(
-    'PHP GET /organizations/{id}/charts?search=X searches in team charts',
-    testV1GetTeamChartsWithSearchParam,
-    'organizations'
-);
-
-async function testV1GetTeamsOfUser(t, teamsPath = 'teams') {
+test('V1 GET /teams/user returns teams of a user', async t => {
     let userObj = {};
     let team1;
     let team2;
@@ -440,14 +341,15 @@ async function testV1GetTeamsOfUser(t, teamsPath = 'teams') {
         userObj = await createUser(t.context.server);
         await addUserToTeam(userObj.user, team1);
         await addUserToTeam(userObj.user, team2);
-        const res = await fetch(`${BASE_URL}/${teamsPath}/user`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/user`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${userObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'ok');
         t.is(json.data.length, 2);
         t.is(json.data.includes(team1.id), true);
@@ -456,13 +358,9 @@ async function testV1GetTeamsOfUser(t, teamsPath = 'teams') {
     } finally {
         await destroy(team1, team2, team3, Object.values(userObj));
     }
-}
+});
 
-test('PHP GET /teams/user returns teams of a user', testV1GetTeamsOfUser, 'teams');
-
-test('PHP GET /organizations/user returns teams of a user', testV1GetTeamsOfUser, 'organizations');
-
-async function testV1GetTeamsOfUserIgnoreDisabled(t, teamsPath = 'teams') {
+test('V1 GET /teams/user does not return disabled teams of a user', async t => {
     const disableTeam = async team => {
         // helper function to disable a team. Uses a raw query
         // since property 'disabled' is not part of the Sequelize model definition
@@ -482,14 +380,15 @@ async function testV1GetTeamsOfUserIgnoreDisabled(t, teamsPath = 'teams') {
         userObj = await createUser(t.context.server);
         await addUserToTeam(userObj.user, team1);
         await addUserToTeam(userObj.user, team2);
-        const res = await fetch(`${BASE_URL}/${teamsPath}/user`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/user`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${userObj.token}`
             }
         });
-        t.is(res.status, 200);
-        const json = await res.json();
+        t.is(statusCode, 200);
         t.is(json.status, 'ok');
         t.is(json.data.length, 1);
         t.is(json.data.includes(team1.id), true);
@@ -497,21 +396,9 @@ async function testV1GetTeamsOfUserIgnoreDisabled(t, teamsPath = 'teams') {
     } finally {
         await destroy(team1, team2, Object.values(userObj));
     }
-}
+});
 
-test(
-    'PHP GET /teams/user does not return disabled teams of a user',
-    testV1GetTeamsOfUserIgnoreDisabled,
-    'teams'
-);
-
-test(
-    'PHP GET /organizations/user does not return disabled teams of a user',
-    testV1GetTeamsOfUserIgnoreDisabled,
-    'organizations'
-);
-
-async function testV1GetTeamsOfUserWithInsufficientScope(t, teamsPath = 'teams') {
+test("V1 GET /teams/user returns an error if user does not have scope 'team:read'", async t => {
     let userObj = {};
     let team1;
     let team2;
@@ -523,30 +410,19 @@ async function testV1GetTeamsOfUserWithInsufficientScope(t, teamsPath = 'teams')
         userObj = await createUser(t.context.server, { scopes: ['scope:invalid'] });
         await addUserToTeam(userObj.user, team1);
         await addUserToTeam(userObj.user, team2);
-        const res = await fetch(`${BASE_URL}/${teamsPath}/user`, {
+        const { statusCode, result: json } = await t.context.server.inject({
+            method: 'GET',
+            url: `${V1_BASE_URL}/teams/user`,
             headers: {
                 ...t.context.headers,
                 Authorization: `Bearer ${userObj.token}`
             }
         });
-        t.is(res.status, 403);
-        const json = await res.json();
+        t.is(statusCode, 403);
         t.is(json.status, 'error');
         t.is(json.code, 'access-denied');
         t.is(json.message, 'Insufficient scope');
     } finally {
         await destroy(team1, team2, team3, Object.values(userObj));
     }
-}
-
-test(
-    "PHP GET /teams/user returns an error if user does not have scope 'team:read'",
-    testV1GetTeamsOfUserWithInsufficientScope,
-    'teams'
-);
-
-test(
-    "PHP GET /organizations/user returns an error if user does not have scope 'team:read'",
-    testV1GetTeamsOfUserWithInsufficientScope,
-    'organizations'
-);
+});

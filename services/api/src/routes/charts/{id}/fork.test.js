@@ -2,11 +2,8 @@ const assignDeep = require('assign-deep');
 const cloneDeep = require('lodash/cloneDeep');
 const { Chart, ChartPublic } = require('@datawrapper/orm/db');
 const { defaultChartMetadata } = require('@datawrapper/service-utils');
-const fetch = require('node-fetch');
 const test = require('ava');
 const {
-    BASE_URL,
-    createChart,
     createGuestSession,
     createPublicChart,
     createUser,
@@ -530,7 +527,6 @@ test('POST /charts/{id}/fork creates a fork when the user is a guest', async t =
 test('POST /charts/{id}/fork returns 401 for unathorized requests', async t => {
     let userObj = {};
     let chart;
-    let fork;
     try {
         userObj = await createUser(t.context.server);
 
@@ -548,153 +544,6 @@ test('POST /charts/{id}/fork returns 401 for unathorized requests', async t => {
         });
 
         t.is(res.statusCode, 401);
-    } finally {
-        await destroy(fork, chart, Object.values(userObj));
-    }
-});
-
-test('PHP POST /charts/{id}/fork creates a fork', async t => {
-    let userObj = {};
-    let chart;
-    let fork;
-    try {
-        userObj = await createUser(t.context.server, { role: 'editor' });
-        chart = await createPublicChart({
-            title: 'Chart 1',
-            organization_id: null,
-            author_id: userObj.user.id,
-            forkable: true,
-            is_fork: false
-        });
-
-        t.is(chart.title, 'Chart 1');
-
-        const res = await fetch(`${BASE_URL}/charts/${chart.id}/fork`, {
-            method: 'POST',
-            headers: {
-                ...t.context.headers,
-                Authorization: `Bearer ${userObj.token}`
-            }
-        });
-
-        t.is(res.status, 200);
-
-        const json = await res.json();
-
-        t.is(json.status, 'ok');
-        t.truthy(json.data);
-        t.truthy(json.data.id);
-
-        fork = await getChart(json.data.id);
-        t.truthy(fork);
-        t.is(fork.title, 'Chart 1');
-        t.is(fork.is_fork, true);
-        t.is(fork.forked_from, chart.id);
-    } finally {
-        await destroy(fork, chart, Object.values(userObj));
-    }
-});
-
-test('PHP POST /charts/{id}/fork refuses to create a fork when not forkable', async t => {
-    let userObj = {};
-    let chart;
-    try {
-        userObj = await createUser(t.context.server, { role: 'editor' });
-        chart = await createChart({
-            title: 'Chart 1',
-            organization_id: null,
-            author_id: userObj.user.id,
-            forkable: false,
-            is_fork: false,
-            last_edit_step: 5
-        });
-
-        t.is(chart.title, 'Chart 1');
-
-        const res = await fetch(`${BASE_URL}/charts/${chart.id}/fork`, {
-            method: 'POST',
-            headers: {
-                ...t.context.headers,
-                Authorization: `Bearer ${userObj.token}`
-            }
-        });
-
-        t.is(res.status, 200);
-
-        const json = await res.json();
-        t.is(json.status, 'error');
-        t.is(json.code, 'not-allowed');
-        t.is(json.message, 'You can not re-fork a forked chart.');
-    } finally {
-        await destroy(chart, Object.values(userObj));
-    }
-});
-
-test('PHP POST /charts/{id}/fork refuses to create a fork of forks', async t => {
-    let userObj = {};
-    let chart;
-    try {
-        userObj = await createUser(t.context.server, { role: 'editor' });
-        chart = await createChart({
-            title: 'Chart 1',
-            organization_id: null,
-            author_id: userObj.user.id,
-            forkable: true,
-            is_fork: true,
-            last_edit_step: 5
-        });
-
-        t.is(chart.title, 'Chart 1');
-
-        const res = await fetch(`${BASE_URL}/charts/${chart.id}/fork`, {
-            method: 'POST',
-            headers: {
-                ...t.context.headers,
-                Authorization: `Bearer ${userObj.token}`
-            }
-        });
-
-        t.is(res.status, 200);
-
-        const json = await res.json();
-        t.is(json.status, 'error');
-        t.is(json.code, 'not-allowed');
-        t.is(json.message, 'You can not re-fork a forked chart.');
-    } finally {
-        await destroy(chart, Object.values(userObj));
-    }
-});
-
-test('PHP POST /charts/{id}/fork refuses to create a fork of unpublished charts', async t => {
-    let userObj = {};
-    let chart;
-    try {
-        userObj = await createUser(t.context.server, { role: 'editor' });
-        chart = await createChart({
-            title: 'Chart 1',
-            organization_id: null,
-            author_id: userObj.user.id,
-            forkable: true,
-            is_fork: false,
-            last_edit_step: 3
-        });
-
-        t.is(chart.title, 'Chart 1');
-
-        const res = await fetch(`${BASE_URL}/charts/${chart.id}/fork`, {
-            method: 'POST',
-            headers: {
-                ...t.context.headers,
-                Authorization: `Bearer ${userObj.token}`
-            }
-        });
-
-        t.is(res.status, 200);
-
-        const json = await res.json();
-        t.is(json.status, 'error');
-        t.is(json.code, 'not-allowed');
-        t.is(json.message, 'You can not re-fork a forked chart.');
     } finally {
         await destroy(chart, Object.values(userObj));
     }

@@ -1,22 +1,21 @@
 export DW_CONFIG_PATH ?= /app/services/api/test/config.docker.js
 
 test_dir ?= services/api
-m ?= !PHP*
 
 docker_compose := docker-compose -f docker-compose-test.yml
 
 .PHONY: test
 test: | test-setup  ## Run unit tests
-	$(MAKE) test-run cmd="sh -c 'cd \"/app/$(test_dir)\" && npm test -- -m \"$(m)\"'"
+	$(MAKE) test-run cmd="sh -c 'cd \"/app/$(test_dir)\" && npm test'"
 
 .PHONY: test-coverage
 test-coverage: | test-setup  ## Run unit tests with coverage report
-	$(MAKE) test-run cmd="sh -c 'cd \"/app/$(test_dir)\" && npm run test:coverage -- -m \"$(m)\"'"
+	$(MAKE) test-run cmd="sh -c 'cd \"/app/$(test_dir)\" && npm run test:coverage'"
 
 .PHONY: test-plugins
 test-plugins: | test-setup  ## Run unit tests including all plugins
 	export DW_CONFIG_PATH=/app/services/api/test/config-plugins.docker.js; \
-	$(MAKE) test-run cmd="sh -c 'cd \"/app/services/api\" && npm run test:plugins -- -m \"$(m)\"'"
+	$(MAKE) test-run cmd="sh -c 'cd \"/app/services/api\" && npm run test:plugins'"
 
 .PHONY: test-setup
 test-setup:  ## Create tables and run migrations in the testing database

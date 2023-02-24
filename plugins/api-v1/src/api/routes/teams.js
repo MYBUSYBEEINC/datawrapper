@@ -85,7 +85,7 @@ module.exports = {
                         headers: request.headers
                     });
 
-                    if (res.result.message === 'Not Acceptable') {
+                    if (['Not Acceptable', 'Forbidden'].includes(res.result.message)) {
                         return {
                             status: 'error',
                             code: 'access-denied',
