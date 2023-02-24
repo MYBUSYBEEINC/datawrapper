@@ -306,8 +306,18 @@ module.exports = async function createChartWebsite(
         'utf-8'
     );
     publishData.styles = css;
-    publishData.theme.fontsCSS = fonts;
+
     publishData.themeCSSDark = `${cssDark}`;
+    publishData.themeFonts = publishData.theme.fonts;
+    publishData.theme = {
+        id: publishData.theme.id,
+        title: publishData.theme.title,
+        // we can safely omit theme.data, theme.fonts and theme.assets here
+        // since we're already including them as top level publishData
+        _computed: publishData.theme._computed,
+        fontsCSS: fonts
+    };
+
     const webComponent =
         webComponentJS + `\n\nwindow.datawrapper.render(${JSON.stringify(publishData)});`;
     /* write "embed.js" for embedding as web component*/
