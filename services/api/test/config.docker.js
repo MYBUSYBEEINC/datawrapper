@@ -46,6 +46,9 @@ module.exports = {
     },
     worker: {
         queues: {
+            render: {
+                concurrency: 1
+            },
             test: {
                 concurrency: 1
             }

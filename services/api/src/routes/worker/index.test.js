@@ -80,7 +80,7 @@ test('GET /v3/worker/health returns a report for the test queue', async t => {
         });
 
         t.is(res.statusCode, 555); // The health check fails, because no workers are connected to the queue.
-        t.deepEqual(res.result, {
+        t.like(res.result, {
             [QUEUE_NAME]: {
                 connected: true,
                 numWorkers: 0,

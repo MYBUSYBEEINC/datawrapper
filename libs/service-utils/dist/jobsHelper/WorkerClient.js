@@ -19,6 +19,7 @@ function getWorkerConfig(config) {
         queues: config.worker.queues,
         connection: {
             autoResubscribe: true,
+            lazyConnect: true,
             host: config.worker.redis.host,
             port: +config.worker.redis.port,
             ...(config.worker.redis.password && { password: config.worker.redis.password })

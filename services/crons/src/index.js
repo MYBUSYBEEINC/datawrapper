@@ -10,9 +10,9 @@ const Redis = require('ioredis');
 const { eventList, CronsEventEmitter } = require('./events');
 const { createJobsHelper } = require('./jobs');
 
-const config = requireConfig();
+module.exports = async function ({ db, testsConfigPatcher = config => config } = {}) {
+    const config = testsConfigPatcher(requireConfig());
 
-module.exports = async function ({ db } = {}) {
     const logger = require('./logger');
 
     if (!db) {
