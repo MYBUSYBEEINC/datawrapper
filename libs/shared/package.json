@@ -76,7 +76,7 @@
         "js-cookie": "^2.2.1",
         "lodash": "^4.17.21",
         "node-fetch": "^2.6.0",
-        "underscore": "^1.13.1"
+        "underscore": "^1.13.6"
     },
     "publishConfig": {
         "access": "public"
