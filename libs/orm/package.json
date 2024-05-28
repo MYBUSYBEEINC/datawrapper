@@ -32,7 +32,7 @@
         "assign-deep": "^1.0.1",
         "lodash": "^4.17.20",
         "merge-deep": "^3.0.2",
-        "mysql2": "^2.2.5",
+        "mysql2": "^3.9.8",
         "nanoid": "2.1.6",
         "sequelize": "^6.25.7",
         "underscore": "1.9.1"
