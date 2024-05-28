@@ -15,7 +15,7 @@
         "bullmq": "^1.68.2",
         "express": "3.11.0",
         "moment": "^2.15.1",
-        "mysql2": "^2.3.3",
+        "mysql2": "^3.9.8",
         "normalize-url": "^1.9.1",
         "winston": "^3.4.0"
     },
