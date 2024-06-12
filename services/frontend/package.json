@@ -87,7 +87,7 @@
         "sass": "^1.42.1",
         "snarkdown": "^2.0.0",
         "svelte": "^3.52.0",
-        "svelte-preprocess": "^4.10.4",
+        "svelte-preprocess": "^6.0.0",
         "tempfile": "^3.0.0",
         "underscore": "^1.12.0"
     },
