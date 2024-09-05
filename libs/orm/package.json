@@ -34,7 +34,7 @@
         "merge-deep": "^3.0.2",
         "mysql2": "^2.2.5",
         "nanoid": "2.1.6",
-        "sequelize": "^6.25.7",
+        "sequelize": "^6.33.0",
         "underscore": "1.9.1"
     },
     "devDependencies": {
