@@ -24,7 +24,7 @@
     ],
     "dependencies": {
         "@datawrapper/icons": "^1.17.1",
-        "@datawrapper/shared": "^0.34.4",
+        "@datawrapper/shared": "^0.40.1",
         "lodash": "^4.17.21"
     },
     "devDependencies": {
