@@ -53,7 +53,7 @@
         "assign-deep": "1.0.1",
         "aws-sdk": "^2.1041.0",
         "bcryptjs": "2.4.3",
-        "bullmq": "^3.7.2",
+        "bullmq": "^5.34.5",
         "chalk": "^4.1.2",
         "chroma-js": "^2.1.2",
         "deepmerge": "^4.2.2",
