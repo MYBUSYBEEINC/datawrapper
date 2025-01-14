@@ -38,7 +38,7 @@
         "lodash": "^4.17.21",
         "needle": "^3.2.0",
         "numeral": "^2.0.6",
-        "postcss": "^8.4.21",
+        "postcss": "^8.5.0",
         "postcss-default-unit": "^1.1.0",
         "postcss-less": "^6.0.0",
         "svelte-extras": "^2.0.2",
