@@ -12,7 +12,7 @@
     "dependencies": {
         "@datawrapper/schemas": "^1.18.0",
         "@datawrapper/service-utils": "^1.4.0",
-        "bullmq": "^1.68.2",
+        "bullmq": "^5.3.3",
         "express": "3.11.0",
         "moment": "^2.15.1",
         "mysql2": "^2.3.3",
