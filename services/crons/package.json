@@ -35,7 +35,7 @@
         "d3-array": "^2.0.3",
         "got": "^11.8.5",
         "ioredis": "^5.0.4",
-        "lodash": "^4.17.21",
+        "lodash": "^4.17.23",
         "lodash.shuffle": "^4.2.0",
         "mysql2": "^2.3.0",
         "node-cron": "^3.0.0",
