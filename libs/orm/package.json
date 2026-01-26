@@ -30,7 +30,7 @@
     "dependencies": {
         "@datawrapper/backend-utils": "file:../backend-utils",
         "assign-deep": "^1.0.1",
-        "lodash": "^4.17.20",
+        "lodash": "^4.17.23",
         "merge-deep": "^3.0.2",
         "mysql2": "^2.2.5",
         "nanoid": "2.1.6",
